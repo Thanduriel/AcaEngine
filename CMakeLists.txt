@@ -1,8 +1,5 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.12)
 project (AcaEngine)
-
-set (CMAKE_CXX_STANDARD 17)
-set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #---------------------------------------------------------------------------------------
 # main project
@@ -29,6 +26,10 @@ endmacro()
 GroupSources(src)
 
 add_executable(AcaEngine ${SOURCE_FILES})
+set_target_properties(AcaEngine PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED YES
+)
 target_include_directories(AcaEngine PRIVATE "src")
 
 #---------------------------------------------------------------------------------------
@@ -54,6 +55,19 @@ else()
 endif(glfw_FOUND)
 target_include_directories(AcaEngine PRIVATE ${GLFW_INCLUDE_DIRS})
 target_link_libraries (AcaEngine PRIVATE ${GLFW_LIBRARIES})
+
+# glew
+find_package(GLEW QUIET)
+if (NOT GLEW_FOUND)
+	set(glew-cmake_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+	set(glew-cmake_BUILD_MULTI_CONTEXT OFF CACHE BOOL "" FORCE)
+	set(ONLY_LIBS ON CACHE BOOL "" FORCE)
+	add_subdirectory ("dependencies/glew/build/cmake")
+	set(GLEW_INCLUDE_DIRS "dependencies/glew/include")
+	set(GLEW_LIBRARIES "glew_s")
+endif(NOT GLEW_FOUND)
+target_include_directories(AcaEngine PRIVATE ${GLEW_INCLUDE_DIRS})
+target_link_libraries (AcaEngine PRIVATE ${GLEW_LIBRARIES})
 
 # glm
 find_package(glm QUIET)

@@ -1,4 +1,5 @@
 #include <spdlog/spdlog.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtx/color_space.hpp>
 #include <glm/gtx/compatibility.hpp>
@@ -33,6 +34,14 @@ int main()
 	}
 
 	glfwMakeContextCurrent(window);
+
+	GLenum GlewInitResult = glewInit();
+	if (GLEW_OK != GlewInitResult)
+	{
+		spdlog::error("Could not initialize glew.");
+		glfwTerminate();
+		return -1;
+	}
 
 	std::default_random_engine rng;
 	std::uniform_real_distribution<float> dist;
