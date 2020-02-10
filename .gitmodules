@@ -10,3 +10,6 @@
 [submodule "dependencies/glew"]
 	path = dependencies/glew
 	url = https://github.com/Perlmint/glew-cmake.git
+[submodule "dependencies/freetype"]
+	path = dependencies/freetype
+	url = https://git.sv.nongnu.org/r/freetype/freetype2.git

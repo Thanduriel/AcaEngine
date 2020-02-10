@@ -31,6 +31,14 @@ set_target_properties(AcaEngine PROPERTIES
     CXX_STANDARD_REQUIRED YES
 )
 target_include_directories(AcaEngine PRIVATE "src")
+if (MSVC)
+	# disable type conversion warnings globaly
+	add_compile_options(/wd4267)
+	add_compile_options(/wd4244)
+	add_compile_options(/wd4305)
+	add_compile_options(/wd4996)
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT AcaEngine)
+endif()
 
 #---------------------------------------------------------------------------------------
 # libraries
@@ -82,3 +90,13 @@ if (NOT spdlog_FOUND)
 	add_subdirectory ("dependencies/spdlog")
 endif(NOT spdlog_FOUND)
 target_link_libraries (AcaEngine PRIVATE spdlog::spdlog)
+
+# freetype
+find_package(FREETYPE QUIET)
+if (NOT FREETYPE_FOUND)
+	add_subdirectory ("dependencies/freetype")
+endif(NOT FREETYPE_FOUND)
+target_link_libraries (AcaEngine PRIVATE freetype)
+
+# stb_image
+target_include_directories(AcaEngine PRIVATE "dependencies/stb")
