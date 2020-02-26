@@ -1,6 +1,9 @@
 #include "graphics/core/opengl.hpp"
 #include "device.hpp"
 
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 namespace graphics {
 
 	BlendOp Device::s_blendOp[8] 				= {BlendOp::ADD};
@@ -25,13 +28,52 @@ namespace graphics {
 	bool Device::s_zEnable						= true;
 	bool Device::s_zWriteEnable					= true;
 	bool Device::s_scissorEnable				= true;
+	GLFWwindow* Device::s_window				= nullptr;
 
-
-	/*void Device::init()
+	static void ErrorCallback(int, const char* err_str)
 	{
-		for(int i = 0; i < 8; ++i)
-			glCall(glBlendEquationi, i, unsigned(BlendOp::ADD));
-	}*/
+		spdlog::error("GLFW Error: {}", err_str);
+	}
+
+
+	bool Device::Initialize(int _width, int _height, bool _fullScreen)
+	{
+		spdlog::info("Creating OpenGL context.");
+		glfwSetErrorCallback(ErrorCallback);
+		if (!glfwInit())
+		{
+			spdlog::error("Could not initialize glfw.");
+			return false;
+		}
+
+	//	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // We want OpenGL 4.5
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL 
+
+		s_window = glfwCreateWindow(_width, _height, "AcaEngine", _fullScreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+		if (!s_window)
+		{
+			spdlog::error("Could not create window.");
+			glfwTerminate();
+			return false;
+		}
+
+		glfwMakeContextCurrent(s_window);
+
+		GLenum GlewInitResult = glewInit();
+		if (GLEW_OK != GlewInitResult)
+		{
+			spdlog::error("Could not initialize glew.");
+			glfwTerminate();
+			return false;
+		}
+
+		return true;
+	//	for(int i = 0; i < 8; ++i)
+	//		glCall(glBlendEquationi, i, unsigned(BlendOp::ADD));
+	}
 
 	// TODO: glCall(glEnable, GL_BLEND);
 	void Device::setBlendOp(BlendOp _operation, int _target)

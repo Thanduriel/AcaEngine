@@ -1,5 +1,6 @@
 #include "graphics/renderer/fontrenderer.hpp"
 #include "graphics/core/shader.hpp"
+#include "graphics/core/device.hpp"
 #include <spdlog/spdlog.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -9,56 +10,21 @@
 #include <random>
 #include <chrono>
 
-void ErrorCallback(int, const char* err_str)
-{
-	spdlog::info("GLFW Error: {}", err_str);
-}
-
 int main()
 {
 	using namespace glm;
 	using namespace std::chrono;
+	using namespace graphics;
 
-	spdlog::info("Creating OpenGL context.");
-	glfwSetErrorCallback(ErrorCallback);
-	if (!glfwInit())
-	{
-		spdlog::error("Could not initialize glfw.");
-		return -1;
-	}
+	if (!Device::Initialize(1366, 768, false)) return -1;
+	GLFWwindow* window = Device::GetWindow();
 
-	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // We want OpenGL 4.5
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL 
-
-	GLFWwindow* window = glfwCreateWindow(1366, 768, "hello world", NULL, NULL);
-	if (!window)
-	{
-		spdlog::error("Could not create window.");
-		glfwTerminate();
-		return -1;
-	}
-
-	glfwMakeContextCurrent(window);
-
-	GLenum GlewInitResult = glewInit();
-	if (GLEW_OK != GlewInitResult)
-	{
-		spdlog::error("Could not initialize glew.");
-		glfwTerminate();
-		return -1;
-	}
-
-	glDisable(GL_CULL_FACE);
 	graphics::FontRenderer fontRenderer;
 	fontRenderer.createFont("../resources/fonts/Anonymous Pro.ttf", reinterpret_cast<const char*>(u8" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöüß#´`'\"^_@%&|,;.:!?~+-*/(){}[]<>\U000003B5\U000003A9\U0000262F\U00002713"));
 //	fontRenderer.storeCaf("../resources/fonts/OpenSans.caf");
 //	fontRenderer.loadCaf("../resources/fonts/OpenSans.caf");
 
-	using namespace graphics;
-	graphics::Program shader;
+	Program shader;
 	shader.attach(ShaderManager::get("../resources/shader/font.vert", ShaderType::VERTEX));
 	shader.attach(ShaderManager::get("../resources/shader/font.geom", ShaderType::GEOMETRY));
 	shader.attach(ShaderManager::get("../resources/shader/font.frag", ShaderType::FRAGMENT));

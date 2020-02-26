@@ -1,5 +1,7 @@
 #pragma once
 
+struct GLFWwindow;
+
 namespace graphics {
 
 	enum class BlendOp
@@ -64,8 +66,9 @@ namespace graphics {
 	class Device
 	{
 	public:
-		/// Set all states to a default value
-		//static void init();
+		/// Creates the context and window.
+		static bool Initialize(int _width, int _height, bool _fullScreen);
+		static GLFWwindow* GetWindow() { return s_window; }
 		/// Creates the one window (only one call allowed)
 		//static void createWindow(int _width, int _height, bool _fullScreen);
 		
@@ -112,6 +115,7 @@ namespace graphics {
 		static bool s_zEnable;
 		static bool s_zWriteEnable;
 		static bool s_scissorEnable;
+		static GLFWwindow* s_window;
 	};
 	
 } // namespace graphics
