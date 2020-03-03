@@ -1,13 +1,14 @@
-#include <iostream>
 #include "assert.hpp"
+#include <spdlog/spdlog.h>
+#include <iostream>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-namespace Details
+namespace details
 {
-	void AssertHandler(const std::string& file, long line, const std::string& functionName,
+	void assertHandler(const std::string& file, long line, const std::string& functionName,
 		const std::string& conditionName, const std::string& errorMessage)
 	{
 		std::string message("Assertion failed in file \"" + file + "\" line " + std::to_string(line) +
@@ -16,6 +17,6 @@ namespace Details
 #ifdef _WIN32
 		MessageBoxA(0, message.c_str(), "Assertion!", MB_OK | MB_ICONERROR);
 #endif
-		std::cerr << message << std::endl;
+		spdlog::error(message);
 	}
 }

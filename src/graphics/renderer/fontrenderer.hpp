@@ -1,7 +1,6 @@
 #pragma once
 
 #include "graphics/core/texture.hpp"
-#include "utils/scopedptr.hpp"
 #include "math/geometrictypes.hpp"
 
 #include <glm/glm.hpp>
@@ -10,6 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include <functional>
+#include <memory>
 
 // Predeclarations
 typedef struct FT_FaceRec_*  FT_Face;
@@ -58,7 +58,7 @@ namespace graphics {
 		void draw(const glm::vec3& _position, const char* _text, float _size, const glm::vec4& _color, float _rotation = 0.0f, float _alignX = 0.0f, float _alignY = 0.0f, bool _roundToPixel = false);
 
 		/// Simulate a text rendering and get the bounding box of the resulting drawn text.
-		Math::Rectangle getBoundingBox(const glm::vec3& _position, const char* _text, float _size, float _rotation = 0.0f, float _alignX = 0.0f, float _alignY = 0.0f, bool _roundToPixel = false);
+		math::Rectangle getBoundingBox(const glm::vec3& _position, const char* _text, float _size, float _rotation = 0.0f, float _alignX = 0.0f, float _alignY = 0.0f, bool _roundToPixel = false);
 
 		/// Find the text position (character index) which is closest to a real position.
 		unsigned findPosition(const glm::vec2& _findPosition, const glm::vec2& _textPosition, const char* _text, float _size, float _rotation = 0.0f, float _alignX = 0.0f, float _alignY = 0.0f, bool _roundToPixel = false);
@@ -98,7 +98,8 @@ namespace graphics {
 		};
 #pragma pack(pop)
 		Texture2D::Handle m_texture;
-		ScopedPtr<Sampler> m_sampler;
+		
+		std::unique_ptr<Sampler> m_sampler;
 		unsigned m_vao;		///< OpenGL vertex array object
 		unsigned m_vbo;		///< OpenGL vertex buffer for sprites
 		mutable bool m_dirty;

@@ -1,5 +1,6 @@
 #include "graphics/core/opengl.hpp"
 #include "device.hpp"
+#include "shader.hpp"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -36,7 +37,7 @@ namespace graphics {
 	}
 
 
-	bool Device::Initialize(int _width, int _height, bool _fullScreen)
+	bool Device::initialize(int _width, int _height, bool _fullScreen)
 	{
 		spdlog::info("Creating OpenGL context.");
 		glfwSetErrorCallback(ErrorCallback);
@@ -73,6 +74,15 @@ namespace graphics {
 		return true;
 	//	for(int i = 0; i < 8; ++i)
 	//		glCall(glBlendEquationi, i, unsigned(BlendOp::ADD));
+	}
+
+	void Device::close()
+	{
+		ShaderManager::clear();
+
+		spdlog::info("Shutting down.");
+		glfwDestroyWindow(s_window);
+		glfwTerminate();
 	}
 
 	// TODO: glCall(glEnable, GL_BLEND);

@@ -9,7 +9,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-using namespace Math;
+using namespace math;
 using namespace glm;
 
 namespace graphics {
@@ -44,7 +44,7 @@ namespace graphics {
 		glCall(glEnableVertexAttribArray, 4);
 		glCall(glVertexAttribPointer, 4, 1, GLenum(PrimitiveFormat::FLOAT), GL_FALSE, 32, (GLvoid*)(28));
 
-		m_sampler = new Sampler(Sampler::Filter::POINT, Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Border::CLAMP);
+		m_sampler = std::make_unique<Sampler>(Sampler::Filter::POINT, Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Border::CLAMP);
 
 		spdlog::info("[graphics] Created font renderer.");
 	}
@@ -72,7 +72,7 @@ namespace graphics {
 		color.b = (uint8)clamp(_color.a*_color.b*255.0f, 0.0f, 255.0f);
 		color.a = (uint8)clamp(_color.a*255.0f, 0.0f, 255.0f);
 
-		mat2x2 rotateAndScale = Rotation(_rotation) * (_size / BASE_SIZE);
+		mat2x2 rotateAndScale = rotation(_rotation) * (_size / BASE_SIZE);
 
 		size_t firstNewVertex = m_instances.size();
 		vec2 maxCursor = renderingKernel(_position, _text, _size, rotateAndScale, _roundToPixel,
@@ -101,10 +101,10 @@ namespace graphics {
 		m_dirty = true;
 	}
 
-	Math::Rectangle FontRenderer::getBoundingBox(const vec3& _position, const char* _text, float _size, float _rotation, float _alignX, float _alignY, bool _roundToPixel)
+	math::Rectangle FontRenderer::getBoundingBox(const vec3& _position, const char* _text, float _size, float _rotation, float _alignX, float _alignY, bool _roundToPixel)
 	{
 		// Convert pixel size into a scale factor and apply rotation
-		mat2 rotateAndScale = Rotation(_rotation) * (_size / BASE_SIZE);
+		mat2 rotateAndScale = rotation(_rotation) * (_size / BASE_SIZE);
 
 		const CharacterDef * lastCharMetric = nullptr;
 		vec2 maxCursor = renderingKernel(_position, _text, _size, rotateAndScale, _roundToPixel,
@@ -113,7 +113,7 @@ namespace graphics {
 		});
 
 		// Add line height and transform the last cursor position into an after char position.
-		Math::Rectangle out( vec2(0.0f), maxCursor );
+		math::Rectangle out( vec2(0.0f), maxCursor );
 		out.max.y += float(BASE_SIZE);
 		if(lastCharMetric)
 			out.max.x += lastCharMetric->texSize.x - lastCharMetric->advance/64.0f;
@@ -134,7 +134,7 @@ namespace graphics {
 	{
 		// First tranform the real position into a local position. This requires the
 		// knowledge of the maxCursor.
-		mat2 rotateAndScale = Rotation(_rotation) * (_size / BASE_SIZE);
+		mat2 rotateAndScale = rotation(_rotation) * (_size / BASE_SIZE);
 		const CharacterDef * lastCharMetric = nullptr;
 		vec2 maxCursor = renderingKernel(vec3(_textPosition, 0.0f), _text, _size, rotateAndScale, _roundToPixel,
 			[&](const glm::vec3 & _charPosition, char32_t _char, const CharacterDef & _charMetric, float _scale) {
@@ -538,16 +538,16 @@ namespace graphics {
 			if((ptr[0] & 0xf8) == 0xf0)
 			{
 				// All three following characters must start with 10xxx...
-				Assert(((ptr[1] & 0xc0) == 0x80) && ((ptr[2] & 0xc0) == 0x80) && ((ptr[3] & 0xc0) == 0x80), "Invalid utf8 codepoint!");
+				ASSERT(((ptr[1] & 0xc0) == 0x80) && ((ptr[2] & 0xc0) == 0x80) && ((ptr[3] & 0xc0) == 0x80), "Invalid utf8 codepoint!");
 				// Take all the xxxx from the bytes and put them into one character
 				c = ((ptr[0] & 0x07) << 18) | ((ptr[1] & 0x3f) << 12) | ((ptr[2] & 0x3f) << 6) | (ptr[3] & 0x3f);
 				*_textit = ptr + 4;
 			} else if((ptr[0] & 0xf0) == 0xe0) {
-				Assert(((ptr[1] & 0xc0) == 0x80) && ((ptr[2] & 0xc0) == 0x80), "Invalid utf8 codepoint!");
+				ASSERT(((ptr[1] & 0xc0) == 0x80) && ((ptr[2] & 0xc0) == 0x80), "Invalid utf8 codepoint!");
 				c = ((ptr[0] & 0x0f) << 12) | ((ptr[1] & 0x3f) << 6) | (ptr[2] & 0x3f);
 				*_textit = ptr + 3;
 			} else if((ptr[0] & 0xe0) == 0xc0) {
-				Assert(((ptr[1] & 0xc0) == 0x80), "Invalid utf8 codepoint!");
+				ASSERT(((ptr[1] & 0xc0) == 0x80), "Invalid utf8 codepoint!");
 				c = ((ptr[0] & 0x1f) << 6) | (ptr[1] & 0x3f);
 				*_textit = ptr + 2;
 			} else {

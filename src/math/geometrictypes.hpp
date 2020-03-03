@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <cstdint>
 
-namespace Math {
+namespace math {
 
 	struct Rectangle
 	{
@@ -20,14 +20,14 @@ namespace Math {
 			min(_min),
 			max(_max)
 		{
-			Assert(_min.x <= _max.x && _min.y <= _max.y,
+			ASSERT(_min.x <= _max.x && _min.y <= _max.y,
 				"Minimum coordinates must be smaller or equal the maximum.");
 		}
 
 		/// \brief Create an optimal box for a set of points
 		Rectangle(const glm::vec2* _points, uint32_t _numPoints) noexcept
 		{
-			Assert(_points && _numPoints > 0, "The point list must have at least one point.");
+			ASSERT(_points && _numPoints > 0, "The point list must have at least one point.");
 			min = max = *_points++;
 			for (uint32_t i = 1; i < _numPoints; ++i, ++_points)
 			{

@@ -7,17 +7,32 @@
 #include <glm/gtx/color_space.hpp>
 #include <glm/gtx/compatibility.hpp>
 
+// CRT's memory leak detection
+#ifndef NDEBUG 
+#if defined(_MSC_VER)
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+#endif
+
 #include <random>
 #include <chrono>
 
 int main()
 {
+#ifndef NDEBUG 
+#if defined(_MSC_VER)
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+//	_CrtSetBreakAlloc(2760);
+#endif
+#endif
+
 	using namespace glm;
 	using namespace std::chrono;
 	using namespace graphics;
 
-	if (!Device::Initialize(1366, 768, false)) return -1;
-	GLFWwindow* window = Device::GetWindow();
+	if (!Device::initialize(1366, 768, false)) return -1;
+	GLFWwindow* window = Device::getWindow();
 
 	graphics::FontRenderer fontRenderer;
 	fontRenderer.createFont("../resources/fonts/Anonymous Pro.ttf", reinterpret_cast<const char*>(u8" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöüß#´`'\"^_@%&|,;.:!?~+-*/(){}[]<>\U000003B5\U000003A9\U0000262F\U00002713"));
@@ -72,9 +87,7 @@ int main()
 		glfwSwapBuffers(window);
 	}
 
-	spdlog::info("Shutting down.");
-	glfwDestroyWindow(window);
-	glfwTerminate();
+	Device::close();
 
 	return 0;
 }

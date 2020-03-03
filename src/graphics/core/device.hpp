@@ -67,8 +67,10 @@ namespace graphics {
 	{
 	public:
 		/// Creates the context and window.
-		static bool Initialize(int _width, int _height, bool _fullScreen);
-		static GLFWwindow* GetWindow() { return s_window; }
+		static bool initialize(int _width, int _height, bool _fullScreen);
+		static void close();
+
+		static GLFWwindow* getWindow() { return s_window; }
 		/// Creates the one window (only one call allowed)
 		//static void createWindow(int _width, int _height, bool _fullScreen);
 		
