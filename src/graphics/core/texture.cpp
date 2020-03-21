@@ -124,14 +124,23 @@ namespace graphics {
 
 		// Enable bindless access
 		m_bindlessHandle = glCall(glGetTextureSamplerHandleARB, m_textureID, m_sampler->getID());
-		glCall(glMakeTextureHandleResidentARB, m_bindlessHandle);
+		if ( GLEW_ARB_bindless_texture ) 
+		{
+			glCall(glMakeTextureHandleResidentARB, m_bindlessHandle);
+		}
 
 		spdlog::info("[graphics] Loaded texture {} from '{}'.", m_textureID, _textureFileName);
 	}
 
 	Texture2D::~Texture2D()
 	{
-		if(m_bindlessHandle) glCall(glMakeTextureHandleNonResidentARB, m_bindlessHandle);
+		if(m_bindlessHandle) 
+		{
+			if ( GLEW_ARB_bindless_texture )
+			{
+				glCall(glMakeTextureHandleNonResidentARB, m_bindlessHandle);
+			}
+		}
 		glCall(glBindTexture, GL_TEXTURE_2D, 0);
 		glCall(glDeleteTextures, 1, &m_textureID);
 		spdlog::info("[graphics] Deleted texture {} .", m_textureID);
@@ -175,8 +184,16 @@ namespace graphics {
 
 		if(_makeResident)
 		{
-			m_bindlessHandle = glCall(glGetTextureSamplerHandleARB, m_textureID, m_sampler->getID());
-			glCall(glMakeTextureHandleResidentARB, m_bindlessHandle);
+			if ( !GLEW_ARB_bindless_texture ) 
+			{
+				spdlog::warn("bindless Texture is not supported from this GPU");
+			}
+			else
+			{
+				m_bindlessHandle 
+					= glCall(glGetTextureSamplerHandleARB, m_textureID, m_sampler->getID());
+				glCall(glMakeTextureHandleResidentARB, m_bindlessHandle);
+			}
 		}
 		return this;
 	}
