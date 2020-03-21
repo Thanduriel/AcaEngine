@@ -5,6 +5,7 @@
 #if defined(_WIN32)
 #define DEBUG_BREAK do { __debugbreak(); } while(false)
 #else
+#include <signal.h>
 #define DEBUG_BREAK do { ::kill(0, SIGTRAP); } while(false)
 #endif
 

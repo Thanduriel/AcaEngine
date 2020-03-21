@@ -1,7 +1,7 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <type_traits>
 #include <string>
 

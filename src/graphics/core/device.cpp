@@ -40,20 +40,26 @@ namespace graphics {
 	bool Device::initialize(int _width, int _height, bool _fullScreen)
 	{
 		spdlog::info("Creating OpenGL context.");
-		glfwSetErrorCallback(ErrorCallback);
+			
 		if (!glfwInit())
 		{
-			spdlog::error("Could not initialize glfw.");
+			const char* msg;
+			int err = glfwGetError(&msg);
+			spdlog::error("Could not initialize glew. error: " + std::to_string(err) + msg);
 			return false;
 		}
 
-	//	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
+		glfwSetErrorCallback(ErrorCallback);
+
+	  glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // We want OpenGL 4.5
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+		glfwWindowHint(GLFW_FOCUSED, GL_FALSE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL 
 
-		s_window = glfwCreateWindow(_width, _height, "AcaEngine", _fullScreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
+		spdlog::info("dimensions: {} {}: full-screen?: {}", _width, _height, _fullScreen);
+		s_window = glfwCreateWindow(_width, _height, "AcaEngine", nullptr, nullptr);
 		if (!s_window)
 		{
 			spdlog::error("Could not create window.");
@@ -62,13 +68,14 @@ namespace graphics {
 		}
 
 		glfwMakeContextCurrent(s_window);
-
 		GLenum GlewInitResult = glewInit();
 		if (GLEW_OK != GlewInitResult)
 		{
-			spdlog::error("Could not initialize glew.");
-			glfwTerminate();
-			return false;
+			if (GlewInitResult != 4) {
+				spdlog::error("Could not initialize glew. with: '{}'", glewGetErrorString(GlewInitResult));
+				glfwTerminate();
+				return false;
+			}
 		}
 
 		return true;

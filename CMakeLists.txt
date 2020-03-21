@@ -6,10 +6,10 @@ project (AcaEngine)
 #---------------------------------------------------------------------------------------
 
 # find all source and header files
-file(GLOB_RECURSE SOURCE_FILES "src/*.hpp" "src/*.cpp" "src/*.inl")
+file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.hpp" "src/*.inl")
 
 # organize the files according to the organisation in the file system
-# from: http://cmake.3232098.n2.nabble.com/Keep-folder-structure-in-Visual-Studio-Project-generated-with-CMake-td7586044.html
+# from: http:#cmake.3232098.n2.nabble.com/Keep-folder-structure-in-Visual-Studio-Project-generated-with-CMake-td7586044.html
 macro(GroupSources curdir)
    file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
    foreach(child ${children})
@@ -25,12 +25,12 @@ endmacro()
 # execute tha macro
 GroupSources(src)
 
-add_executable(AcaEngine ${SOURCE_FILES})
-set_target_properties(AcaEngine PROPERTIES
+add_executable(Game src/main.cpp)
+set_target_properties(Game PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
 )
-target_include_directories(AcaEngine PRIVATE "src")
+list(APPEND INCLUDE_DIR Game PRIVATE "src")
 if (MSVC)
 	# disable type conversion warnings globaly
 	add_compile_options(/wd4267)
@@ -44,14 +44,21 @@ endif()
 # libraries
 #---------------------------------------------------------------------------------------
 
+add_library(AcaEngine STATIC ${SOURCE_FILES})
+set_target_properties(AcaEngine PROPERTIES
+	CXX_STANDARD 20
+	CXX_STANDARD_REQUIRED YES
+)
+
 # OpenGL
 find_package(OpenGL REQUIRED)
-target_link_libraries(AcaEngine PRIVATE ${OPENGL_gl_LIBRARY})
+target_link_libraries(AcaEngine PUBLIC ${OPENGL_LIBRARIES})
+list(APPEND INCLUDE_DIR ${OPENGL_INCUDE_DIRS})
 
 # glfw
-find_package(glfw QUIET)
+# find_package(glfw QUIET)
 if (glfw_FOUND)
-	target_link_directories(AcaEngine PRIVATE ${GLFW_LIBRARY_DIRS})
+	list(APPEND INCLUDE_DIR  ${GLFW_LIBRARY_DIRS})
 else()
 	message("Using submodule glfw.")
 	set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -62,11 +69,11 @@ else()
 	set(GLFW_INCLUDE_DIRS "dependencies/glfw/include")
 	set(GLFW_LIBRARIES "glfw")
 endif(glfw_FOUND)
-target_include_directories(AcaEngine PRIVATE ${GLFW_INCLUDE_DIRS})
-target_link_libraries (AcaEngine PRIVATE ${GLFW_LIBRARIES})
+list(APPEND INCLUDE_DIR  ${GLFW_INCLUDE_DIRS})
+target_link_libraries (AcaEngine PUBLIC ${GLFW_LIBRARIES})
 
 # glew
-find_package(GLEW QUIET)
+# find_package(GLEW QUIET)
 if (NOT GLEW_FOUND)
 	message("Using submodule GLEW.")
 	set(glew-cmake_BUILD_SHARED OFF CACHE BOOL "" FORCE)
@@ -76,8 +83,8 @@ if (NOT GLEW_FOUND)
 	set(GLEW_INCLUDE_DIRS "dependencies/glew/include")
 	set(GLEW_LIBRARIES "libglew_static")
 endif(NOT GLEW_FOUND)
-target_include_directories(AcaEngine PRIVATE ${GLEW_INCLUDE_DIRS})
-target_link_libraries (AcaEngine PRIVATE ${GLEW_LIBRARIES})
+list(APPEND INCLUDE_DIR  ${GLEW_INCLUDE_DIRS})
+target_link_libraries (AcaEngine PUBLIC ${GLEW_LIBRARIES})
 
 # glm
 find_package(glm QUIET)
@@ -85,18 +92,18 @@ if (NOT glm_FOUND)
 	message("Using submodule glm.")
 	set(GLM_INCLUDE_DIRS "dependencies/glm")
 endif(NOT glm_FOUND)
-target_include_directories(AcaEngine PRIVATE ${GLM_INCLUDE_DIRS})
+list(APPEND INCLUDE_DIR  ${GLM_INCLUDE_DIRS})
 
 # spdlog
-find_package(spdlog QUIET)
+# find_package(spdlog QUIET)
 if (NOT spdlog_FOUND)
 	message("Using submodule spdlog.")
 	add_subdirectory ("dependencies/spdlog")
 endif(NOT spdlog_FOUND)
-target_link_libraries (AcaEngine PRIVATE spdlog::spdlog)
+target_link_libraries (AcaEngine PUBLIC spdlog::spdlog)
 
 # freetype
-find_package(Freetype QUIET)
+# find_package(Freetype QUIET)
 if (NOT FREETYPE_FOUND)
 	message("Using submodule Freetype.")
 	set(CMAKE_DISABLE_FIND_PACKAGE_ZLIB ON CACHE BOOL "" FORCE)
@@ -105,8 +112,18 @@ if (NOT FREETYPE_FOUND)
 	set(CMAKE_DISABLE_FIND_PACKAGE_BZip2 ON CACHE BOOL "" FORCE)
 	set(CMAKE_DISABLE_FIND_PACKAGE_PNG ON CACHE BOOL "" FORCE)
 	add_subdirectory ("dependencies/freetype")
+	target_link_libraries (AcaEngine PRIVATE freetype)
+else()
+	target_link_libraries(AcaEngine PRIVATE ${FREETYPE_LIBRARIES})
+	target_include_directories(AcaEngine PRIVATE ${FREETYPE_INCLUDE_DIRS})
 endif(NOT FREETYPE_FOUND)
-target_link_libraries (AcaEngine PRIVATE freetype)
 
 # stb_image
-target_include_directories(AcaEngine PRIVATE "dependencies/stb")
+list(APPEND INCLUDE_DIR  "dependencies/stb")
+
+target_include_directories(AcaEngine PUBLIC ${INCLUDE_DIR})
+target_link_libraries(Game AcaEngine)
+target_include_directories(Game PRIVATE ${INCLUDE_DIR})
+
+enable_testing()
+add_subdirectory(tests)

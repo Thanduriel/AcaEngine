@@ -576,6 +576,7 @@ namespace graphics {
 		bool firstInLine = true;
 		vec2 maxCursor( cursor );
 		auto lastC = m_chars.end();
+
 		for(char32_t c = getNext(&_text); c; c = getNext(&_text))
 		{
 			if(c == '\n')
