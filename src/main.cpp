@@ -35,7 +35,7 @@ int main()
 	GLFWwindow* window = Device::getWindow();
 
 	graphics::FontRenderer fontRenderer;
-	fontRenderer.createFont("../resources/fonts/Anonymous Pro.ttf", reinterpret_cast<const char*>(u8" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöüß#´`'\"^_@%&|,;.:!?~+-*/(){}[]<>\U000003B5\U000003A9\U0000262F\U00002713"));
+	fontRenderer.createFont("../resources/fonts/Anonymous Pro.ttf", reinterpret_cast<const char*>(u8" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\u00E4\u00FC\u00F6\u00DF\u0060#'\"^_@%&|,;.:!?~+-*/(){}[]<>\u03B5\u03A9\u262F\u2713"));
 //	fontRenderer.storeCaf("../resources/fonts/OpenSans.caf");
 //	fontRenderer.loadCaf("../resources/fonts/OpenSans.caf");
 
