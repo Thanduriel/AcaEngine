@@ -7,6 +7,8 @@ project (AcaEngine)
 
 # find all source and header files
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.hpp" "src/*.inl")
+# this file is not part of the engine
+list(REMOVE_ITEM SOURCE_FILES "src/main.cpp")
 
 # organize the files according to the organisation in the file system
 # from: http:#cmake.3232098.n2.nabble.com/Keep-folder-structure-in-Visual-Studio-Project-generated-with-CMake-td7586044.html
@@ -37,7 +39,8 @@ if (MSVC)
 	add_compile_options(/wd4244)
 	add_compile_options(/wd4305)
 	add_compile_options(/wd4996)
-	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT AcaEngine)
+	# set startup project
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Game)
 endif()
 
 #---------------------------------------------------------------------------------------

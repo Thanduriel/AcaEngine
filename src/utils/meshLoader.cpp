@@ -154,20 +154,16 @@ void parseLine(
 		std::string::size_type begin,
 		utils::MeshData& mesh) 
 {
-	if constexpr ( I < std::tuple_size_v<LineTypes> ) 
-	{
-		using LineType = std::tuple_element_t<I, LineTypes>;
-		if (LineType::check(name)) {
-			LineType::parse(line, begin, mesh);	
-		}
-		else 
-		{
-			parseLine<I+1>(name, line, begin, mesh);
-		}
+	using LineType = std::tuple_element_t<I, LineTypes>;
+	if (LineType::check(name)) {
+		LineType::parse(line, begin, mesh);	
 	}
-	else 
+	else
 	{
-		throw parsing_error( "unknown line type: >" + std::string(name) + "<");
+		if constexpr (I + 1 < std::tuple_size_v<LineTypes>)
+			parseLine<I + 1>(name, line, begin, mesh);
+		else
+			throw parsing_error("unknown line type: >" + std::string(name) + "<");
 	}
 }
 
