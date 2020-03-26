@@ -11,8 +11,9 @@ namespace graphics {
 	public:
 		Mesh(const utils::MeshData& _meshData);
 
-		void draw();
 	private:
+		friend class MeshRenderer;
+
 		struct Vertex
 		{
 			glm::vec3 position;

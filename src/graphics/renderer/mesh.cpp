@@ -39,9 +39,4 @@ namespace graphics {
 		}
 		m_geomtryBuffer.setIndexData(&indicies.front(), sizeof(uint32_t) * indicies.size());
 	}
-
-	void Mesh::draw()
-	{
-		m_geomtryBuffer.draw();
-	}
 }

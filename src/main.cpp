@@ -1,6 +1,10 @@
 #include "graphics/renderer/fontrenderer.hpp"
 #include "graphics/core/shader.hpp"
 #include "graphics/core/device.hpp"
+#include "graphics/renderer/mesh.hpp"
+#include "graphics/renderer/meshrenderer.hpp"
+#include "game/core/registry.hpp"
+#include "game/actions/drawModels.hpp"
 #include <spdlog/spdlog.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -34,60 +38,54 @@ int main()
 	if (!Device::initialize(1366, 768, false)) return -1;
 	GLFWwindow* window = Device::getWindow();
 
-	graphics::FontRenderer fontRenderer;
-	fontRenderer.createFont("../resources/fonts/Anonymous Pro.ttf", reinterpret_cast<const char*>(u8" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\u00E4\u00FC\u00F6\u00DF\u0060#'\"^_@%&|,;.:!?~+-*/(){}[]<>\u03B5\u03A9\u262F\u2713"));
-//	fontRenderer.storeCaf("../resources/fonts/OpenSans.caf");
-//	fontRenderer.loadCaf("../resources/fonts/OpenSans.caf");
-
-	Program shader;
-	shader.attach(ShaderManager::get("../resources/shader/font.vert", ShaderType::VERTEX));
-	shader.attach(ShaderManager::get("../resources/shader/font.geom", ShaderType::GEOMETRY));
-	shader.attach(ShaderManager::get("../resources/shader/font.frag", ShaderType::FRAGMENT));
-	shader.link();
-
-	int w, h;
-	glfwGetFramebufferSize(window, &w, &h);
-	mat4x4 viewProj = glm::ortho(0.0f, (float)w, 0.0f, (float)h, 0.f, 1.f);
-	shader.setUniform(0, viewProj);
-
-	std::default_random_engine rng;
-	std::uniform_real_distribution<float> dist;
-
-	auto getRandomColor = [&]() { return glm::rgbColor(vec3(dist(rng)* 360.f, 1.f, 1.f)); };
-
-	vec3 iniCol = getRandomColor();
-	vec3 tarCol = getRandomColor();
-	float timeSum = 0.f;
-
-	steady_clock::time_point begin = steady_clock::now();
-
-	while (!glfwWindowShouldClose(window))
 	{
-		const steady_clock::time_point end = steady_clock::now();
-		const duration<float> d = duration_cast<duration<float>>(end - begin);
-		const float dt = d.count();
-		begin = end;
+		using namespace game;
 
-		timeSum += dt * 0.5f;
-		const vec3 curCol = glm::lerp(iniCol, tarCol, timeSum);
-		glClearColor(curCol.r, curCol.g, curCol.b, 1.f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		if (timeSum >= 1.f)
+		Registry<Model> registry;
+	/*	utils::MeshData test;
+		test.positions.push_back(vec3(-1.f, -1.f, 0.f));
+		test.positions.push_back(vec3(1.f, -1.f, 0.f));
+		test.positions.push_back(vec3(1.f, 1.f, 0.f));
+		test.positions.push_back(vec3(-1.f, 1.f, 0.f));
+		test.normals.resize(4, vec3(1.f, 0.f, 0.f));
+		test.textureCoordinates.resize(4, vec2(0.f));
+		test.faces.push_back({});
+		test.faces[0].indices[0].positionIdx = 0;
+		test.faces[0].indices[1].positionIdx = 1;
+		test.faces[0].indices[2].positionIdx = 2;
+		test.faces.push_back({});
+		test.faces[1].indices[0].positionIdx = 3;
+		test.faces[1].indices[1].positionIdx = 0;
+		test.faces[1].indices[2].positionIdx = 2;*/
+
+		MeshRenderer renderer;
+		actions::DrawMeshes drawMeshes;
+		Mesh mesh(*utils::MeshLoader::get("../resources/models/crate.obj"));
+
+		Entity ent = registry.create();
+		registry.addComponent<Model>(ent, mesh, glm::identity<mat4>());
+
+		int w, h;
+		glfwGetFramebufferSize(window, &w, &h);
+		//mat4x4 viewProj = glm::ortho(0.0f, (float)w, 0.0f, (float)h, 0.f, 1.f);
+		mat4x4 viewProj = perspective(glm::radians(70.f), 16.f / 9.f, 0.01f, 100.f) * lookAt(vec3(0.f, 0.f, 10.f), vec3(0.f), vec3(0.f, 1.f, 0.f));
+		drawMeshes.setViewProjection(viewProj);
+
+		while (!glfwWindowShouldClose(window))
 		{
-			timeSum = 0.f;
-			iniCol = curCol;
-			tarCol = getRandomColor();
-		}
-		shader.use();
-		fontRenderer.clearText();
-		fontRenderer.draw(vec3(250.f, 500.f, 0.f), "[](){ return \"Hello world!\"; }", 50.0f, vec4(1.f,1.f,1.f,1.f));
-		fontRenderer.present();
+			glClearColor(0.0f, 0.3f, 0.6f, 1.f);
+			glClear(GL_COLOR_BUFFER_BIT);
 
-		glfwPollEvents();
-		glfwSwapBuffers(window);
+			registry.execute(drawMeshes);
+			drawMeshes.present();
+
+			glfwPollEvents();
+			glfwSwapBuffers(window);
+		}
 	}
 
 	Device::close();
+	utils::MeshLoader::clear();
 
 	return 0;
 }
