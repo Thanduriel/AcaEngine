@@ -141,6 +141,21 @@ struct Face
 				v.normalIdx = std::nullopt;
 			}
 		} 
+		if (
+				f.indices[0].normalIdx.has_value()
+				!= f.indices[1].normalIdx.has_value()
+				||
+				f.indices[1].normalIdx.has_value()
+				!= f.indices[2].normalIdx.has_value()
+				||
+				f.indices[0].textureCoordinateIdx.has_value()
+				!= f.indices[1].textureCoordinateIdx.has_value()
+				||
+				f.indices[1].textureCoordinateIdx.has_value()
+				!= f.indices[2].textureCoordinateIdx.has_value())
+		{
+			throw parsing_error("face with inconsistent vertex descriptions");	
+		}
 		mesh.faces.emplace_back(f);
 	}
 };
@@ -194,10 +209,17 @@ void parseLine( const std::string& line, utils::MeshData& data) {
 
 void parseObj( std::ifstream& file, utils::MeshData& data) {
 	std::string line, type;
+	int lineNumber = 0;
 
+	try {
 	while ( std::getline(file, line) ) 
 	{
 		parseLine(line, data);
+		++lineNumber;
+	}
+	} catch (const parsing_error& err) {
+		throw parsing_error("line: " + std::to_string(lineNumber)
+				+ ": "+ err.what());
 	}
 }
 
@@ -231,4 +253,4 @@ namespace utils {
 	{
 		delete const_cast<MeshData*>( _meshData );
 	}
-} // end utilsa
+} // end utils
