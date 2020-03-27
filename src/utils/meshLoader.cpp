@@ -50,6 +50,52 @@ glm::vec2 parseVec2(const std::string& line, std::string::size_type begin) {
 	return res;
 }
 
+utils::MeshData::FaceData mapIndices(const utils::MeshData& data, const utils::MeshData::FaceData& f) {
+	utils::MeshData::FaceData res;
+
+	int idx;
+	for ( int i = 0; i < 3; ++i) {
+		idx = f.indices[i].positionIdx;
+		if (idx < 0) 
+		{
+			idx = data.positions.size() + idx; 
+		} else {
+			--idx;
+		}
+		res.indices[i].positionIdx = idx;	
+
+		if (f.indices[i].textureCoordinateIdx) 
+		{
+			idx = f.indices[i].textureCoordinateIdx.value();
+			if (idx < 0)
+			{
+				idx = data.textureCoordinates.size() + idx;
+			} else {
+				--idx;
+			}
+			res.indices[i].textureCoordinateIdx = idx;
+		} else {
+			res.indices[i].textureCoordinateIdx = std::nullopt;
+		}
+
+		if (f.indices[i].normalIdx)
+		{
+			idx = f.indices[i].normalIdx.value();
+			if (idx < 0)
+			{
+				idx = data.normals.size() + idx;
+			} else {
+				--idx;
+			}
+			res.indices[i].normalIdx = idx;
+		} else {
+			res.indices[i].normalIdx = std::nullopt;
+		}
+	}
+
+	return res;
+}
+
 
 struct Command 
 { 
@@ -156,8 +202,34 @@ struct Face
 		{
 			throw parsing_error("face with inconsistent vertex descriptions");	
 		}
-		mesh.faces.emplace_back(f);
+		mesh.faces.emplace_back(mapIndices(mesh, f));
 	}
+};
+
+struct MtlLib {
+	static bool check(const std::string_view& name) { return name == "mtllib"; }
+	static void parse(
+			const std::string& line,
+			std::string::size_type begin,
+			utils::MeshData& mesh) {
+			spdlog::warn("skip parsing of marital!");
+	}
+};
+
+struct UseMtl {
+	static bool check(const std::string_view& name) { return name == "usemtl"; }
+	static void parse(
+			const std::string& line,
+			std::string::size_type begin,
+			utils::MeshData& mesh) {}
+};
+
+struct SmoothGroup {
+	static bool check(const std::string_view& name) { return name == "s"; }
+	static void parse(
+			const std::string& line,
+			std::string::size_type begin,
+			utils::MeshData& mesh) {}
 };
 
 using LineTypes = std::tuple<
@@ -165,7 +237,10 @@ using LineTypes = std::tuple<
 	Vertex,
 	TextureCoordinate,
 	Normal,
-	Face> ;
+	Face,
+	MtlLib,
+	UseMtl,
+	SmoothGroup> ;
 template<int I = 0>
 void parseLine(
 		const std::string_view& name, 

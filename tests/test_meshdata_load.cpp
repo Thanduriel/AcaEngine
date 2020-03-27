@@ -57,12 +57,12 @@ std::string sizeMismatchError(const std::string& attr, int get, int expected)
 		+ " but got: " + std::to_string(get);
 }
 
-// load cube.obj end check if all faces, vertices, texture coordinates 
+// load tet.obj end check if all faces, vertices, texture coordinates 
 // and normals readded correctly
 int main() {
 	try {
 		const utils::MeshData* data = utils::MeshLoader::get( 
-				RESOURCE_FOLDER "/cube.obj" );
+				RESOURCE_FOLDER "/tet.obj" );
 
 		std::array<glm::vec3, 4> positons = {{
 			{0, 0, 0},
