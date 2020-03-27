@@ -33,9 +33,9 @@ namespace graphics {
 
 		for (size_t i = 0; i < _meshData.faces.size(); ++i)
 		{
-			indicies.emplace_back(_meshData.faces[i].indices[0].positionIdx-1);
-			indicies.emplace_back(_meshData.faces[i].indices[1].positionIdx-1);
-			indicies.emplace_back(_meshData.faces[i].indices[2].positionIdx-1);
+			indicies.emplace_back(_meshData.faces[i].indices[0].positionIdx);
+			indicies.emplace_back(_meshData.faces[i].indices[1].positionIdx);
+			indicies.emplace_back(_meshData.faces[i].indices[2].positionIdx);
 		}
 		m_geomtryBuffer.setIndexData(&indicies.front(), sizeof(uint32_t) * indicies.size());
 	}
