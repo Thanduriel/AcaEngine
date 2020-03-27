@@ -5,6 +5,9 @@
 #include "graphics/renderer/meshrenderer.hpp"
 #include "game/core/registry.hpp"
 #include "game/actions/drawModels.hpp"
+#include "game/actions/applyVelocity.hpp"
+#include "game/actions/updateTransform.hpp"
+#include "game/actions/processLifetime.hpp"
 #include <spdlog/spdlog.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -41,29 +44,33 @@ int main()
 	{
 		using namespace game;
 
-		Registry<Model> registry;
-	/*	utils::MeshData test;
-		test.positions.push_back(vec3(-1.f, -1.f, 0.f));
-		test.positions.push_back(vec3(1.f, -1.f, 0.f));
-		test.positions.push_back(vec3(1.f, 1.f, 0.f));
-		test.positions.push_back(vec3(-1.f, 1.f, 0.f));
-		test.normals.resize(4, vec3(1.f, 0.f, 0.f));
-		test.textureCoordinates.resize(4, vec2(0.f));
-		test.faces.push_back({});
-		test.faces[0].indices[0].positionIdx = 0;
-		test.faces[0].indices[1].positionIdx = 1;
-		test.faces[0].indices[2].positionIdx = 2;
-		test.faces.push_back({});
-		test.faces[1].indices[0].positionIdx = 3;
-		test.faces[1].indices[1].positionIdx = 0;
-		test.faces[1].indices[2].positionIdx = 2;*/
+		Registry<Model, Position, Velocity, Transform, Lifetime> registry;
+		LifetimeManager manager;
 
-		MeshRenderer renderer;
 		actions::DrawMeshes drawMeshes;
 		Mesh mesh(*utils::MeshLoader::get("../resources/models/crate.obj"));
 
-		Entity ent = registry.create();
-		registry.addComponent<Model>(ent, mesh, glm::identity<mat4>());
+	//	Entity ent = registry.create();
+	//	registry.addComponent<Model>(ent, mesh, glm::identity<mat4>());
+	//	registry.addComponent<Model>(ent, mesh, rotate(glm::identity<mat4>(), pi<float>()/2.f, vec3(0.f,0.f,1.f)));
+
+/*		std::vector<Entity> ents;
+		for (int i = 0; i < 10; ++i)
+		{
+			ents.push_back(registry.create());
+			registry.addComponent<Model>(ents.back(), mesh, glm::identity<mat4>());
+		}
+		registry.destroy(ents[3]);
+		registry.destroy(ents[5]);
+
+		ents.push_back(registry.create());
+		registry.addComponent<Model>(ents.back(), mesh, glm::identity<mat4>());
+
+		registry.destroy(ents.back());
+		*/
+
+		std::default_random_engine rng;
+		std::uniform_real_distribution<float> dist;
 
 		int w, h;
 		glfwGetFramebufferSize(window, &w, &h);
@@ -71,13 +78,40 @@ int main()
 		mat4x4 viewProj = perspective(glm::radians(70.f), 16.f / 9.f, 0.01f, 100.f) * lookAt(vec3(0.f, 0.f, 10.f), vec3(0.f), vec3(0.f, 1.f, 0.f));
 		drawMeshes.setViewProjection(viewProj);
 
+		steady_clock::time_point begin = steady_clock::now();
+		float spawnTime = 0.f;
+
 		while (!glfwWindowShouldClose(window))
 		{
+			const steady_clock::time_point end = steady_clock::now();
+			const duration<float> d = duration_cast<duration<float>>(end - begin);
+			const float dt = d.count();
+			begin = end;
+
 			glClearColor(0.0f, 0.3f, 0.6f, 1.f);
 			glClear(GL_COLOR_BUFFER_BIT);
 
+			spawnTime += dt * 0.5f;
+			if (spawnTime >= 0.25f)
+			{
+				Entity ent = registry.create();
+				registry.addComponent<Model>(ent, mesh, glm::identity<mat4>());
+				registry.addComponent<Model>(ent, mesh, rotate(glm::identity<mat4>(), pi<float>() / 2.f, vec3(0.f, 0.f, 1.f)));
+				registry.addComponent<Position>(ent, vec3(0.f));
+				registry.addComponent<Transform>(ent, identity<mat4>());
+				registry.addComponent<Velocity>(ent, vec3(dist(rng)*2.f-1.0f, dist(rng)*2.f-1.0f, 0.f));
+				registry.addComponent<Lifetime>(ent, 1.f + dist(rng) * 5.f);
+
+				spawnTime = 0.f;
+			}
+
+			registry.execute(actions::ApplyVelocity(dt));
+			registry.execute(actions::UpdateTransformPosition());
+			registry.executeExt(actions::ProcessLifetime(manager, dt));
 			registry.execute(drawMeshes);
 			drawMeshes.present();
+
+			manager.cleanup(registry);
 
 			glfwPollEvents();
 			glfwSwapBuffers(window);

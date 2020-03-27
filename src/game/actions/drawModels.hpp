@@ -3,6 +3,7 @@
 #include "game/core/entity.hpp"
 #include "game/core/action.hpp"
 #include "game/components/model.hpp"
+#include "game/components/simpleComponents.hpp"
 #include "graphics/renderer/meshrenderer.hpp"
 
 namespace game {
@@ -11,7 +12,7 @@ namespace actions {
 	class DrawModelsImpl
 	{
 	public:
-		void operator()(Entity _ent, const Model& _mesh);
+		void operator()(const Model& _mesh, const Transform& _transform);
 
 		void present();
 
@@ -21,5 +22,5 @@ namespace actions {
 		graphics::MeshRenderer m_renderer;
 	};
 	
-	using DrawMeshes = Action<DrawModelsImpl, Model>;
+	using DrawMeshes = Action<DrawModelsImpl, Model, Transform>;
 }}
