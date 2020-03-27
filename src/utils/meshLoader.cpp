@@ -29,7 +29,9 @@ glm::vec3 parseVec3(const std::string& line, std::string::size_type begin) {
 	glm::vec3 res;
 	for(int i = 0; i < 3; ++i) 
 	{
-		res[i] = std::stof(line.substr(pos), &diff);
+		float val = std::stof(line.substr(pos), &diff);
+		if ( std::fabs(val) == 0 ) val = 0;
+		res[i] = val;
 		pos += diff;
 	}
 	return res;
@@ -38,9 +40,11 @@ glm::vec3 parseVec3(const std::string& line, std::string::size_type begin) {
 glm::vec2 parseVec2(const std::string& line, std::string::size_type begin) {
 	std::string::size_type pos = begin, diff;
 	glm::vec2 res;
-	for(int i = 1; i < 2; ++i) 
+	for(int i = 0; i < 2; ++i) 
 	{
-		res[i] = std::stof(line.substr(pos), &diff);
+		float val = std::stof(line.substr(pos), &diff);
+		if ( std::fabs(val) == 0 ) val = 0;
+		res[i] = val;
 		pos += diff;
 	}
 	return res;

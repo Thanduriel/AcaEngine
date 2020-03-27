@@ -13,6 +13,17 @@ namespace std {
 	string to_string(const optional<int>&  val) {
 		return val ? std::to_string(val.value()) : std::string("nullopt");
 	}
+	string to_string(const glm::vec3& vec) {
+		return 
+			"(" + std::to_string(vec[0]) + ","
+			+ std::to_string(vec[1]) + ","
+			+ std::to_string(vec[2]) + ")";
+	}
+	string to_string(const glm::vec2& vec) {
+		return
+			"(" + std::to_string(vec[0]) + ","
+			+ std::to_string(vec[1]) + ")";
+	}
 } // end namespace std
 
 template<typename T>
@@ -22,16 +33,56 @@ std::string faceMismatchError(
 		const T& get,
 		const T& expected)
 {
-		return std::string("expected face ")
+		return "expected face "
 			+ std::to_string(fId) + " vertex " + std::to_string(vId)
 			+ " " + attr + " to be " + std::to_string(expected)
 			+ " but got " +  std::to_string(get);
 }
 
+template<typename T>
+std::string valueMismatchError(
+		int id,
+		const std::string& attr,
+		const T& get,
+		const T& expected)
+{
+	throw "expected "+ attr  + " "+ std::to_string(id)
+		+ " to be " + std::to_string(expected)
+		+ ", but got " + std::to_string(get);
+}
+
+std::string sizeMismatchError(const std::string& attr, int get, int expected)
+{
+	return "expected " + attr + " to have size: " + std::to_string(expected)
+		+ " but got: " + std::to_string(get);
+}
+
+// load cube.obj end check if all faces, vertices, texture coordinates 
+// and normals readded correctly
 int main() {
 	try {
 		const utils::MeshData* data = utils::MeshLoader::get( 
 				RESOURCE_FOLDER "/cube.obj" );
+
+		std::array<glm::vec3, 4> positons = {{
+			{0, 0, 0},
+			{1, 0, 0},
+			{0, 1, 0},
+			{0, 0, 1}
+		}};
+		std::array<glm::vec2, 4> texCoords = {{
+			{0, 0},
+			{1, 0},
+			{0, 1},
+			{1, 1}
+		}};
+		std::array<glm::vec3, 4> normals = {{
+			{1, 0, 0},
+			{0, 1, 0},
+			{0, 0, -1},
+			{1, 1, 1}
+		}};
+
 		std::array<utils::MeshData::FaceData, 16> faces;
 			faces[0].indices[0].positionIdx = 0;
 			faces[0].indices[0].textureCoordinateIdx = 0; 
@@ -95,10 +146,49 @@ int main() {
 				}
 			}
 
+		// check positions
+		if ( data->positions.size() != positons.size() ) {
+			throw sizeMismatchError(
+					"positions", data->positions.size(), positons.size());
+		}
+		for(auto i = 0; i < positons.size(); ++i) {
+			if ( data->positions[i] != positons[i]) {
+				throw valueMismatchError(i, "positions", 
+						data->positions[i], positons[i]);
+			}
+		}
+
+		// check texture coordinates
+		if ( data->textureCoordinates.size() != texCoords.size() ) 
+		{
+			throw sizeMismatchError(
+					"texture coordinates", 
+					data->textureCoordinates.size(), texCoords.size());
+		}
+		for( auto i = 0; i < texCoords.size(); ++i) 
+		{
+			if ( data->textureCoordinates[i] != texCoords[i] ) 
+			{
+				throw valueMismatchError(i, "texture coordinates",
+						data->textureCoordinates[i], texCoords[i]);
+			}
+		}
+
+		// check normals
+		if ( data->normals.size() != normals.size() ) {
+			throw sizeMismatchError(
+					"normals", data->normals.size(), positons.size());
+		}
+		for(auto i = 0; i < normals.size(); ++i) {
+			if ( data->normals[i] != normals[i]) {
+				throw valueMismatchError(i, "normals",
+						data->normals[i], positons[i]);
+			}
+		}
+
+		// check faces
 		if ( data->faces.size() != faces.size() ) {
-			throw std::string("expected ") 
-				+ std::to_string(faces.size()) + " faces, got: '" 
-				+ std::to_string(data->faces.size()) +  "'";
+			throw sizeMismatchError("faces", data->faces.size(), faces.size());
 		}
 
 		for ( auto i = 0; i < faces.size(); ++i) {
