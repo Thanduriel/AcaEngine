@@ -10,7 +10,7 @@ namespace actions {
 	class UpdateTransformPositionImpl
 	{
 	public:
-		void operator()(Transform& _transform, const Position& _position);
+		void operator()(Transform& _transform, const Position& _position) const;
 	};
 
 	using UpdateTransformPosition = Action<UpdateTransformPositionImpl, Transform, Position>;
