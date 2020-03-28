@@ -5,6 +5,7 @@
 #include "game/components/model.hpp"
 #include "game/components/simpleComponents.hpp"
 #include "graphics/renderer/meshrenderer.hpp"
+#include "graphics/camera.hpp"
 
 namespace game {
 namespace actions {
@@ -16,11 +17,14 @@ namespace actions {
 
 		void present();
 
-		void setViewProjection(const glm::mat4& _viewProjection) { m_viewProjection = _viewProjection; }
+		void setCamera(const graphics::Camera& _camera) 
+		{ 
+			m_camera = _camera;
+		}
 	private:
-		glm::mat4 m_viewProjection;
+		graphics::Camera m_camera;
 		graphics::MeshRenderer m_renderer;
 	};
 	
-	using DrawMeshes = Action<DrawModelsImpl, Model, Transform>;
+	using DrawModels = Action<DrawModelsImpl, Model, Transform>;
 }}

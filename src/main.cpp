@@ -3,6 +3,7 @@
 #include "graphics/core/device.hpp"
 #include "graphics/renderer/mesh.hpp"
 #include "graphics/renderer/meshrenderer.hpp"
+#include "graphics/camera.hpp"
 #include "game/core/registry.hpp"
 #include "game/actions/drawModels.hpp"
 #include "game/actions/applyVelocity.hpp"
@@ -47,7 +48,7 @@ int main()
 		Registry<Model, Position, Velocity, Transform, Lifetime> registry;
 		LifetimeManager manager;
 
-		actions::DrawMeshes drawMeshes;
+		actions::DrawModels drawMeshes;
 		Mesh mesh(*utils::MeshLoader::get("../resources/models/crate.obj"));
 
 	//	Entity ent = registry.create();
@@ -75,8 +76,10 @@ int main()
 		int w, h;
 		glfwGetFramebufferSize(window, &w, &h);
 		//mat4x4 viewProj = glm::ortho(0.0f, (float)w, 0.0f, (float)h, 0.f, 1.f);
-		mat4x4 viewProj = perspective(glm::radians(70.f), 16.f / 9.f, 0.01f, 100.f) * lookAt(vec3(0.f, 0.f, 10.f), vec3(0.f), vec3(0.f, 1.f, 0.f));
-		drawMeshes.setViewProjection(viewProj);
+		Camera camera;
+		camera.projection = perspective(glm::radians(70.f), 16.f / 9.f, 0.01f, 100.f);
+		camera.view = lookAt(vec3(0.f, 0.f, 10.f), vec3(0.f), vec3(0.f, 1.f, 0.f));
+		drawMeshes.setCamera(camera);
 
 		steady_clock::time_point begin = steady_clock::now();
 		float spawnTime = 0.f;
@@ -89,10 +92,10 @@ int main()
 			begin = end;
 
 			glClearColor(0.0f, 0.3f, 0.6f, 1.f);
-			glClear(GL_COLOR_BUFFER_BIT);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			spawnTime += dt * 0.5f;
-			if (spawnTime >= 0.25f)
+			spawnTime += dt;
+			if (spawnTime >= 0.5f)
 			{
 				Entity ent = registry.create();
 				registry.addComponent<Model>(ent, mesh, glm::identity<mat4>());

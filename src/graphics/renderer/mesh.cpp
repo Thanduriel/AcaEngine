@@ -25,18 +25,24 @@ namespace graphics {
 			vertices.push_back(v);
 		}
 
-		m_geomtryBuffer.setData(&vertices.front(), sizeof(Vertex) * vertices.size());
-
 		const size_t n = _meshData.faces.size() * 3;
 		std::vector<glm::uint32_t> indicies;
 		indicies.reserve(n);
 
 		for (size_t i = 0; i < _meshData.faces.size(); ++i)
 		{
-			indicies.emplace_back(_meshData.faces[i].indices[0].positionIdx);
-			indicies.emplace_back(_meshData.faces[i].indices[1].positionIdx);
-			indicies.emplace_back(_meshData.faces[i].indices[2].positionIdx);
+			const auto& indices = _meshData.faces[i].indices;
+			indicies.emplace_back(indices[0].positionIdx);
+			indicies.emplace_back(indices[1].positionIdx);
+			indicies.emplace_back(indices[2].positionIdx);
+
+			// overwrite normals if available
+			if (indices[0].normalIdx) vertices[indices[0].positionIdx].normal = _meshData.normals[*indices[0].normalIdx];
+			if (indices[1].normalIdx) vertices[indices[1].positionIdx].normal = _meshData.normals[*indices[1].normalIdx];
+			if (indices[2].normalIdx) vertices[indices[2].positionIdx].normal = _meshData.normals[*indices[2].normalIdx];
 		}
+
+		m_geomtryBuffer.setData(&vertices.front(), sizeof(Vertex) * vertices.size());
 		m_geomtryBuffer.setIndexData(&indicies.front(), sizeof(uint32_t) * indicies.size());
 	}
 }

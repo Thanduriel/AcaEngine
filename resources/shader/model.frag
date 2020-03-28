@@ -8,7 +8,7 @@ layout(location = 0) out vec4 out_color;
 
 void main()
 {
-	float cosTheta = clamp( dot( in_normal, vec4(0,0,-1,1) ), 0.1,0.9 );
+	float cosTheta = clamp( dot( in_normal, vec4(0.57737,0.57737,0.57737,0) ), 0.1,0.7 );
 	
 	out_color = vec4(cosTheta, cosTheta, cosTheta, 1.0);
 }
