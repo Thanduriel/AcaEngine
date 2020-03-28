@@ -59,12 +59,32 @@ namespace game {
 		}
 
 		template<typename None, typename Comp, typename... Comps>
+		void execute(const Action<None, Comp, Comps...>& _action)
+		{
+			auto& mainContainer = std::get<SM<Comp>>(m_components);
+			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
+			{
+				executeHelper<Comps...>(_action, it.key(), it.value());
+			}
+		}
+
+		template<typename None, typename Comp, typename... Comps>
 		void execute(Action<None, Comp, Comps...>& _action)
 		{
 			auto& mainContainer = std::get<SM<Comp>>(m_components);
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{
 				executeHelper<Comps...>(_action, it.key(), it.value());
+			}
+		}
+
+		template<typename None, typename Comp, typename... Comps>
+		void executeExt(const Action<None, Comp, Comps...>& _action)
+		{
+			auto& mainContainer = std::get<SM<Comp>>(m_components);
+			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
+			{
+				executeHelperExt<Comps...>(_action, it.key(), it.value());
 			}
 		}
 
@@ -124,6 +144,20 @@ namespace game {
 
 		template<typename Action, typename... Args>
 		void executeHelperExt(Action& _action, Entity _ent, Args&... _args)
+		{
+			_action(_ent, _args...);
+		}
+
+		template<typename Comp, typename... Comps, typename Action, typename... Args>
+		void executeHelperExt(const Action& _action, Entity _ent, Args&... _args)
+		{
+			auto& comps = std::get<SM<Comp>>(m_components);
+			if (comps.contains(_ent))
+				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent]);
+		}
+
+		template<typename Action, typename... Args>
+		void executeHelperExt(const Action& _action, Entity _ent, Args&... _args)
 		{
 			_action(_ent, _args...);
 		}

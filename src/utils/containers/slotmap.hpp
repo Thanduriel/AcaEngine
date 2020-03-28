@@ -51,7 +51,7 @@ namespace utils {
 			Value& value() { return m_target.m_values[m_index]; }
 
 			void operator++() { ++m_index; }
-			bool operator!=(Iterator& _oth) const { return m_index != _oth.m_index; }
+			bool operator!=(const Iterator& _oth) const { return m_index != _oth.m_index; }
 		private:
 			std::size_t m_index;
 			SlotMap& m_target;
@@ -76,56 +76,57 @@ namespace utils {
 	template<typename Key, typename Value>
 	class MultiSlotMap : public SlotMap<Key, Value>
 	{
+		using Base = SlotMap<Key, Value>;
 	public:
 		template<typename... Args>
 		void emplace(Key _key, Args&&... _args)
 		{
-			if (contains(_key))
+			if (Base::contains(_key))
 			{
-				const Key ind = m_slots[_key];
-				m_links.push_back({ind, INVALID_SLOT });
-				m_links[ind].next = static_cast<Key>(m_values.size());
+				const Key ind = Base::m_slots[_key];
+				m_links.push_back({ind, Base::INVALID_SLOT });
+				m_links[ind].next = static_cast<Key>(Base::m_values.size());
 				// slot points to the latest component
-				m_slots[_key] = m_links[ind].next;
+				Base::m_slots[_key] = m_links[ind].next;
 			}
 			else
-				m_links.push_back({ INVALID_SLOT, INVALID_SLOT });
-			SlotMap::emplace(_key, std::forward<Args>(_args)...);
+				m_links.push_back({ Base::INVALID_SLOT, Base::INVALID_SLOT });
+			Base::emplace(_key, std::forward<Args>(_args)...);
 		}
 
 		// erases all components associated with this entity
 		void erase(Key _key)
 		{
-			const Key ind = m_slots[_key];
+			const Key ind = Base::m_slots[_key];
 			Key cur = ind;
 			do{
 				Key temp = m_links[cur].prev;
 				eraseSlot(cur);
 				cur = temp;
 
-			} while (cur != INVALID_SLOT);
+			} while (cur != Base::INVALID_SLOT);
 
-			m_slots[_key] = INVALID_SLOT;
+			Base::m_slots[_key] = Base::INVALID_SLOT;
 		}
 	private:
 		void eraseSlot(Key _slot)
 		{
-			if (m_links[_slot].prev != INVALID_SLOT) m_links[m_links[_slot].prev].next = INVALID_SLOT;
-			if (m_links[_slot].next != INVALID_SLOT) m_links[m_links[_slot].next].prev = INVALID_SLOT;
+			if (m_links[_slot].prev != Base::INVALID_SLOT) m_links[m_links[_slot].prev].next = Base::INVALID_SLOT;
+			if (m_links[_slot].next != Base::INVALID_SLOT) m_links[m_links[_slot].next].prev = Base::INVALID_SLOT;
 
-			if (_slot+1 < m_values.size())
+			if (_slot+1 < Base::m_values.size())
 			{
-				m_values[_slot] = std::move(m_values.back());
-				m_valuesToSlots[_slot] = m_valuesToSlots.back();
+				Base::m_values[_slot] = std::move(Base::m_values.back());
+				Base::m_valuesToSlots[_slot] = Base::m_valuesToSlots.back();
 
 				const Link& link = m_links.back();
-				if (link.prev != INVALID_SLOT) m_links[link.prev].next = _slot;
-				if (link.next != INVALID_SLOT) m_links[link.next].prev = _slot;
-				else m_slots[m_valuesToSlots.back()] = _slot;
+				if (link.prev != Base::INVALID_SLOT) m_links[link.prev].next = _slot;
+				if (link.next != Base::INVALID_SLOT) m_links[link.next].prev = _slot;
+				else Base::m_slots[Base::m_valuesToSlots.back()] = _slot;
 				m_links[_slot] = m_links.back();
 			}
-			m_values.pop_back();
-			m_valuesToSlots.pop_back();
+			Base::m_values.pop_back();
+			Base::m_valuesToSlots.pop_back();
 			m_links.pop_back();
 		}
 
