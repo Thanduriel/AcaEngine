@@ -13,7 +13,7 @@ namespace actions {
 	{
 	public:
 		ProcessLifetimeImpl(LifetimeManager& _manager, float _deltaTime) : m_manager(_manager), m_deltaTime(_deltaTime) {}
-		void operator()(Entity _ent, Lifetime& _lifeTime);
+		void operator()(Entity _ent, Lifetime& _lifeTime) const;
 
 	private:
 		LifetimeManager& m_manager;
