@@ -5,32 +5,36 @@
 
 namespace game {
 
-	struct Position : public glm::vec3
+	struct Position 
 	{
-		using glm::vec3::vec3;
-		Position(const glm::vec3& v) : glm::vec3{v}{} 
-		Position(glm::vec3&& v) : glm::vec3{v}{} 
+		Position(const glm::vec3& v) : value{v}{} 
+		Position(glm::vec3&& v) : value{v}{} 
+
+		glm::vec3 value;
 	};
 
-	struct Velocity : public glm::vec3
+	struct Velocity 
 	{
-		using glm::vec3::vec3;
-		Velocity(const glm::vec3& v) : glm::vec3{v}{}
-		Velocity(glm::vec3& v) : glm::vec3{v}{}
+		Velocity(const glm::vec3& v) : value{v}{}
+		Velocity(glm::vec3& v) : value{v}{}
+
+		glm::vec3 value;
 	};
 
-	struct Rotation : public glm::quat
+	struct Rotation 
 	{
-		using glm::quat::quat;
-		Rotation(const glm::quat& q) : glm::quat{q}{}
-		Rotation(glm::quat&& q) : glm::quat{q}{}
+		Rotation(const glm::quat& q) : value{q}{}
+		Rotation(glm::quat&& q) : value{q}{}
+
+		glm::quat value;
 	};
 
-	struct Transform : public glm::mat4
+	struct Transform 
 	{
-		using glm::mat4::mat4;
-		Transform(const glm::mat4& m) : glm::mat4{m}{}
-		Transform(glm::mat4&& m) : glm::mat4{m}{}
+		Transform(const glm::mat4& m) : value{m}{}
+		Transform(glm::mat4&& m) : value{m}{}
+
+		glm::mat4 value;
 	};
 
 	struct Lifetime
