@@ -17,5 +17,5 @@ namespace actions {
 		float m_deltaTime;
 	};
 
-	using ApplyVelocity = Action<ApplyVelocityImpl, Velocity, Position>;
+	using ApplyVelocity = ApplyVelocityImpl;//Action<ApplyVelocityImpl, Velocity, Position>;
 }}

@@ -114,7 +114,7 @@ namespace utils {
 			if (m_links[_slot].prev != Base::INVALID_SLOT) m_links[m_links[_slot].prev].next = Base::INVALID_SLOT;
 			if (m_links[_slot].next != Base::INVALID_SLOT) m_links[m_links[_slot].next].prev = Base::INVALID_SLOT;
 
-			if (_slot+1 < Base::m_values.size())
+			if (_slot+1u < Base::m_values.size())
 			{
 				Base::m_values[_slot] = std::move(Base::m_values.back());
 				Base::m_valuesToSlots[_slot] = Base::m_valuesToSlots.back();

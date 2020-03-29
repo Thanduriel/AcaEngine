@@ -13,5 +13,5 @@ namespace actions {
 		void operator()(Transform& _transform, const Position& _position) const;
 	};
 
-	using UpdateTransformPosition = Action<UpdateTransformPositionImpl, Transform, Position>;
+	using UpdateTransformPosition = UpdateTransformPositionImpl; //Action<UpdateTransformPositionImpl, Transform, Position>;
 }}

@@ -17,10 +17,10 @@ namespace game {
 		class SlotMapDecider {};
 
 		template<typename Val>
-		class SlotMapDecider<Val, false> : public utils::SlotMap<Entity, Val> {};
+		class SlotMapDecider<Val, false> : public utils::SlotMap<Entity::BaseType, Val> {};
 
 		template<typename Val>
-		class SlotMapDecider<Val, true> : public utils::MultiSlotMap<Entity, Val> {};
+		class SlotMapDecider<Val, true> : public utils::MultiSlotMap<Entity::BaseType, Val> {};
 
 		template<typename Val>
 		using SM = SlotMapDecider < Val, std::is_base_of_v<MultiComponent, Val>>;
@@ -33,12 +33,12 @@ namespace game {
 				ent = m_unusedEntities.back();
 				m_unusedEntities.pop_back();
 
-				m_generations[ent].entity = ent;
-				m_generations[ent].generation++;
+				m_generations[ent.toIndex()].entity = ent;
+				m_generations[ent.toIndex()].generation++;
 			}
 			else
 			{
-				ent = m_maxNumEntities++;
+				ent = Entity(m_maxNumEntities++);
 				m_generations.push_back({ ent,0 });
 			}
 			return ent;
@@ -49,15 +49,53 @@ namespace game {
 			removeHelper<void, Components...>(_ent);
 
 			m_unusedEntities.push_back(_ent);
-			m_generations[_ent].entity = INVALID_ENTITY;
+			m_generations[_ent.toIndex()].entity = INVALID_ENTITY;
 		}
 
 		template<typename Component, typename... Args>
 		void addComponent(Entity _ent, Args&&... _args)
 		{
-			std::get<SM<Component>>(m_components).emplace(_ent, std::forward<Args>(_args)...);
+			std::get<SM<Component>>(m_components).emplace(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
+		template<typename T, typename... Args>
+		using UnpackFunctionConst = void(T::*)(Args ...)const;
+
+		template<typename Action>
+		void execute(const Action& _action)
+		{
+			executeImpl(_action, &Action::operator());
+		}
+
+		template<typename Action, typename Comp, typename... Comps>
+		void executeImpl(const Action& _action, UnpackFunctionConst<Action,Comp, Comps...> __)
+		{
+			auto& mainContainer = std::get<SM<std::decay_t<Comp>>>(m_components);
+			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
+			{
+				executeHelper<std::decay_t<Comps>...>(_action, Entity(it.key()), it.value());
+			}
+		}
+
+		template<typename T, typename... Args>
+		using UnpackFunction = void(T::*)(Args ...);
+
+		template<typename Action>
+		void execute(Action& _action)
+		{
+			executeImpl(_action, &Action::operator());
+		}
+
+		template<typename Action, typename Comp, typename... Comps>
+		void executeImpl(Action& _action, UnpackFunction<Action, Comp, Comps...> __)
+		{
+			auto& mainContainer = std::get<SM<std::decay_t<Comp>>>(m_components);
+			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
+			{
+				executeHelper<std::decay_t<Comps>...>(_action, Entity(it.key()), it.value());
+			}
+		}
+		/*
 		template<typename None, typename Comp, typename... Comps>
 		void execute(const Action<None, Comp, Comps...>& _action)
 		{
@@ -67,16 +105,16 @@ namespace game {
 				executeHelper<Comps...>(_action, it.key(), it.value());
 			}
 		}
-
+		
 		template<typename None, typename Comp, typename... Comps>
-		void execute(Action<None, Comp, Comps...>& _action)
+		void executeM(Action<None, Comp, Comps...>& _action)
 		{
 			auto& mainContainer = std::get<SM<Comp>>(m_components);
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{
 				executeHelper<Comps...>(_action, it.key(), it.value());
 			}
-		}
+		}*/
 
 		template<typename None, typename Comp, typename... Comps>
 		void executeExt(const Action<None, Comp, Comps...>& _action)
@@ -84,7 +122,7 @@ namespace game {
 			auto& mainContainer = std::get<SM<Comp>>(m_components);
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{
-				executeHelperExt<Comps...>(_action, it.key(), it.value());
+				executeHelperExt<Comps...>(_action, Entity(it.key()), it.value());
 			}
 		}
 
@@ -94,7 +132,7 @@ namespace game {
 			auto& mainContainer = std::get<SM<Comp>>(m_components);
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{
-				executeHelperExt<Comps...>(_action, it.key(), it.value());
+				executeHelperExt<Comps...>(_action, Entity(it.key()), it.value());
 			}
 		}
 
@@ -106,16 +144,16 @@ namespace game {
 
 		EntityRef getRef(Entity _ent)
 		{
-			return m_generations[_ent];
+			return m_generations[_ent.toIndex()];
 		}
 
 		bool isValid(Entity _ent) const
 		{
-			return m_generations[_ent].entity == _ent;
+			return m_generations[_ent.toIndex()].entity == _ent;
 		}
 		bool isValid(EntityRef _ent) const 
 		{
-			const EntityRef& ref = m_generations[_ent];
+			const EntityRef& ref = m_generations[_ent.toIndex()];
 			return ref.entity == _ent.entity && _ent.generation == ref.generation;
 		}
 	private:
@@ -124,8 +162,8 @@ namespace game {
 		void executeHelper(Action& _action, Entity _ent, Args&... _args)
 		{	
 			auto& comps = std::get<SM<Comp>>(m_components);
-			if(comps.contains(_ent))
-				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent]);
+			if(comps.contains(_ent.toIndex()))
+				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent.toIndex()]);
 		}
 
 		template<typename Action, typename... Args>
@@ -138,8 +176,8 @@ namespace game {
 		void executeHelperExt(Action& _action, Entity _ent, Args&... _args)
 		{
 			auto& comps = std::get<SM<Comp>>(m_components);
-			if (comps.contains(_ent))
-				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent]);
+			if (comps.contains(_ent.toIndex()))
+				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent.toIndex()]);
 		}
 
 		template<typename Action, typename... Args>
@@ -152,8 +190,8 @@ namespace game {
 		void executeHelperExt(const Action& _action, Entity _ent, Args&... _args)
 		{
 			auto& comps = std::get<SM<Comp>>(m_components);
-			if (comps.contains(_ent))
-				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent]);
+			if (comps.contains(_ent.toIndex()))
+				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent.toIndex()]);
 		}
 
 		template<typename Action, typename... Args>
@@ -166,8 +204,8 @@ namespace game {
 		void removeHelper(Entity _ent)
 		{
 			auto& comps = std::get<SM<Comp>>(m_components);
-			if (comps.contains(_ent))
-				comps.erase(_ent);
+			if (comps.contains(_ent.toIndex()))
+				comps.erase(_ent.toIndex());
 			removeHelper<void, Comps...>(_ent);
 		}
 

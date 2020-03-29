@@ -26,5 +26,5 @@ namespace actions {
 		graphics::MeshRenderer m_renderer;
 	};
 	
-	using DrawModels = Action<DrawModelsImpl, Model, Transform>;
+	using DrawModels = DrawModelsImpl;//Action<DrawModelsImpl, Model, Transform>;
 }}
