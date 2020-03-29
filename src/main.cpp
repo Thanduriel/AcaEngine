@@ -84,6 +84,7 @@ int main()
 		steady_clock::time_point begin = steady_clock::now();
 		float spawnTime = 0.f;
 
+		glClearColor(0.0f, 0.3f, 0.6f, 1.f);
 		while (!glfwWindowShouldClose(window))
 		{
 			const steady_clock::time_point end = steady_clock::now();
@@ -91,7 +92,6 @@ int main()
 			const float dt = d.count();
 			begin = end;
 
-			glClearColor(0.0f, 0.3f, 0.6f, 1.f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			spawnTime += dt;

@@ -5,6 +5,6 @@ namespace actions {
 
 	void UpdateTransformPosition::operator()(Transform& _transform, const Position& _position) const
 	{
-		_transform[3] = glm::vec4(_position, 1.f);
+		_transform.value[3] = glm::vec4(_position.value, 1.f);
 	}
 }}
