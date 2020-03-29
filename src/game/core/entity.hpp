@@ -15,7 +15,7 @@ namespace game {
 		BaseType toIndex() const { return m_id; }
 
 		constexpr Entity operator=(Entity oth) { m_id = oth.m_id; return *this; }
-		constexpr bool operator==(Entity oth) { return m_id == oth.m_id; }
+		constexpr bool operator==(Entity oth) const { return m_id == oth.m_id; }
 	private:
 		BaseType m_id;
 	};

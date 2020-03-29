@@ -6,7 +6,7 @@
 #include "component.hpp"
 #include <tuple>
 #include <utility>
-#include <concepts>
+#include <type_traits>
 
 namespace game {
 
@@ -58,82 +58,16 @@ namespace game {
 			std::get<SM<Component>>(m_components).emplace(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
-		template<typename T, typename... Args>
-		using UnpackFunctionConst = void(T::*)(Args ...)const;
-
 		template<typename Action>
 		void execute(const Action& _action)
 		{
-			executeImpl(_action, &Action::operator());
+			executeUnpack(_action, &Action::operator());
 		}
-
-		template<typename Action, typename Comp, typename... Comps>
-		void executeImpl(const Action& _action, UnpackFunctionConst<Action,Comp, Comps...> __)
-		{
-			auto& mainContainer = std::get<SM<std::decay_t<Comp>>>(m_components);
-			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
-			{
-				executeHelper<std::decay_t<Comps>...>(_action, Entity(it.key()), it.value());
-			}
-		}
-
-		template<typename T, typename... Args>
-		using UnpackFunction = void(T::*)(Args ...);
 
 		template<typename Action>
 		void execute(Action& _action)
 		{
-			executeImpl(_action, &Action::operator());
-		}
-
-		template<typename Action, typename Comp, typename... Comps>
-		void executeImpl(Action& _action, UnpackFunction<Action, Comp, Comps...> __)
-		{
-			auto& mainContainer = std::get<SM<std::decay_t<Comp>>>(m_components);
-			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
-			{
-				executeHelper<std::decay_t<Comps>...>(_action, Entity(it.key()), it.value());
-			}
-		}
-		/*
-		template<typename None, typename Comp, typename... Comps>
-		void execute(const Action<None, Comp, Comps...>& _action)
-		{
-			auto& mainContainer = std::get<SM<Comp>>(m_components);
-			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
-			{
-				executeHelper<Comps...>(_action, it.key(), it.value());
-			}
-		}
-		
-		template<typename None, typename Comp, typename... Comps>
-		void executeM(Action<None, Comp, Comps...>& _action)
-		{
-			auto& mainContainer = std::get<SM<Comp>>(m_components);
-			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
-			{
-				executeHelper<Comps...>(_action, it.key(), it.value());
-			}
-		}*/
-
-		template<typename None, typename Comp, typename... Comps>
-		void executeExt(const Action<None, Comp, Comps...>& _action)
-		{
-			auto& mainContainer = std::get<SM<Comp>>(m_components);
-			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
-			{
-				executeHelperExt<Comps...>(_action, Entity(it.key()), it.value());
-			}
-		}
-
-		template<typename None, typename Comp, typename... Comps>
-		void executeExt(Action<None, Comp, Comps...>& _action)
-		{
-			auto& mainContainer = std::get<SM<Comp>>(m_components);
-			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
-			{
-				executeHelperExt<Comps...>(_action, Entity(it.key()), it.value());
-			}
+			executeUnpack(_action, &Action::operator());
 		}
 
 		struct EntityRef
@@ -157,47 +91,56 @@ namespace game {
 			return ref.entity == _ent.entity && _ent.generation == ref.generation;
 		}
 	private:
+		template<typename T, typename... Args>
+		using UnpackFunctionConst = void(T::*)(Args ...)const;
 
-		template<typename Comp, typename... Comps, typename Action, typename... Args>
+		template<typename Action, typename Comp, typename... Comps>
+		void executeUnpack(const Action& _action, UnpackFunctionConst<Action, Comp, Comps...> __)
+		{
+			if constexpr (std::is_convertible_v<Comp,Entity>)
+				executeImpl<true, const Action, std::decay_t<Comps>...>(_action);
+			else
+				executeImpl<false, const Action, std::decay_t<Comp>, std::decay_t<Comps>...>(_action);
+		}
+
+		template<typename T, typename... Args>
+		using UnpackFunction = void(T::*)(Args ...);
+
+		template<typename Action, typename Comp, typename... Comps>
+		void executeUnpack(Action& _action, UnpackFunction<Action, Comp, Comps...> __)
+		{
+			if constexpr (std::is_convertible_v<Comp, Entity>)
+				executeImpl<true, Action, std::decay_t<Comps>...>(_action);
+			else
+				executeImpl<false, Action, std::decay_t<Comp>, std::decay_t<Comps>...>(_action);
+		}
+
+		template<bool WithEnt, typename Action, typename Comp, typename... Comps>
+		void executeImpl(Action& _action)
+		{
+			auto& mainContainer = std::get<SM<Comp>>(m_components);
+			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
+			{
+				executeHelper<WithEnt, Comps...>(_action, Entity(it.key()), it.value());
+			}
+		
+		}
+
+		template<bool WithEntity, typename Comp, typename... Comps, typename Action, typename... Args>
 		void executeHelper(Action& _action, Entity _ent, Args&... _args)
 		{	
 			auto& comps = std::get<SM<Comp>>(m_components);
 			if(comps.contains(_ent.toIndex()))
-				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent.toIndex()]);
+				executeHelper<WithEntity, Comps...>(_action, _ent, _args..., comps[_ent.toIndex()]);
 		}
 
-		template<typename Action, typename... Args>
+		template<bool WithEntity, typename Action, typename... Args>
 		void executeHelper(Action& _action, Entity _ent,  Args&... _args)
 		{
-			_action(_args...);
-		}
-
-		template<typename Comp, typename... Comps, typename Action, typename... Args>
-		void executeHelperExt(Action& _action, Entity _ent, Args&... _args)
-		{
-			auto& comps = std::get<SM<Comp>>(m_components);
-			if (comps.contains(_ent.toIndex()))
-				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent.toIndex()]);
-		}
-
-		template<typename Action, typename... Args>
-		void executeHelperExt(Action& _action, Entity _ent, Args&... _args)
-		{
-			_action(_ent, _args...);
-		}
-
-		template<typename Comp, typename... Comps, typename Action, typename... Args>
-		void executeHelperExt(const Action& _action, Entity _ent, Args&... _args)
-		{
-			auto& comps = std::get<SM<Comp>>(m_components);
-			if (comps.contains(_ent.toIndex()))
-				executeHelper<Comps...>(_action, _ent, _args..., comps[_ent.toIndex()]);
-		}
-
-		template<typename Action, typename... Args>
-		void executeHelperExt(const Action& _action, Entity _ent, Args&... _args)
-		{
-			_action(_ent, _args...);
+			if constexpr (WithEntity)
+				_action(_ent, _args...);
+			else
+				_action(_args...);
 		}
 
 		template<typename Dummy, typename Comp, typename... Comps>

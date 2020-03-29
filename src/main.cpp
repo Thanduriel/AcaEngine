@@ -110,7 +110,7 @@ int main()
 
 			registry.execute(actions::ApplyVelocity(dt));
 			registry.execute(actions::UpdateTransformPosition());
-			registry.executeExt(actions::ProcessLifetime(manager, dt));
+			registry.execute(actions::ProcessLifetime(manager, dt));
 			registry.execute(drawMeshes);
 			drawMeshes.present();
 

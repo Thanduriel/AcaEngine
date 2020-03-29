@@ -7,11 +7,9 @@
 namespace game {
 namespace actions {
 
-	class UpdateTransformPositionImpl
+	class UpdateTransformPosition
 	{
 	public:
 		void operator()(Transform& _transform, const Position& _position) const;
 	};
-
-	using UpdateTransformPosition = UpdateTransformPositionImpl; //Action<UpdateTransformPositionImpl, Transform, Position>;
 }}

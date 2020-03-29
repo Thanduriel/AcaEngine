@@ -6,16 +6,14 @@
 namespace game {
 namespace actions {
 
-	class ApplyVelocityImpl
+	class ApplyVelocity
 	{
 	public:
-		ApplyVelocityImpl(float _deltaTime) : m_deltaTime(_deltaTime) {}
+		ApplyVelocity(float _deltaTime) : m_deltaTime(_deltaTime) {}
 
 		void operator()(const Velocity& _velocity, Position& _position) const;
 
 	private:
 		float m_deltaTime;
 	};
-
-	using ApplyVelocity = ApplyVelocityImpl;//Action<ApplyVelocityImpl, Velocity, Position>;
 }}
