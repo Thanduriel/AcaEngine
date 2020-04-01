@@ -24,7 +24,6 @@ namespace game {
 			m_deleted.clear();
 		}
 	private:
-	//	utils::SlotMap<Entity, unsigned> m_generation;
 		std::vector<Entity> m_deleted;
 	};
 }

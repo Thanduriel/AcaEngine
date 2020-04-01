@@ -10,7 +10,7 @@
 
 namespace game {
 
-	template<typename... Components>
+	template<component_type... Components>
 	class Registry
 	{
 		template<typename Val, bool MultiSlot>
@@ -28,7 +28,7 @@ namespace game {
 		Entity create()
 		{
 			Entity ent;
-			if (m_unusedEntities.size())
+			if (!m_unusedEntities.empty())
 			{
 				ent = m_unusedEntities.back();
 				m_unusedEntities.pop_back();
@@ -52,7 +52,7 @@ namespace game {
 			m_generations[_ent.toIndex()].entity = INVALID_ENTITY;
 		}
 
-		template<typename Component, typename... Args>
+		template<component_type Component, typename... Args>
 		void addComponent(Entity _ent, Args&&... _args)
 		{
 			std::get<SM<Component>>(m_components).emplace(_ent.toIndex(), std::forward<Args>(_args)...);
@@ -76,10 +76,7 @@ namespace game {
 			unsigned generation;
 		};
 
-		EntityRef getRef(Entity _ent)
-		{
-			return m_generations[_ent.toIndex()];
-		}
+		EntityRef getRef(Entity _ent) const { return m_generations[_ent.toIndex()]; }
 
 		bool isValid(Entity _ent) const
 		{
@@ -115,7 +112,7 @@ namespace game {
 				executeImpl<false, Action, std::decay_t<Comp>, std::decay_t<Comps>...>(_action);
 		}
 
-		template<bool WithEnt, typename Action, typename Comp, typename... Comps>
+		template<bool WithEnt, typename Action, component_type Comp, component_type... Comps>
 		void executeImpl(Action& _action)
 		{
 			auto& mainContainer = std::get<SM<Comp>>(m_components);
@@ -126,7 +123,7 @@ namespace game {
 		
 		}
 
-		template<bool WithEntity, typename Comp, typename... Comps, typename Action, typename... Args>
+		template<bool WithEntity, component_type Comp, component_type... Comps, typename Action, typename... Args>
 		void executeHelper(Action& _action, Entity _ent, Args&... _args)
 		{	
 			auto& comps = std::get<SM<Comp>>(m_components);
@@ -153,9 +150,7 @@ namespace game {
 		}
 
 		template<typename Dummy>
-		void removeHelper(Entity _ent)
-		{
-		}
+		void removeHelper(Entity _ent) {}
 
 		std::vector<Entity> m_unusedEntities;
 		uint32_t m_maxNumEntities = 0u;

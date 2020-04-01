@@ -10,7 +10,7 @@
 namespace game {
 namespace actions {
 
-	class DrawModelsImpl
+	class DrawModels
 	{
 	public:
 		void operator()(const Model& _mesh, const Transform& _transform);
@@ -25,6 +25,4 @@ namespace actions {
 		graphics::Camera m_camera;
 		graphics::MeshRenderer m_renderer;
 	};
-	
-	using DrawModels = DrawModelsImpl;//Action<DrawModelsImpl, Model, Transform>;
 }}

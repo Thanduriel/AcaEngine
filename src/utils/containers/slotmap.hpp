@@ -4,9 +4,10 @@
 #include <vector>
 #include <limits>
 #include <utility>
+#include <concepts>
 
 namespace utils {
-	template<typename Key, typename Value>
+	template<std::integral Key, std::movable Value>
 	class SlotMap
 	{
 	protected:
@@ -50,7 +51,10 @@ namespace utils {
 			Key key() const { return m_target.m_valuesToSlots[m_index]; }
 			Value& value() { return m_target.m_values[m_index]; }
 
-			void operator++() { ++m_index; }
+			Value& operator*() { return m_target.m_values[m_index]; }
+			const Value& operator*() const { return m_target.m_values[m_index]; }
+
+			Iterator& operator++() { ++m_index; return *this; }
 			bool operator!=(const Iterator& _oth) const { return m_index != _oth.m_index; }
 		private:
 			std::size_t m_index;
