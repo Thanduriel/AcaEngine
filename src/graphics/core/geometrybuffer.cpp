@@ -32,6 +32,7 @@ namespace graphics {
 		unsigned _initialSize
 	) :
 		m_vboInstances(0),
+		m_ibo(0),
 		m_glType(_type),
 		m_capacity(_initialSize),
 		m_indexCapacity(_indexed ? _initialSize : 0),

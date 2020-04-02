@@ -9,6 +9,7 @@ namespace game {
 		using BaseType = uint32_t;
 
 		constexpr explicit Entity(BaseType id) : m_id(id) {}
+
 		Entity() = default;
 
 		explicit operator BaseType() const { return m_id; }

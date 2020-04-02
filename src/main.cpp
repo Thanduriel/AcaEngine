@@ -4,6 +4,8 @@
 #include "graphics/renderer/mesh.hpp"
 #include "graphics/renderer/meshrenderer.hpp"
 #include "graphics/camera.hpp"
+#include "graphics/core/texture.hpp"
+#include "graphics/core/sampler.hpp"
 #include "game/core/registry.hpp"
 #include "game/actions/drawModels.hpp"
 #include "game/actions/applyVelocity.hpp"
@@ -50,25 +52,8 @@ int main()
 
 		actions::DrawModels drawMeshes;
 		Mesh mesh(*utils::MeshLoader::get("../resources/models/crate.obj"));
-
-	//	Entity ent = registry.create();
-	//	registry.addComponent<Model>(ent, mesh, glm::identity<mat4>());
-	//	registry.addComponent<Model>(ent, mesh, rotate(glm::identity<mat4>(), pi<float>()/2.f, vec3(0.f,0.f,1.f)));
-
-/*		std::vector<Entity> ents;
-		for (int i = 0; i < 10; ++i)
-		{
-			ents.push_back(registry.create());
-			registry.addComponent<Model>(ents.back(), mesh, glm::identity<mat4>());
-		}
-		registry.destroy(ents[3]);
-		registry.destroy(ents[5]);
-
-		ents.push_back(registry.create());
-		registry.addComponent<Model>(ents.back(), mesh, glm::identity<mat4>());
-
-		registry.destroy(ents.back());
-		*/
+		Sampler sampler(Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Border::CLAMP);
+		const Texture2D& texture = *graphics::Texture2DManager::get("../resources/textures/cratetex.png", sampler);
 
 		std::default_random_engine rng;
 		std::uniform_real_distribution<float> dist;
@@ -98,8 +83,8 @@ int main()
 			if (spawnTime >= 0.5f)
 			{
 				Entity ent = registry.create();
-				registry.addComponent<Model>(ent, mesh, glm::identity<mat4>());
-				registry.addComponent<Model>(ent, mesh, rotate(glm::identity<mat4>(), pi<float>() / 2.f, vec3(0.f, 0.f, 1.f)));
+				registry.addComponent<Model>(ent, mesh, texture, glm::identity<mat4>());
+				registry.addComponent<Model>(ent, mesh, texture, rotate(glm::identity<mat4>(), pi<float>() / 2.f, vec3(0.f, 0.f, 1.f)));
 				registry.addComponent<Position>(ent, vec3(0.f));
 				registry.addComponent<Transform>(ent, identity<mat4>());
 				registry.addComponent<Velocity>(ent, vec3(dist(rng)*2.f-1.0f, dist(rng)*2.f-1.0f, 0.f));

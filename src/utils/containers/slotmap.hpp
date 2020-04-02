@@ -55,7 +55,9 @@ namespace utils {
 			const Value& operator*() const { return m_target.m_values[m_index]; }
 
 			Iterator& operator++() { ++m_index; return *this; }
-			bool operator!=(const Iterator& _oth) const { return m_index != _oth.m_index; }
+			Iterator operator++(int) { Iterator tmp(*this);  ++m_index; return tmp; }
+			bool operator==(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index == _oth.m_index; }
+			bool operator!=(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index != _oth.m_index; }
 		private:
 			std::size_t m_index;
 			SlotMap& m_target;
@@ -70,6 +72,7 @@ namespace utils {
 		const Value& operator[](Key _key) const { return m_values[m_slots[_key]]; }
 
 		std::size_t size() const { return m_values.size(); }
+		bool empty() const { return m_values.empty(); }
 	protected:
 
 		std::vector<Key> m_slots;
@@ -77,6 +80,7 @@ namespace utils {
 		std::vector<Value> m_values;
 	};
 
+	// Allows multiple values for the same Key to be stored.
 	template<typename Key, typename Value>
 	class MultiSlotMap : public SlotMap<Key, Value>
 	{

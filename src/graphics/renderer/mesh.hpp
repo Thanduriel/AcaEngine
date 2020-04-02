@@ -18,7 +18,7 @@ namespace graphics {
 		{
 			glm::vec3 position;
 			glm::vec3 normal;
-			glm::vec2 textureCoordinates;
+			glm::vec2 texCoords;
 		};
 		
 		GeometryBuffer m_geomtryBuffer;

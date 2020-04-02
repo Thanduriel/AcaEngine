@@ -1,6 +1,7 @@
-#include "graphics/core/opengl.hpp"
+#include "opengl.hpp"
 #include "device.hpp"
 #include "shader.hpp"
+#include "texture.hpp"
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -86,6 +87,7 @@ namespace graphics {
 	void Device::close()
 	{
 		ShaderManager::clear();
+		Texture2DManager::clear();
 
 		spdlog::info("Shutting down.");
 		glfwDestroyWindow(s_window);
