@@ -3,6 +3,7 @@
 #include "graphics/core/device.hpp"
 #include "graphics/renderer/mesh.hpp"
 #include "graphics/renderer/meshrenderer.hpp"
+#include "graphics/renderer/spriterenderer.hpp"
 #include "graphics/camera.hpp"
 #include "graphics/core/texture.hpp"
 #include "graphics/core/sampler.hpp"
@@ -50,7 +51,6 @@ int main()
 		Registry<Model, Position, Velocity, Transform, Lifetime> registry;
 		LifetimeManager manager;
 
-		actions::DrawModels drawMeshes;
 		Mesh mesh(*utils::MeshLoader::get("../resources/models/crate.obj"));
 		Sampler sampler(Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Border::CLAMP);
 		const Texture2D& texture = *graphics::Texture2DManager::get("../resources/textures/cratetex.png", sampler);
@@ -60,11 +60,19 @@ int main()
 
 		int w, h;
 		glfwGetFramebufferSize(window, &w, &h);
-		//mat4x4 viewProj = glm::ortho(0.0f, (float)w, 0.0f, (float)h, 0.f, 1.f);
 		Camera camera;
 		camera.projection = perspective(glm::radians(70.f), 16.f / 9.f, 0.01f, 100.f);
 		camera.view = lookAt(vec3(0.f, 0.f, 10.f), vec3(0.f), vec3(0.f, 1.f, 0.f));
-		drawMeshes.setCamera(camera);
+
+		Camera orthoCam;
+		orthoCam.viewProjection= glm::ortho(0.0f, (float)w, 0.0f, (float)h, 0.f, 1.f);
+		
+		actions::DrawModels drawModels;
+		drawModels.setCamera(camera);
+
+		SpriteRenderer spriteRenderer;
+		Sprite sprite(0.5f, 0.5f, &texture);
+		spriteRenderer.draw(sprite, vec3(0.f, 0.f, -0.1f), 0.f, vec2(0.5f,0.5f));
 
 		steady_clock::time_point begin = steady_clock::now();
 		float spawnTime = 0.f;
@@ -96,8 +104,9 @@ int main()
 			registry.execute(actions::ApplyVelocity(dt));
 			registry.execute(actions::UpdateTransformPosition());
 			registry.execute(actions::ProcessLifetime(manager, dt));
-			registry.execute(drawMeshes);
-			drawMeshes.present();
+			registry.execute(drawModels);
+			drawModels.present();
+			spriteRenderer.present(orthoCam);
 
 			manager.cleanup(registry);
 

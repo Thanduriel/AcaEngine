@@ -35,28 +35,28 @@ void main()
 	out_texCoord = in_texCoords[0].xy;
 	vec3 worldPos = in_position[0];
 	worldPos.xy += rot * in_scale[0].xy;
-	gl_Position = vec4(worldPos, 1) * c_viewProjection;
+	gl_Position = c_viewProjection * vec4(worldPos, 1);
 	EmitVertex();
 
 	// Bottom-Right
 	out_texCoord = in_texCoords[0].zy;
 	worldPos = in_position[0];
 	worldPos.xy += rot * in_scale[0].zy;
-	gl_Position = vec4(worldPos, 1) * c_viewProjection;
+	gl_Position = c_viewProjection * vec4(worldPos, 1);
 	EmitVertex();
 
 	// Top-Left
 	out_texCoord = in_texCoords[0].xw;
 	worldPos = in_position[0];
 	worldPos.xy += rot * in_scale[0].xw;
-	gl_Position = vec4(worldPos, 1) * c_viewProjection;
+	gl_Position = c_viewProjection * vec4(worldPos, 1);
 	EmitVertex();
 
 	// Top-Right
 	out_texCoord = in_texCoords[0].zw;
 	worldPos = in_position[0];
 	worldPos.xy += rot * in_scale[0].zw;
-	gl_Position = vec4(worldPos, 1) * c_viewProjection;
+	gl_Position = c_viewProjection * vec4(worldPos, 1);
 	EmitVertex();
 
 	EndPrimitive();

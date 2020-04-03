@@ -91,7 +91,7 @@ namespace graphics {
 		struct CharacterVertex
 		{
 			glm::u16vec4 texCoords;	///< l, u, r and b texture coordinates.
-			unsigned size;			///< two packed half-floats
+			glm::uint size;			///< two packed half-floats
 			glm::u16vec2 color;
 			glm::vec3 position;
 			float rotation;
