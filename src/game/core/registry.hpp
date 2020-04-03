@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/containers/slotmap.hpp"
+#include "utils/metaProgHelpers.hpp"
 #include "action.hpp"
 #include "entity.hpp"
 #include "component.hpp"
@@ -55,20 +56,26 @@ namespace game {
 		template<component_type Component, typename... Args>
 		void addComponent(Entity _ent, Args&&... _args)
 		{
-			std::get<SM<Component>>(m_components).emplace(_ent.toIndex(), std::forward<Args>(_args)...);
+			getContainer<Component>().emplace(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
-		template<typename Action>
-		void execute(const Action& _action)
-		{
-			executeUnpack(_action, &Action::operator());
-		}
+		template<component_type Component>
+		bool hasComponent(Entity _ent) const { return getContainer<Component>().contains(_ent); }
 
+		// Retrieve a component associated with an entity.
+		// Does not check whether it exits.
+		template<component_type Component>
+		Component& getComponent(Entity _ent) { getContainer<Component>()[_ent]; }
+		template<component_type Component>
+		const Component& getComponent(Entity _ent) const { getContainer<Component>()[_ent]; }
+
+		// Execute an Action on all entities having the components
+		// expected by Action::operator(...).
 		template<typename Action>
-		void execute(Action& _action)
-		{
-			executeUnpack(_action, &Action::operator());
-		}
+		void execute(Action& _action) { executeUnpack(_action, utils::UnpackFunction(&Action::operator())); }
+		// This explicit version is only needed to capture rvalues.
+		template<typename Action>
+		void execute(const Action& _action) { executeUnpack(_action, utils::UnpackFunction(&Action::operator())); }
 
 		struct EntityRef
 		{
@@ -78,35 +85,17 @@ namespace game {
 
 		EntityRef getRef(Entity _ent) const { return m_generations[_ent.toIndex()]; }
 
-		bool isValid(Entity _ent) const
-		{
-			return m_generations[_ent.toIndex()].entity == _ent;
-		}
+		bool isValid(Entity _ent) const { return m_generations[_ent.toIndex()].entity == _ent; }
 		bool isValid(EntityRef _ent) const 
 		{
 			const EntityRef& ref = m_generations[_ent.toIndex()];
 			return ref.entity == _ent.entity && _ent.generation == ref.generation;
 		}
 	private:
-		template<typename T, typename... Args>
-		using UnpackFunctionConst = void(T::*)(Args ...)const;
-
 		template<typename Action, typename Comp, typename... Comps>
-		void executeUnpack(const Action& _action, UnpackFunctionConst<Action, Comp, Comps...> __)
+		void executeUnpack(Action& _action, utils::UnpackFunction<std::remove_cv_t<Action>, Comp, Comps...>)
 		{
 			if constexpr (std::is_convertible_v<Comp,Entity>)
-				executeImpl<true, const Action, std::decay_t<Comps>...>(_action);
-			else
-				executeImpl<false, const Action, std::decay_t<Comp>, std::decay_t<Comps>...>(_action);
-		}
-
-		template<typename T, typename... Args>
-		using UnpackFunction = void(T::*)(Args ...);
-
-		template<typename Action, typename Comp, typename... Comps>
-		void executeUnpack(Action& _action, UnpackFunction<Action, Comp, Comps...> __)
-		{
-			if constexpr (std::is_convertible_v<Comp, Entity>)
 				executeImpl<true, Action, std::decay_t<Comps>...>(_action);
 			else
 				executeImpl<false, Action, std::decay_t<Comp>, std::decay_t<Comps>...>(_action);
@@ -151,6 +140,12 @@ namespace game {
 
 		template<typename Dummy>
 		void removeHelper(Entity _ent) {}
+
+		template<component_type Comp>
+		SM<Comp>& getContainer() { return std::get<SM<Comp>>(m_components); }
+
+		template<component_type Comp>
+		const SM<Comp>& getContainer() const { return std::get<SM<Comp>>(m_components); }
 
 		std::vector<Entity> m_unusedEntities;
 		uint32_t m_maxNumEntities = 0u;
