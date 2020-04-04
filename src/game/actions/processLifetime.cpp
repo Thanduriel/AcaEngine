@@ -1,7 +1,7 @@
 #include "processLifetime.hpp"
 
 namespace game {
-namespace actions {
+namespace operations {
 
 	void ProcessLifetime::operator()(Entity _ent, components::Lifetime& _lifeTime) const
 	{

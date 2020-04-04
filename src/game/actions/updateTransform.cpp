@@ -1,7 +1,7 @@
 #include "updateTransform.hpp"
 
 namespace game {
-namespace actions {
+namespace operations {
 
 	void UpdateTransformPosition::operator()(components::Transform& _transform, const components::Position& _position) const
 	{

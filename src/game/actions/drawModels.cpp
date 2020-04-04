@@ -1,7 +1,7 @@
 #include "drawModels.hpp"
 
 namespace game {
-namespace actions {
+namespace operations {
 
 	void DrawModels::operator()(const components::Model& _model, const components::Transform& _transform)
 	{

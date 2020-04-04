@@ -124,6 +124,9 @@ endif(NOT FREETYPE_FOUND)
 # stb_image
 list(APPEND INCLUDE_DIR  "dependencies/stb")
 
+# json
+list(APPEND INCLUDE_DIR  "dependencies/json")
+
 target_include_directories(AcaEngine PUBLIC ${INCLUDE_DIR})
 target_link_libraries(Game AcaEngine)
 target_include_directories(Game PRIVATE ${INCLUDE_DIR})

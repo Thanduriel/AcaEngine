@@ -7,7 +7,7 @@
 #include "graphics/renderer/meshrenderer.hpp"
 
 namespace game {
-namespace actions {
+namespace operations {
 
 	class ProcessLifetime
 	{

@@ -4,7 +4,7 @@
 #include "game/components/simpleComponents.hpp"
 
 namespace game {
-namespace actions {
+namespace operations {
 
 	class ApplyVelocity
 	{

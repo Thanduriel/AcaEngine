@@ -68,7 +68,7 @@ int main()
 		Camera orthoCam;
 		orthoCam.viewProjection= glm::ortho(0.0f, (float)w, 0.0f, (float)h, 0.f, 1.f);
 		
-		actions::DrawModels drawModels;
+		operations::DrawModels drawModels;
 		drawModels.setCamera(camera);
 
 		SpriteRenderer spriteRenderer;
@@ -102,9 +102,9 @@ int main()
 				spawnTime = 0.f;
 			}
 
-			registry.execute(actions::ApplyVelocity(dt));
-			registry.execute(actions::UpdateTransformPosition());
-			registry.execute(actions::ProcessLifetime(manager, dt));
+			registry.execute(operations::ApplyVelocity(dt));
+			registry.execute(operations::UpdateTransformPosition());
+			registry.execute(operations::ProcessLifetime(manager, dt));
 			registry.execute(drawModels);
 			drawModels.present();
 			spriteRenderer.present(orthoCam);

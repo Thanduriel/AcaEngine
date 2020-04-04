@@ -3,7 +3,7 @@
 #include "game/components/2dComponents.hpp"
 #include "game/components/simpleComponents.hpp"
 
-namespace game { namespace actions {
+namespace game { namespace operations {
 
 	class DrawSprites
 	{

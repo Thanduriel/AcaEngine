@@ -1,6 +1,6 @@
 #include "drawSprites.hpp"
 
-namespace game { namespace actions {
+namespace game { namespace operations {
 
 	void DrawSprites::operator()(const components::Sprite& _sprite, const components::Position& _position) const
 	{

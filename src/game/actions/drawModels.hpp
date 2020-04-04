@@ -8,7 +8,7 @@
 #include "graphics/camera.hpp"
 
 namespace game {
-namespace actions {
+namespace operations {
 
 	class DrawModels
 	{
