@@ -13,7 +13,7 @@ namespace actions {
 	class DrawModels
 	{
 	public:
-		void operator()(const Model& _mesh, const Transform& _transform);
+		void operator()(const components::Model& _mesh, const components::Transform& _transform);
 
 		void present();
 

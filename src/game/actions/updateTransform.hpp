@@ -10,6 +10,6 @@ namespace actions {
 	class UpdateTransformPosition
 	{
 	public:
-		void operator()(Transform& _transform, const Position& _position) const;
+		void operator()(components::Transform& _transform, const components::Position& _position) const;
 	};
 }}

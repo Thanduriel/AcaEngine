@@ -11,7 +11,7 @@ namespace actions {
 	public:
 		ApplyVelocity(float _deltaTime) : m_deltaTime(_deltaTime) {}
 
-		void operator()(const Velocity& _velocity, Position& _position) const;
+		void operator()(const components::Velocity& _velocity, components::Position& _position) const;
 
 	private:
 		float m_deltaTime;

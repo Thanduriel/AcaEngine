@@ -47,6 +47,7 @@ int main()
 
 	{
 		using namespace game;
+		using namespace components;
 
 		Registry<Model, Position, Velocity, Transform, Lifetime> registry;
 		LifetimeManager manager;
@@ -112,6 +113,7 @@ int main()
 
 			glfwPollEvents();
 			glfwSwapBuffers(window);
+			Sleep(3);
 		}
 	}
 

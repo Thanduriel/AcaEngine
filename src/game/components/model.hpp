@@ -8,7 +8,7 @@ namespace graphics {
 	class Texture2D;
 }
 
-namespace game {
+namespace game { namespace components {
 
 	struct Model : public MultiComponent
 	{
@@ -21,4 +21,4 @@ namespace game {
 		glm::mat4 transform;
 	};
 
-}
+}}
