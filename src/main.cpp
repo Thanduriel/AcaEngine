@@ -12,6 +12,7 @@
 #include "game/actions/applyVelocity.hpp"
 #include "game/actions/updateTransform.hpp"
 #include "game/actions/processLifetime.hpp"
+#include "input/inputmanager.hpp"
 #include <spdlog/spdlog.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -44,6 +45,7 @@ int main()
 
 	if (!Device::initialize(1366, 768, false)) return -1;
 	GLFWwindow* window = Device::getWindow();
+	input::InputManager::initialize(window);
 
 	{
 		using namespace game;
@@ -79,7 +81,7 @@ int main()
 		float spawnTime = 0.f;
 
 		glClearColor(0.0f, 0.3f, 0.6f, 1.f);
-		while (!glfwWindowShouldClose(window))
+		while (!glfwWindowShouldClose(window) && !input::InputManager::isKeyPressed(input::Key::ESCAPE))
 		{
 			const steady_clock::time_point end = steady_clock::now();
 			const duration<float> d = duration_cast<duration<float>>(end - begin);
@@ -113,7 +115,9 @@ int main()
 
 			glfwPollEvents();
 			glfwSwapBuffers(window);
+#if defined(_MSC_VER)
 			Sleep(3);
+#endif
 		}
 	}
 
