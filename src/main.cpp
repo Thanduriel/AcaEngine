@@ -13,11 +13,15 @@
 #include "game/actions/updateTransform.hpp"
 #include "game/actions/processLifetime.hpp"
 #include "input/inputmanager.hpp"
+#include "input/keyboardInterface.hpp"
 #include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtx/color_space.hpp>
 #include <glm/gtx/compatibility.hpp>
+#include <fstream>
+#include <filesystem>
 
 // CRT's memory leak detection
 #ifndef NDEBUG 
@@ -51,6 +55,18 @@ int main()
 		using namespace game;
 		using namespace components;
 
+		using json = nlohmann::json;
+		json config;
+		try {
+			std::ifstream file("config.json");
+			file >> config;
+		} catch(...)
+		{ }
+
+		input::KeyboardInterface kbInputs(config["inputs"]["keyboard"], { {"exit", input::Key::ESCAPE} });
+		std::ofstream file("config.json");
+		file << config;
+
 		Registry<Model, Position, Velocity, Transform, Lifetime> registry;
 		LifetimeManager manager;
 
@@ -81,7 +97,7 @@ int main()
 		float spawnTime = 0.f;
 
 		glClearColor(0.0f, 0.3f, 0.6f, 1.f);
-		while (!glfwWindowShouldClose(window) && !input::InputManager::isKeyPressed(input::Key::ESCAPE))
+		while (!glfwWindowShouldClose(window) && !kbInputs.isKeyPressed(0))
 		{
 			const steady_clock::time_point end = steady_clock::now();
 			const duration<float> d = duration_cast<duration<float>>(end - begin);

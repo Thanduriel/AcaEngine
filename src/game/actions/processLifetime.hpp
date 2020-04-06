@@ -1,7 +1,6 @@
 #pragma once
 
 #include "game/core/entity.hpp"
-#include "game/core/action.hpp"
 #include "game/core/lifetimeManager.hpp"
 #include "game/components/simpleComponents.hpp"
 #include "graphics/renderer/meshrenderer.hpp"

@@ -8,16 +8,7 @@ struct GLFWwindow;
 
 namespace input
 {
-
-	class InputInterface
-	{
-	public:
-		virtual bool isKeyPressed(Action _action) const = 0;
-		virtual float getAxis(Axis _axis) const = 0;
-		// in screen space
-		virtual glm::vec2 getCursorPos() const = 0;
-	};
-
+	// Simple wrapper to handle for glfw inputs.
 	class InputManager
 	{
 	public:
@@ -29,5 +20,15 @@ namespace input
 		static glm::vec2 getCursorPos();
 	private:
 		static GLFWwindow* s_window;
+	};
+
+	// Interface to map game actions to keys.
+	class InputInterface
+	{
+	public:
+		virtual ~InputInterface() {}
+		virtual bool isKeyPressed(Action _action) const = 0;
+		virtual float getAxis(Axis _axis) const = 0;
+		virtual glm::vec2 getCursorPos() const = 0;
 	};
 }

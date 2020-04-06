@@ -1,6 +1,5 @@
 #pragma once
 
-#include "game/core/action.hpp"
 #include "game/components/simpleComponents.hpp"
 
 namespace game {
