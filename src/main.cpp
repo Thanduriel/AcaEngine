@@ -8,10 +8,11 @@
 #include "graphics/core/texture.hpp"
 #include "graphics/core/sampler.hpp"
 #include "game/core/registry.hpp"
-#include "game/actions/drawModels.hpp"
-#include "game/actions/applyVelocity.hpp"
-#include "game/actions/updateTransform.hpp"
-#include "game/actions/processLifetime.hpp"
+#include "game/operations/drawModels.hpp"
+#include "game/operations/applyVelocity.hpp"
+#include "game/operations/updateTransform.hpp"
+#include "game/operations/processLifetime.hpp"
+#include "game/core/game.hpp"
 #include "input/inputmanager.hpp"
 #include "input/keyboardInterface.hpp"
 #include <spdlog/spdlog.h>
@@ -34,6 +35,91 @@
 #include <random>
 #include <chrono>
 
+using namespace game;
+using namespace components;
+using namespace graphics;
+using namespace glm;
+
+class MainState : public game::GameState
+{
+public:
+	MainState()
+	{
+		using json = nlohmann::json;
+		json config;
+		try {
+			std::ifstream file("config.json");
+			file >> config;
+		}
+		catch (...)
+		{
+		}
+
+		m_inputs = std::unique_ptr<input::InputInterface>(new input::KeyboardInterface(config["inputs"]["keyboard"], { {"exit", input::Key::ESCAPE} }));
+		std::ofstream file("config.json");
+		file << config;
+	}
+
+	void process(float _deltaTime)
+	{
+		static std::default_random_engine rng;
+		static std::uniform_real_distribution<float> dist;
+		static Mesh mesh(*utils::MeshLoader::get("../resources/models/crate.obj"));
+		static Sampler sampler(Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Border::CLAMP);
+		static const Texture2D& texture = *graphics::Texture2DManager::get("../resources/textures/cratetex.png", sampler);
+
+
+		static float spawnTime = 0.f;
+		spawnTime += _deltaTime;
+		if (spawnTime >= 0.5f)
+		{
+			Entity ent = m_registry.create();
+			m_registry.addComponent<Model>(ent, mesh, texture, glm::identity<mat4>());
+			m_registry.addComponent<Model>(ent, mesh, texture, rotate(glm::identity<mat4>(), pi<float>() / 2.f, vec3(0.f, 0.f, 1.f)));
+			m_registry.addComponent<Position>(ent, vec3(0.f));
+			m_registry.addComponent<Transform>(ent, identity<mat4>());
+			m_registry.addComponent<Velocity>(ent, vec3(dist(rng) * 2.f - 1.0f, dist(rng) * 2.f - 1.0f, 0.f));
+			m_registry.addComponent<Lifetime>(ent, 1.f + dist(rng) * 5.f);
+
+			spawnTime = 0.f;
+		}
+
+		m_registry.execute(operations::ApplyVelocity(_deltaTime));
+		m_registry.execute(operations::UpdateTransformPosition());
+		m_registry.execute(operations::ProcessLifetime(m_manager, _deltaTime));
+
+		if (m_inputs->isKeyPressed(0)) finish();
+	}
+
+	void draw(float _deltaTime)
+	{
+		int w, h;
+		glfwGetFramebufferSize(Device::getWindow(), &w, &h);
+		Camera camera;
+		camera.projection = perspective(glm::radians(70.f), 16.f / 9.f, 0.01f, 100.f);
+		camera.view = lookAt(vec3(0.f, 0.f, 10.f), vec3(0.f), vec3(0.f, 1.f, 0.f));
+
+		Camera orthoCam;
+		orthoCam.viewProjection = glm::ortho(0.0f, (float)w, 0.0f, (float)h, 0.f, 1.f);
+
+		operations::DrawModels drawModels;
+		drawModels.setCamera(camera);
+
+	//	SpriteRenderer spriteRenderer;
+	//	Sprite sprite(0.5f, 0.5f, &texture);
+	//	spriteRenderer.draw(sprite, vec3(0.f, 0.f, -0.1f), 0.f, vec2(0.5f, 0.5f));
+
+		m_registry.execute(drawModels);
+		drawModels.present();
+	//	spriteRenderer.present(orthoCam);
+	}
+
+private:
+	Registry<Model, Position, Velocity, Transform, Lifetime> m_registry;
+	LifetimeManager m_manager;
+	std::unique_ptr<input::InputInterface> m_inputs;
+};
+
 int main()
 {
 #ifndef NDEBUG 
@@ -43,102 +129,8 @@ int main()
 #endif
 #endif
 
-	using namespace glm;
-	using namespace std::chrono;
-	using namespace graphics;
-
-	if (!Device::initialize(1366, 768, false)) return -1;
-	GLFWwindow* window = Device::getWindow();
-	input::InputManager::initialize(window);
-
-	{
-		using namespace game;
-		using namespace components;
-
-		using json = nlohmann::json;
-		json config;
-		try {
-			std::ifstream file("config.json");
-			file >> config;
-		} catch(...)
-		{ }
-
-		input::KeyboardInterface kbInputs(config["inputs"]["keyboard"], { {"exit", input::Key::ESCAPE} });
-		std::ofstream file("config.json");
-		file << config;
-
-		Registry<Model, Position, Velocity, Transform, Lifetime> registry;
-		LifetimeManager manager;
-
-		Mesh mesh(*utils::MeshLoader::get("../resources/models/crate.obj"));
-		Sampler sampler(Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Filter::LINEAR, Sampler::Border::CLAMP);
-		const Texture2D& texture = *graphics::Texture2DManager::get("../resources/textures/cratetex.png", sampler);
-
-		std::default_random_engine rng;
-		std::uniform_real_distribution<float> dist;
-
-		int w, h;
-		glfwGetFramebufferSize(window, &w, &h);
-		Camera camera;
-		camera.projection = perspective(glm::radians(70.f), 16.f / 9.f, 0.01f, 100.f);
-		camera.view = lookAt(vec3(0.f, 0.f, 10.f), vec3(0.f), vec3(0.f, 1.f, 0.f));
-
-		Camera orthoCam;
-		orthoCam.viewProjection= glm::ortho(0.0f, (float)w, 0.0f, (float)h, 0.f, 1.f);
-		
-		operations::DrawModels drawModels;
-		drawModels.setCamera(camera);
-
-		SpriteRenderer spriteRenderer;
-		Sprite sprite(0.5f, 0.5f, &texture);
-		spriteRenderer.draw(sprite, vec3(0.f, 0.f, -0.1f), 0.f, vec2(0.5f,0.5f));
-
-		steady_clock::time_point begin = steady_clock::now();
-		float spawnTime = 0.f;
-
-		glClearColor(0.0f, 0.3f, 0.6f, 1.f);
-		while (!glfwWindowShouldClose(window) && !kbInputs.isKeyPressed(0))
-		{
-			const steady_clock::time_point end = steady_clock::now();
-			const duration<float> d = duration_cast<duration<float>>(end - begin);
-			const float dt = d.count();
-			begin = end;
-
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			spawnTime += dt;
-			if (spawnTime >= 0.5f)
-			{
-				Entity ent = registry.create();
-				registry.addComponent<Model>(ent, mesh, texture, glm::identity<mat4>());
-				registry.addComponent<Model>(ent, mesh, texture, rotate(glm::identity<mat4>(), pi<float>() / 2.f, vec3(0.f, 0.f, 1.f)));
-				registry.addComponent<Position>(ent, vec3(0.f));
-				registry.addComponent<Transform>(ent, identity<mat4>());
-				registry.addComponent<Velocity>(ent, vec3(dist(rng)*2.f-1.0f, dist(rng)*2.f-1.0f, 0.f));
-				registry.addComponent<Lifetime>(ent, 1.f + dist(rng) * 5.f);
-
-				spawnTime = 0.f;
-			}
-
-			registry.execute(operations::ApplyVelocity(dt));
-			registry.execute(operations::UpdateTransformPosition());
-			registry.execute(operations::ProcessLifetime(manager, dt));
-			registry.execute(drawModels);
-			drawModels.present();
-			spriteRenderer.present(orthoCam);
-
-			manager.cleanup(registry);
-
-			glfwPollEvents();
-			glfwSwapBuffers(window);
-#if defined(_MSC_VER)
-			Sleep(3);
-#endif
-		}
-	}
-
-	Device::close();
-	utils::MeshLoader::clear();
+	Game game;
+	game.run(std::make_unique<MainState>());
 
 	return 0;
 }
