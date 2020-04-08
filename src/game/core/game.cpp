@@ -2,6 +2,7 @@
 #include "graphics/core/device.hpp"
 #include "input/inputmanager.hpp"
 #include "utils/meshLoader.hpp"
+#include "utils/config.hpp"
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <thread>
@@ -18,6 +19,7 @@ namespace game{
 	{
 		graphics::Device::close();
 		utils::MeshLoader::clear();
+		utils::Config::save();
 	}
 
 	void Game::run(std::unique_ptr<GameState> _initialState)

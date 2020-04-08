@@ -14,9 +14,9 @@
 #include "game/operations/processLifetime.hpp"
 #include "game/core/game.hpp"
 #include "input/inputmanager.hpp"
+#include "utils/config.hpp"
 #include "input/keyboardInterface.hpp"
 #include <spdlog/spdlog.h>
-#include <nlohmann/json.hpp>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtx/color_space.hpp>
@@ -45,19 +45,8 @@ class MainState : public game::GameState
 public:
 	MainState()
 	{
-		using json = nlohmann::json;
-		json config;
-		try {
-			std::ifstream file("config.json");
-			file >> config;
-		}
-		catch (...)
-		{
-		}
-
-		m_inputs = std::unique_ptr<input::InputInterface>(new input::KeyboardInterface(config["inputs"]["keyboard"], { {"exit", input::Key::ESCAPE} }));
-		std::ofstream file("config.json");
-		file << config;
+		m_inputs = std::unique_ptr<input::InputInterface>(
+			new input::KeyboardInterface(utils::Config::get()["inputs"]["keyboard"], { {"exit", input::Key::ESCAPE} }));
 	}
 
 	void process(float _deltaTime)
