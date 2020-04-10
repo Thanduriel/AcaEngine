@@ -6,52 +6,37 @@
 
 namespace input
 {
-	class ActionInfo
+	struct Action
 	{
-		std::string_view name;
+		template<typename T>
+			requires std::is_enum_v<T>
+		Action(const T& _id)
+			: id(static_cast<unsigned>(_id))
+		{}
+
+		explicit Action(unsigned _id) : id(_id) {}
+
+		bool operator==(const Action& _rhs) const { return id == _rhs.id; }
+
+		unsigned id;
 	};
 
-	
-	using Action = unsigned;
 	using Axis = unsigned;
 
-	/*enum struct Axis
-	{
-		UpDown,
-		LeftRight,
-		COUNT
-	};
-
-	enum struct Action
-	{
-		None,
-
-		CastPrimary,
-
-		MenuDown,
-		MenuLeft,
-		MenuRight,
-		MenuUp,
-
-		// axis actions
-		MoveUp,
-		MoveDown,
-		MoveLeft,
-		MoveRight,
-
-		COUNT
-	};*/
-
 	// map axis to pairs of actions on keyboards
-	struct AxisAction
+	struct VirtualAxis
 	{
 		Action low;
 		Action high;
 	};
-	/*
-	constexpr std::array<AxisAction,  static_cast<size_t>(Axis::COUNT)> AXIS_ACTIONS =
-	{ {
-		{Action::MoveDown, Action::MoveUp},
-		{Action::MoveLeft, Action::MoveRight}
-	} };*/
+}
+
+namespace std {
+	template <> struct hash<input::Action>
+	{
+		size_t operator()(const input::Action& x) const
+		{
+			return hash<unsigned>()(x.id);
+		}
+	};
 }

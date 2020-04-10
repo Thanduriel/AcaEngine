@@ -27,7 +27,9 @@ namespace input
 	}
 
 	KeyboardInterface::KeyboardInterface(nlohmann::json& _config,
-		const std::vector<std::pair<std::string, MKBKey>>& _defaults)
+		const std::vector<std::pair<std::string, MKBKey>>& _defaults,
+		const std::vector<VirtualAxis>& _axis)
+		: m_axis(_axis)
 	{
 		unsigned c = 0;
 		for (const auto& [name, key] : _defaults)
@@ -38,7 +40,7 @@ namespace input
 				_config[name] = key;
 				k = key;
 			}
-			m_inputMap.add(c, k);
+			m_inputMap.add(Action(c), k);
 			++c;
 		}
 	}
@@ -51,18 +53,18 @@ namespace input
 		return isKeyPressed(hndl.data());
 	}
 	
-/*	float KeyboardInterface::getAxis(Axis _axis) const
+	float KeyboardInterface::getAxis(Axis _axis) const
 	{
-		const AxisAction aa = AXIS_ACTIONS[static_cast<size_t>(_axis)];
+		const VirtualAxis va = m_axis[_axis];
 
 		float axis = 0.f;
-		if (IsKeyPressed(m_inputMap.GetKey(aa.low)))
+		if (isKeyPressed(va.low))
 			axis -= 1.f;
-		if (IsKeyPressed(m_inputMap.GetKey(aa.high)))
+		if (isKeyPressed(va.high))
 			axis += 1.f;
 
 		return axis;
-	}*/
+	}
 
 	glm::vec2 KeyboardInterface::getCursorPos() const
 	{

@@ -40,13 +40,25 @@ using namespace components;
 using namespace graphics;
 using namespace glm;
 
+enum struct Actions {
+	EXIT,
+	MOVE_LEFT,
+	MOVE_RIGHT
+};
+
+enum struct Axis {
+	MOVE_L_R
+};
+
 class MainState : public game::GameState
 {
 public:
 	MainState()
 	{
 		m_inputs = std::unique_ptr<input::InputInterface>(
-			new input::KeyboardInterface(utils::Config::get()["inputs"]["keyboard"], { {"exit", input::Key::ESCAPE} }));
+			new input::KeyboardInterface(utils::Config::get()["inputs"]["keyboard"], 
+				{ {"exit", input::Key::ESCAPE}, {"moveLeft", input::Key::LEFT}, {"moveRight", input::Key::RIGHT} },
+				{ {Actions::MOVE_LEFT, Actions::MOVE_RIGHT} }));
 	}
 
 	void process(float _deltaTime)
@@ -77,7 +89,7 @@ public:
 		m_registry.execute(operations::UpdateTransformPosition());
 		m_registry.execute(operations::ProcessLifetime(m_manager, _deltaTime));
 
-		if (m_inputs->isKeyPressed(0)) finish();
+		if (m_inputs->isKeyPressed(Actions::EXIT)) finish();
 	}
 
 	void draw(float _deltaTime)
