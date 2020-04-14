@@ -55,7 +55,7 @@ namespace input
 	
 	float KeyboardInterface::getAxis(Axis _axis) const
 	{
-		const VirtualAxis va = m_axis[_axis];
+		const VirtualAxis va = m_axis[_axis.id];
 
 		float axis = 0.f;
 		if (isKeyPressed(va.low))
