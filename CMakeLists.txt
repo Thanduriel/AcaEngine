@@ -32,7 +32,7 @@ set_target_properties(Game PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
 )
-list(APPEND INCLUDE_DIR Game PRIVATE "src")
+list(APPEND INCLUDE_DIR "src")
 if (MSVC)
 	# disable type conversion warnings globaly
 	add_compile_options(/wd4267)

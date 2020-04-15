@@ -1,6 +1,6 @@
 #pragma once
 
-#include "actions.hpp"
+#include "action.hpp"
 #include "inputmanager.hpp"
 #include "utils/containers/hashmap.hpp"
 #include <nlohmann/json_fwd.hpp>

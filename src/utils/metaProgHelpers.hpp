@@ -2,15 +2,7 @@
 
 namespace utils {
 
-/*	template<bool Const, typename... Args>
-	struct UnpackFunction { };
-
-	template<typename T, typename... Args>
-	struct UnpackFunction<false, T, Args...>
-	{
-		using Type = void(T::*)(Args ...);
-	};*/
-
+	// Allows access to a functor's signature through template argument deduction.
 	template<typename T, typename... Args>
 	struct UnpackFunction
 	{

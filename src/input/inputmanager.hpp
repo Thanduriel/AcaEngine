@@ -1,6 +1,6 @@
 #pragma once
 
-#include "actions.hpp"
+#include "action.hpp"
 #include "keys.hpp"
 #include <glm/vec2.hpp>
 
