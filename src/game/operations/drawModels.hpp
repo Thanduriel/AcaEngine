@@ -18,10 +18,10 @@ namespace operations {
 
 		void setCamera(const graphics::Camera& _camera) 
 		{ 
-			m_camera = _camera;
+			m_camera = &_camera;
 		}
 	private:
-		graphics::Camera m_camera;
+		const graphics::Camera* m_camera;
 		graphics::MeshRenderer m_renderer;
 	};
 }}

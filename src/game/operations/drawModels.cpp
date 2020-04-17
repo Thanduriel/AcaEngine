@@ -5,7 +5,7 @@ namespace operations {
 
 	void DrawModels::operator()(const components::Model& _model, const components::Transform& _transform)
 	{
-		m_renderer.draw(*_model.mesh, *_model.texture, m_camera.view * _transform.value * _model.transform, m_camera.projection);
+		m_renderer.draw(*_model.mesh, *_model.texture, m_camera->getView() * _transform.value * _model.transform, m_camera->getProjection());
 	}
 
 	void DrawModels::present()

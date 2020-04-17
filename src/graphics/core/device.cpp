@@ -31,6 +31,7 @@ namespace graphics {
 	bool Device::s_zWriteEnable					= true;
 	bool Device::s_scissorEnable				= true;
 	GLFWwindow* Device::s_window				= nullptr;
+	float Device::s_aspectRatio					= 1.f;
 
 	static void ErrorCallback(int, const char* err_str)
 	{
@@ -92,6 +93,20 @@ namespace graphics {
 		spdlog::info("Shutting down.");
 		glfwDestroyWindow(s_window);
 		glfwTerminate();
+	}
+
+	glm::ivec2 Device::getBufferSize()
+	{
+		int w, h;
+		glfwGetFramebufferSize(s_window, &w, &h);
+		return glm::ivec2(w, h);
+	}
+
+	float Device::getAspectRatio()
+	{
+		int w, h;
+		glfwGetFramebufferSize(s_window, &w, &h);
+		return static_cast<float>(w) / h;
 	}
 
 	// TODO: glCall(glEnable, GL_BLEND);

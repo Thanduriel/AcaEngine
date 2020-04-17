@@ -44,6 +44,14 @@ namespace game {
 			return ent;
 		}
 
+		template<typename Actor, typename... Args>
+		Entity create(Args&&... _args)
+		{
+			Entity ent = create();
+			Actor act(*this, ent, std::forward<Args>(_args)...);
+			return ent;
+		}
+
 		void erase(Entity _ent)
 		{
 			removeHelper<void, Components...>(_ent);

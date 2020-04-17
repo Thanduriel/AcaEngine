@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/vec2.hpp>
+
 struct GLFWwindow;
 
 namespace graphics {
@@ -71,8 +73,8 @@ namespace graphics {
 		static void close();
 
 		static GLFWwindow* getWindow() { return s_window; }
-		/// Creates the one window (only one call allowed)
-		//static void createWindow(int _width, int _height, bool _fullScreen);
+		static glm::ivec2 getBufferSize();
+		static float getAspectRatio();
 		
 		// Optimized state changes (only calls gl.. if necessary)
 		/// \param _operation A valid blend operation. The default is ADD for all targets
@@ -118,6 +120,7 @@ namespace graphics {
 		static bool s_zWriteEnable;
 		static bool s_scissorEnable;
 		static GLFWwindow* s_window;
+		static float s_aspectRatio;
 	};
 	
 } // namespace graphics

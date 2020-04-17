@@ -96,7 +96,7 @@ void SpriteRenderer::clear()
 void SpriteRenderer::present(const Camera& _camera)
 {
 	m_program.use();
-	m_program.setUniform(0, _camera.viewProjection); //todo: move this into an uniform buffer object?
+	m_program.setUniform(0, _camera.getViewProjection()); //todo: move this into an uniform buffer object?
 
 	// Update instance data each frame - it could be dynamic
 	if(m_dirty)
