@@ -6,9 +6,7 @@ project (AcaEngine)
 #---------------------------------------------------------------------------------------
 
 # find all source and header files
-file(GLOB_RECURSE SOURCE_FILES "src/*.cpp" "src/*.hpp" "src/*.inl")
-# this file is not part of the engine
-list(REMOVE_ITEM SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+file(GLOB_RECURSE SOURCE_FILES "src/engine/*.cpp" "src/engine/*.hpp" "src/engine/*.inl")
 
 # organize the files according to the organisation in the file system
 # from: http:#cmake.3232098.n2.nabble.com/Keep-folder-structure-in-Visual-Studio-Project-generated-with-CMake-td7586044.html
@@ -32,7 +30,6 @@ set_target_properties(Game PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED YES
 )
-list(APPEND INCLUDE_DIR "src")
 if (MSVC)
 	# disable type conversion warnings globaly
 	add_compile_options(/wd4267)
@@ -127,9 +124,11 @@ list(APPEND INCLUDE_DIR  "dependencies/stb")
 # json
 list(APPEND INCLUDE_DIR  "dependencies/json")
 
+list(APPEND INCLUDE_DIR "src")
 target_include_directories(AcaEngine PUBLIC ${INCLUDE_DIR})
+#target_include_directories(AcaEngine INTERFACE "src")
 target_link_libraries(Game AcaEngine)
-target_include_directories(Game PRIVATE ${INCLUDE_DIR})
+#target_include_directories(Game PRIVATE ${INCLUDE_DIR})
 
 enable_testing()
 add_subdirectory(tests)
