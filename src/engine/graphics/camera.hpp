@@ -8,21 +8,24 @@ namespace graphics {
 	{
 	public:
 		// Perspective
-		// @param _fov in angle
+		// @param _fov as angle
 		Camera(float _fov, float _zNear, float zFar);
 		// Orthogonal
-		Camera(glm::vec2 _size, float _zNear = 0.f, float zFar = 1.f);
+		Camera(glm::vec2 _size, glm::vec2 _origin = glm::vec2(0.f), float _zNear = 0.f, float _zFar = 1.f);
 
 		const glm::mat4& getView() const { return m_view; }
 		const glm::mat4& getProjection() const { return m_projection; }
 		const glm::mat4& getViewProjection() const { return m_viewProjection; }
 
-		void setView(const glm::mat4& _view) { m_view = _view; computeViewProjection(); }
+		void setView(const glm::mat4& _view) { m_view = _view; updateMatrices(); }
+
+		glm::vec3 toWorldSpace(const glm::vec2& _sceenSpace);
 	private:
-		void computeViewProjection();
+		void updateMatrices();
 
 		glm::mat4 m_projection;
 		glm::mat4 m_view;
 		glm::mat4 m_viewProjection;
+		glm::mat4 m_viewProjectionInv;
 	};
 }

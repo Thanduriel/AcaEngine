@@ -22,6 +22,5 @@ namespace operations {
 		_transform.value[0][1] = sinTheta;
 		_transform.value[1][0] = -sinTheta;
 		_transform.value[1][1] = cosTheta;
-
 	}
 }}
