@@ -46,7 +46,7 @@ namespace utils {
 		utils::HashMap<std::string, typename TLoader::Handle, FastStringHash> m_resourceMap;
 	};
 
-
+#define RESOURCE_PATH "../resources/"s
 
 	// ********************************************************************************************* //
 	// IMPLEMENTATION																				 //
@@ -73,7 +73,8 @@ namespace utils {
 	template<typename... Args>
 	typename TLoader::Handle ResourceManager<TLoader>::get(const char* _name, const Args&... _args)
 	{
-		std::string name(_name);
+		using namespace std::string_literals;
+		std::string name(RESOURCE_PATH + _name);
 		// Search in hash map
 		auto handle = inst().m_resourceMap.find(name);
 		if(handle) {
@@ -82,7 +83,7 @@ namespace utils {
 		}
 
 		// Add/Load new element
-		handle = inst().m_resourceMap.add(move(name), TLoader::load(_name, _args...));
+		handle = inst().m_resourceMap.add(move(name), TLoader::load(name.c_str(), _args...));
 		return handle.data();
 	}
 

@@ -32,7 +32,7 @@ namespace graphics {
 		Sprite(float _alignX, float _alignY,
 			Texture2D::Handle _textureHandle, int _texX = 0, int _texY = 0, int _texWidth = -1, int _texHeight = -1,
 			int _numX = 1, int _numY = 1);
-	private:
+
 #pragma pack(push, 4)
 		struct SpriteData
 		{
@@ -44,8 +44,6 @@ namespace graphics {
 		SpriteData data;
 		glm::vec2 offset;
 		glm::ivec2 size;
-
-		friend class SpriteRenderer;
 	};
 
 	/// Batch renderer for sprites.

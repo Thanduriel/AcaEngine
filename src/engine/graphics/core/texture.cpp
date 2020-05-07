@@ -95,7 +95,7 @@ namespace graphics {
 		stbi_uc* textureData = stbi_load(_textureFileName, &m_width, &m_height, &numComponents, 0);
 		if(!textureData)
 		{
-			spdlog::error("[graphics] Could not load texture '", _textureFileName, "'.");
+			spdlog::error("[graphics] Could not load texture '{}'.", _textureFileName);
 			return;
 		}
 
