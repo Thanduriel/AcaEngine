@@ -1,4 +1,4 @@
-#include "utils/meshLoader.hpp"
+#include <engine/utils/meshLoader.hpp>
 
 #include <iostream>
 #include <string>
@@ -6,7 +6,7 @@
 #include <optional>
 
 #ifndef RESOURCE_FOLDER
-#define RESOURCE_FOLDER "./"
+#define RESOURCE_FOLDER ""
 #endif
 
 namespace std {
@@ -58,11 +58,10 @@ std::string sizeMismatchError(const std::string& attr, int get, int expected)
 }
 
 // load tet.obj end check if all faces, vertices, texture coordinates 
-// and normals readded correctly
+// and normals read correctly
 int main() {
 	try {
-		const utils::MeshData* data = utils::MeshLoader::get( 
-				RESOURCE_FOLDER "/tet.obj" );
+		std::unique_ptr<const utils::MeshData> data(utils::MeshData::load(RESOURCE_FOLDER "/tet.obj"));
 
 		std::array<glm::vec3, 4> positons = {{
 			{0, 0, 0},

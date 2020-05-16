@@ -5,12 +5,18 @@ set_target_properties(test_meshdata_load PROPERTIES
 	CXX_STANDARD 20
 	CXX_STANDARD_REQUIRED YES
 )
-set(TEST_INCLUDE_DIR ${INCLUDE_DIR})
-list(TRANSFORM INCLUDE_DIR PREPEND ../)
 target_link_libraries(test_meshdata_load PRIVATE AcaEngine)
-target_include_directories(test_meshdata_load PRIVATE  ${INCLUDE_DIR})
 
 add_test(meshdata_load test_meshdata_load)
+
+add_executable(test_octree test_octree.cpp)
+set_target_properties(test_octree PROPERTIES
+	CXX_STANDARD 20
+	CXX_STANDARD_REQUIRED YES
+)
+target_link_libraries(test_octree PRIVATE AcaEngine)
+
+add_test(octree test_octree)
 
 
 

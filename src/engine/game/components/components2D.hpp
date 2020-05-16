@@ -8,6 +8,9 @@ namespace game { namespace components{
 
 	struct Sprite : public MultiComponent
 	{
+		/// Create a sprite component.
+		/// \param [in] _size The size of the sprite in pixels. 
+		///		(0,0): Use the original size of the underlying _sprite.
 		Sprite(const graphics::Sprite& _sprite, 
 			const glm::vec3& _pos = glm::vec3(0.f), 
 			const glm::vec2 _size = glm::vec2(0.f),
