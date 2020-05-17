@@ -5,7 +5,7 @@
 int testOctree2D()
 {
 	using namespace glm;
-	using TreeT = Utils::SparseOctree<int, 2, vec2>;
+	using TreeT = Utils::SparseOctree<int, 2, float>;
 
 	struct Processor
 	{

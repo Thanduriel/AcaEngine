@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../blockalloc.hpp"
+#include "../../math/geometrictypes.hpp"
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
@@ -9,36 +10,14 @@
 namespace Utils {
 
 	// Sparse Octree for axis aligned bounding boxes.
-	template<typename T, int Dim, 
-		typename VecT, 
-		typename FloatT = std::remove_reference_t<decltype(std::declval<VecT>()[0])>>
+	template<typename T, int Dim, typename FloatT>
 	//requires requires(VecT v) { {v[0] }->std::convertable_to<FloatT> }
 	class SparseOctree
 	{
 	public:
-
-		struct AABB
-		{
-			VecT lower;
-			VecT upper;
-
-			// Intersection check with another AABB.
-			// Matching lines are considered intersecting.
-			bool intersect(const AABB& oth) const
-			{
-				for (int i = 0; i < Dim; ++i)
-					if (lower[i] > oth.upper[i] || upper[i] < oth.lower[i])
-						return false;
-
-				return true;
-			}
-
-			bool operator==(const AABB& oth) const
-			{
-				return lower == oth.lower && upper == oth.upper;
-			}
-		};
-
+		using AABB = math::AABB<Dim, FloatT>;
+		using VecT = glm::vec<Dim, FloatT, glm::defaultp>;
+		
 		SparseOctree() { initRoot(); }
 
 		void insert(const AABB& _boundingBox, const T& el)
@@ -49,16 +28,16 @@ namespace Utils {
 			while (!IsIn(_boundingBox, m_rootNode->box))
 			{
 				int index = 0;
-				const VecT dif = curBox.upper - curBox.lower;
+				const VecT dif = curBox.max - curBox.min;
 				for (int i = 0; i < Dim; ++i)
 				{
-					if (curBox.lower[i] > _boundingBox.lower[i])
+					if (curBox.min[i] > _boundingBox.min[i])
 					{
-						curBox.lower[i] -= dif[i];
+						curBox.min[i] -= dif[i];
 						index += 1 << i;
 					}
 					else
-						curBox.upper[i] += dif[i];
+						curBox.max[i] += dif[i];
 				}
 				Node* newRoot = m_allocator.create(curBox);
 				newRoot->childs[index] = m_rootNode;
@@ -71,33 +50,33 @@ namespace Utils {
 				constexpr FloatT MinSize = 1.0 / (2 << 3);
 				const AABB& box = n->box;
 
-				if (box.upper[0] - box.lower[0] <= MinSize)
+				if (box.max[0] - box.min[0] <= MinSize)
 				{
 					n->elements.emplace_back(_boundingBox, el);
 					return;
 				}
 
-				const VecT center = box.lower + (box.upper - box.lower) * 0.5f;
+				const VecT center = box.min + (box.max - box.min) * 0.5f;
 				AABB newBox;
 				int index = 0;
 				for (int i = 0; i < Dim; ++i)
 				{
-					if (_boundingBox.lower[i] < center[i] && _boundingBox.upper[i] >= center[i])
+					if (_boundingBox.min[i] < center[i] && _boundingBox.max[i] >= center[i])
 					{
 						n->elements.emplace_back(_boundingBox, el);
 						return;
 					}
 
-					if (_boundingBox.lower[i] > center[i] && _boundingBox.upper[i] > center[i])
+					if (_boundingBox.min[i] > center[i] && _boundingBox.max[i] > center[i])
 					{
 						index += 1 << i;
-						newBox.lower[i] = center[i];
-						newBox.upper[i] = box.upper[i];
+						newBox.min[i] = center[i];
+						newBox.max[i] = box.max[i];
 					}
 					else
 					{
-						newBox.lower[i] = box.lower[i];
-						newBox.upper[i] = center[i];
+						newBox.min[i] = box.min[i];
+						newBox.max[i] = center[i];
 					}
 				}
 
@@ -149,8 +128,8 @@ namespace Utils {
 			m_rootNode = m_allocator.create(AABB());
 			for (int i = 0; i < Dim; ++i)
 			{
-				m_rootNode->box.lower[i] = 0;
-				m_rootNode->box.upper[i] = 1;
+				m_rootNode->box.min[i] = 0;
+				m_rootNode->box.max[i] = 1;
 			}
 		}
 	/*	template<int Ind, typename V>
@@ -176,33 +155,33 @@ namespace Utils {
 			{
 				constexpr FloatT MinSize = 1.0 / (2 << 3);
 
-				if (box.upper[0] - box.lower[0] <= MinSize)
+				if (box.max[0] - box.min[0] <= MinSize)
 				{
 					elements.emplace_back(_boundingBox, el);
 					return;
 				}
 
-				const VecT center = box.lower + (box.upper - box.lower)*0.5f;
+				const VecT center = box.min + (box.max - box.min)*0.5f;
 				AABB newBox;
 				int index = 0;
 				for (int i = 0; i < Dim; ++i)
 				{
-					if (_boundingBox.lower[i] < center[i] && _boundingBox.upper[i] >= center[i])
+					if (_boundingBox.min[i] < center[i] && _boundingBox.max[i] >= center[i])
 					{
 						elements.emplace_back(_boundingBox, el);
 						return;
 					}
 					
-					if (_boundingBox.lower[i] > center[i] && _boundingBox.upper[i] > center[i])
+					if (_boundingBox.min[i] > center[i] && _boundingBox.max[i] > center[i])
 					{
 						index += 1 << i;
-						newBox.lower[i] = center[i];
-						newBox.upper[i] = box.upper[i];
+						newBox.min[i] = center[i];
+						newBox.max[i] = box.max[i];
 					}
 					else
 					{
-						newBox.lower[i] = box.lower[i];
-						newBox.upper[i] = center[i];
+						newBox.min[i] = box.min[i];
+						newBox.max[i] = center[i];
 					}
 				}
 
@@ -230,7 +209,7 @@ namespace Utils {
 		{
 			for (int i = 0; i < Dim; ++i)
 			{
-				if (_box.lower[i] > _key.lower[i] || _box.upper[i] < _key.upper[i]) return false;
+				if (_box.min[i] > _key.min[i] || _box.max[i] < _key.max[i]) return false;
 			}
 			return true;
 		}

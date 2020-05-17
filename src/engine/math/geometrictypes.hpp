@@ -7,25 +7,27 @@
 
 namespace math {
 
-	struct Rectangle
+	template<unsigned Dim, typename FloatT>
+	struct Box
 	{
-		glm::vec2 min;
-		glm::vec2 max;
+		using VecT = glm::vec<Dim, FloatT, glm::defaultp>;
+
+		VecT min;
+		VecT max;
 
 		/// \brief Create uninitialized rectangle.
-		Rectangle() noexcept {}
+		Box() noexcept {}
 
-		/// \brief Construct from minimal and maximal coordinates
-		Rectangle(const glm::vec2& _min, const glm::vec2& _max) noexcept :
-			min(_min),
-			max(_max)
+		/// \brief Construct from minimal and maximal coordinates.
+		Box(const VecT& _min, const VecT& _max) noexcept
+			: min(_min), max(_max) 
 		{
-			ASSERT(_min.x <= _max.x && _min.y <= _max.y,
+			ASSERT(_min == glm::min(min, max) && _max == glm::max(min, max),
 				"Minimum coordinates must be smaller or equal the maximum.");
 		}
 
-		/// \brief Create an optimal box for a set of points
-		Rectangle(const glm::vec2* _points, uint32_t _numPoints) noexcept
+		/// \brief Create an optimal box for a set of points.
+		Box(const VecT* _points, uint32_t _numPoints) noexcept
 		{
 			ASSERT(_points && _numPoints > 0, "The point list must have at least one point.");
 			min = max = *_points++;
@@ -35,5 +37,29 @@ namespace math {
 				max = glm::max(max, *_points);
 			}
 		}
+
+		// Intersection check with another Box.
+		// Matching lines are considered intersecting.
+		bool intersect(const Box& oth) const
+		{
+			for (int i = 0; i < Dim; ++i)
+				if (min[i] > oth.max[i] || max[i] < oth.min[i])
+					return false;
+
+			return true;
+		}
+
+		bool operator==(const Box& oth) const
+		{
+			return min == oth.min && max == oth.max;
+		}
 	};
+
+	// common box types
+	using Rectangle = Box<2, float>;
+
+	// Axis aligned bounding boxes
+	template<unsigned Dim, typename FloatT = float>
+	using AABB = Box<Dim, FloatT>;
+	using AABB2D = AABB<2>;
 }
