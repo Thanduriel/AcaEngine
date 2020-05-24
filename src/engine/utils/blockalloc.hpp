@@ -3,7 +3,7 @@
 #include <utility>
 #include <memory>
 
-namespace Utils {
+namespace utils {
 
 	template<typename T, int ElemPerBlock>
 	class BlockAllocator

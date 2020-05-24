@@ -5,7 +5,7 @@
 int testOctree2D()
 {
 	using namespace glm;
-	using TreeT = Utils::SparseOctree<int, 2, float>;
+	using TreeT = utils::SparseOctree<int, 2, float>;
 
 	struct Processor
 	{
@@ -71,6 +71,19 @@ int testOctree2D()
 	EXPECT(query.hits.size() == 2, "AABB query.");
 	EXPECT(std::find(query.hits.begin(), query.hits.end(), 6) != query.hits.end(), "AABB query.");
 	EXPECT(std::find(query.hits.begin(), query.hits.end(), 7) != query.hits.end(), "AABB query.");
+
+	proc.reset();
+	tree.remove({ vec2(0.0f), vec2(0.49f) }, 2);
+	tree.traverse(proc);
+	EXPECT(proc.descends == 18 && proc.processed == 18, "Remove element.");
+	for (auto& el : expectedElements)
+	{
+		if(el.second == 2)
+			EXPECT(std::find(proc.found.begin(), proc.found.end(), el) == proc.found.end(), "Removed element is gone.");
+		else
+			EXPECT(std::find(proc.found.begin(), proc.found.end(), el) != proc.found.end(), "Inserted elements can be retrieved.");
+	}
+
 
 	return testsFailed;
 }
