@@ -67,14 +67,14 @@ namespace game {
 		}
 
 		template<component_type Component>
-		bool hasComponent(Entity _ent) const { return getContainer<Component>().contains(_ent); }
+		bool hasComponent(Entity _ent) const { return getContainer<Component>().contains(_ent.toIndex()); }
 
 		// Retrieve a component associated with an entity.
 		// Does not check whether it exits.
 		template<component_type Component>
-		Component& getComponent(Entity _ent) { getContainer<Component>()[_ent]; }
+		Component& getComponent(Entity _ent) { return getContainer<Component>()[_ent.toIndex()]; }
 		template<component_type Component>
-		const Component& getComponent(Entity _ent) const { getContainer<Component>()[_ent]; }
+		const Component& getComponent(Entity _ent) const { return getContainer<Component>()[_ent.toIndex()]; }
 
 		// Execute an Action on all entities having the components
 		// expected by Action::operator(...).

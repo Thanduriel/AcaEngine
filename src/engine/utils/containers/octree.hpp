@@ -18,7 +18,7 @@ namespace utils {
 		using AABB = math::AABB<Dim, FloatT>;
 		using VecT = glm::vec<Dim, FloatT, glm::defaultp>;
 		
-		SparseOctree() { initRoot(); }
+		SparseOctree(FloatT _rootSize = 1.f) : m_size(_rootSize) { initRoot(_rootSize); }
 
 		/// @brief Insert a new element into the tree. Does not check for duplicates.
 		/// @param _boundingBox The bounding box used to determine the proper location.
@@ -31,7 +31,7 @@ namespace utils {
 		void clear()
 		{
 			m_allocator.reset();
-			initRoot();
+			initRoot(m_size);
 		}
 
 		/* Interface of the Processor
@@ -46,7 +46,7 @@ namespace utils {
 		{
 			m_rootNode->traverse(proc);
 		}
-		// Example for a processor
+		/// @brief Processor which retrieves all elements which overlap with the given AABB.
 		struct AABBQuery
 		{
 			AABBQuery(const AABB& _aabb) : aabb(_aabb) {}
@@ -67,13 +67,13 @@ namespace utils {
 	private:
 		constexpr static FloatT MIN_SIZE = 1.0 / (2 << 3);
 
-		void initRoot()
+		void initRoot(FloatT _size)
 		{
 			m_rootNode = m_allocator.create(AABB());
 			for (int i = 0; i < Dim; ++i)
 			{
 				m_rootNode->box.min[i] = 0;
-				m_rootNode->box.max[i] = 1;
+				m_rootNode->box.max[i] = _size;
 			}
 		}
 
@@ -96,13 +96,13 @@ namespace utils {
 				int index = 0;
 				for (int i = 0; i < Dim; ++i)
 				{
-					if (_boundingBox.min[i] < center[i] && _boundingBox.max[i] >= center[i])
+					if (_boundingBox.min[i] < center[i] && _boundingBox.max[i] > center[i])
 					{
 						elements.emplace_back(_boundingBox, el);
 						return;
 					}
 					
-					if (_boundingBox.min[i] > center[i] && _boundingBox.max[i] > center[i])
+					if (_boundingBox.min[i] >= center[i])
 					{
 						index += 1 << i;
 						newBox.min[i] = center[i];
@@ -139,7 +139,7 @@ namespace utils {
 						return;
 					}
 
-					if (_boundingBox.min[i] > center[i] && _boundingBox.max[i] > center[i])
+					if (_boundingBox.min[i] >= center[i])
 					{
 						index += 1 << i;
 					}
@@ -181,14 +181,14 @@ namespace utils {
 		{
 			for (int i = 0; i < Dim; ++i)
 			{
-				if (_box.min[i] > _key.min[i] || _box.max[i] < _key.max[i]) return false;
+				if (_box.min[i] > _key.min[i] || _box.max[i] <= _key.max[i]) return false;
 			}
 			return true;
 		}
 
 		BlockAllocator<Node, 128> m_allocator;
 		Node* m_rootNode;
-		FloatT m_size;
+		FloatT m_size; // initial root size
 	};
 
 
@@ -201,7 +201,6 @@ namespace utils {
 	{
 		// enlarge top
 		AABB curBox = m_rootNode->box;
-		FloatT size = m_size;
 		while (!isIn(_boundingBox, m_rootNode->box))
 		{
 			int index = 0;
