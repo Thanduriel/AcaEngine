@@ -24,7 +24,7 @@ namespace graphics {
 
 		~Shader();
 
-		static Handle load(const char* _source, ShaderType _type, bool _isFileName = true);
+		static Handle load(const char* _name, ShaderType _type, const char* _source = nullptr);
 
 		static void unload(Handle _shader);
 		

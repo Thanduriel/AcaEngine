@@ -116,7 +116,6 @@ namespace game {
 			{
 				executeHelper<WithEnt, Comps...>(_action, Entity(it.key()), it.value());
 			}
-		
 		}
 
 		template<bool WithEntity, component_type Comp, component_type... Comps, typename Action, typename... Args>

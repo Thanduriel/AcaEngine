@@ -87,14 +87,14 @@ namespace graphics {
 					fragColor = vec4(texelFetch(tex, ivec2(gl_FragCoord.xy), 0).rgb, 1.0);
 				}
 			)";
-			s_shader.attach( ShaderManager::get(VS_FULLSCREEN_TRIANGLE, ShaderType::VERTEX, false) );
-			s_shader.attach( ShaderManager::get(FS_SHOW_TARGET, ShaderType::FRAGMENT, false) );
+			s_shader.attach( ShaderManager::get("fullscreen.vert", ShaderType::VERTEX, VS_FULLSCREEN_TRIANGLE) );
+			s_shader.attach( ShaderManager::get("fullscreen.frag", ShaderType::FRAGMENT, FS_SHOW_TARGET) );
 			s_shader.link();
 		}
 
 		if(_attachment == GL_DEPTH_ATTACHMENT)
 			glBindTextureUnit(0, m_depthTexture);
-		else glBindTextureUnit(0, m_colorTextures[_attachment - GL_COLOR_ATTACHMENT0]);
+		else glBindTextureUnit(0, m_colorTextures[_attachment]); // GL_COLOR_ATTACHMENT0
 		s_shader.use();
 		Device::setZFunc(ComparisonFunc::ALWAYS);
 		Device::setZWrite(false);

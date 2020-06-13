@@ -34,11 +34,11 @@ namespace graphics {
 		glCall(glDeleteShader, m_shaderID);
 	}
 
-	Shader::Handle Shader::load(const char* _source, ShaderType _type, bool _isFileName)
+	Shader::Handle Shader::load(const char* _name, ShaderType _type, const char* _source)
 	{
-		if(_isFileName) {
-			FILE* file = fopen(_source, "rb");
-			if(!file) spdlog::error(("Cannot open shader file: " + std::string(_source)).c_str());
+		if(!_source) {
+			FILE* file = fopen(_name, "rb");
+			if(!file) spdlog::error(("Cannot open shader file: " + std::string(_name)).c_str());
 			// Get file size and allocate memory
 			fseek(file, 0, SEEK_END);
 			unsigned fileLength = ftell(file);

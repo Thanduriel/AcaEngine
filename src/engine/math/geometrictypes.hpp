@@ -62,4 +62,18 @@ namespace math {
 	template<unsigned Dim, typename FloatT = float>
 	using AABB = Box<Dim, FloatT>;
 	using AABB2D = AABB<2>;
+
+	template<unsigned Dim, typename FloatT>
+	struct HyperSphere
+	{
+		using VecT = glm::vec<Dim, FloatT, glm::defaultp>;
+
+		VecT center;
+		FloatT radius;
+
+		HyperSphere(const VecT& _center, FloatT _radius) noexcept
+			: center(_center), radius(_radius) {}
+	};
+
+	using Circle = HyperSphere<2, float>;
 }
