@@ -14,9 +14,9 @@ namespace graphics {
 		FrameBuffer();
 		~FrameBuffer();
 		FrameBuffer(const FrameBuffer &) = delete;
-		FrameBuffer(FrameBuffer &&);
+		FrameBuffer(FrameBuffer &&) noexcept;
 		FrameBuffer & operator = (const FrameBuffer &) = delete;
-		FrameBuffer & operator = (FrameBuffer &&);
+		FrameBuffer & operator = (FrameBuffer &&) noexcept;
 
 		/// Binding a framebuffer to draw into its textures.
 		void bind();
@@ -31,6 +31,9 @@ namespace graphics {
 		/// Render one of the textures with a screenfilling quad.
 		/// \param [in] _attachment GL_DEPTH_ATTACHMENT or GL_COLOR_ATTACHMENTi
 		void show(unsigned _attachment);
+
+		/// @brief Clear this buffers attachments if currently bound.
+		void clear();
 	private:
 		unsigned m_fboID;
 		unsigned m_drawBuffers[16];

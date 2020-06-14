@@ -37,6 +37,7 @@ namespace graphics {
 	Shader::Handle Shader::load(const char* _name, ShaderType _type, const char* _source)
 	{
 		if(!_source) {
+			spdlog::info("Creating shader from file: {}", _name);
 			FILE* file = fopen(_name, "rb");
 			if(!file) spdlog::error(("Cannot open shader file: " + std::string(_name)).c_str());
 			// Get file size and allocate memory

@@ -3,7 +3,7 @@
 
 namespace graphics {
 
-	const VertexAttribute c_vertexAttributes[] =
+	const static VertexAttribute c_vertexAttributes[] =
 	{
 		VertexAttribute{PrimitiveFormat::FLOAT, 3, false, false},
 		VertexAttribute{PrimitiveFormat::FLOAT, 3, false, false},

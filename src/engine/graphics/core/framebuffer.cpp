@@ -23,13 +23,13 @@ namespace graphics {
 		glCall(glDeleteFramebuffers, 1, & m_fboID);
 	}
 
-	FrameBuffer::FrameBuffer(FrameBuffer && _other) :
+	FrameBuffer::FrameBuffer(FrameBuffer && _other) noexcept:
 		m_fboID(_other.m_fboID)
 	{
 		_other.m_fboID = 0;
 	}
 
-	FrameBuffer & FrameBuffer::operator=(FrameBuffer && _rhs)
+	FrameBuffer & FrameBuffer::operator=(FrameBuffer && _rhs) noexcept
 	{
 		this->~FrameBuffer();
 		new (this) FrameBuffer (std::move(_rhs));
@@ -102,4 +102,13 @@ namespace graphics {
 		glCall(glDrawArrays, GL_TRIANGLE_STRIP, 0, 3);
 	}
 
+	void FrameBuffer::clear()
+	{
+		Device::setZWrite(true);
+		glClearColor(0.f, 0.f, 0.f, 0.f);
+		if(m_depthTexture)
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		else
+			glClear(GL_COLOR_BUFFER_BIT);
+	}
 }
