@@ -21,7 +21,7 @@ namespace input
 		else
 		{
 			const int i = j.get<int>();
-			if (i >= -1) _key = static_cast<Key>(i);
+			if (i >= 0) _key = static_cast<Key>(i);
 			else _key = static_cast<MouseButton>(-(i + 1));
 		}
 	}

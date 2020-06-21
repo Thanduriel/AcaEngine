@@ -22,7 +22,7 @@ namespace game {
 		template<component_type Component, typename... Args>
 		void addComponent(Entity _ent, Args&&... _args)
 		{
-			std::get<Component>(m_newComponents).emplace(_ent, std::forward<Args>(_args)...);
+			getContainer<Component>().emplace_back(_ent, Component{ std::forward<Args>(_args)... });
 		}
 
 		// Move newly created components into the registry.
@@ -43,12 +43,20 @@ namespace game {
 			m_deleted.clear();
 		}
 	private:
+		template<typename Comp>
+		std::vector<std::pair<Entity, Comp>>& getContainer()
+		{
+			return std::get< std::vector<std::pair<Entity, Comp>>>(m_newComponents);
+		}
+
 		template<typename Dummy, typename Comp, typename... Comps>
 		void moveComponentsImpl()
 		{
-			for (auto& [ent, comp] : std::get<Comp>(m_newComponents))
-				m_registry.addComponent(ent, std::move(comp));
-			moveComponents<Dummy, Comps>();
+			for (auto& [ent, comp] : getContainer<Comp>())
+				m_registry.addComponent<Comp>(ent, std::move(comp));
+			getContainer<Comp>().clear();
+
+			moveComponentsImpl<Dummy, Comps...>();
 		}
 
 		template<typename Dummy>
