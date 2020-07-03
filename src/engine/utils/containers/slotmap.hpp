@@ -14,15 +14,15 @@ namespace utils {
 		constexpr static Key INVALID_SLOT = std::numeric_limits<Key>::max();
 	public:
 		template<typename... Args>
-		void emplace(Key _key, Args&&... _args)
+		Value& emplace(Key _key, Args&&... _args)
 		{
 			// increase slots if necessary
 			if (m_slots.size() <= _key)
 				m_slots.resize(_key + 1, INVALID_SLOT);
 			m_slots[_key] = static_cast<Key>(m_values.size());
 
-			m_values.emplace_back(std::forward<Args>(_args)...);
 			m_valuesToSlots.emplace_back(_key);
+			return m_values.emplace_back(std::forward<Args>(_args)...);
 		}
 
 		void erase(Key _key)
@@ -87,7 +87,7 @@ namespace utils {
 		using Base = SlotMap<Key, Value>;
 	public:
 		template<typename... Args>
-		void emplace(Key _key, Args&&... _args)
+		Value& emplace(Key _key, Args&&... _args)
 		{
 			if (Base::contains(_key))
 			{
@@ -99,7 +99,8 @@ namespace utils {
 			}
 			else
 				m_links.push_back({ Base::INVALID_SLOT, Base::INVALID_SLOT });
-			Base::emplace(_key, std::forward<Args>(_args)...);
+			
+			return Base::emplace(_key, std::forward<Args>(_args)...);
 		}
 
 		// erases all components associated with this entity

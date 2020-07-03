@@ -7,6 +7,7 @@
 #include <tuple>
 #include <utility>
 #include <type_traits>
+#include <optional>
 
 namespace game {
 
@@ -44,11 +45,28 @@ namespace game {
 			return ent;
 		}
 
+		class ComponentCreator
+		{
+		public:
+			ComponentCreator(Registry& _registry, Entity _ent)
+				: entity(_ent), m_registry(_registry)
+			{}
+
+			template<component_type Component, typename... Args>
+			Component& addComponent(Args&&... _args)
+			{
+				return m_registry.addComponent<Component>(entity, std::forward<Args>(_args)...);
+			}
+
+			const Entity entity;
+		private:
+			Registry& m_registry;
+		};
 		template<typename Actor, typename... Args>
 		Entity create(Args&&... _args)
 		{
 			Entity ent = create();
-			Actor act(*this, ent, std::forward<Args>(_args)...);
+			Actor act(ComponentCreator(*this, ent), std::forward<Args>(_args)...);
 			return ent;
 		}
 
@@ -61,9 +79,9 @@ namespace game {
 		}
 
 		template<component_type Component, typename... Args>
-		void addComponent(Entity _ent, Args&&... _args)
+		Component& addComponent(Entity _ent, Args&&... _args)
 		{
-			getContainer<Component>().emplace(_ent.toIndex(), std::forward<Args>(_args)...);
+			return getContainer<Component>().emplace(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
 		template<component_type Component>
@@ -86,6 +104,13 @@ namespace game {
 
 		struct EntityRef
 		{
+		private:
+			EntityRef(Entity _ent, unsigned _generation)
+				: entity(_ent), generation(_generation)
+			{}
+
+			friend class Registry;
+
 			Entity entity;
 			unsigned generation;
 		};
@@ -93,10 +118,18 @@ namespace game {
 		EntityRef getRef(Entity _ent) const { return m_generations[_ent.toIndex()]; }
 
 		bool isValid(Entity _ent) const { return m_generations[_ent.toIndex()].entity == _ent; }
-		bool isValid(EntityRef _ent) const 
+	/*	bool isValid(EntityRef _ent) const 
 		{
 			const EntityRef& ref = m_generations[_ent.toIndex()];
 			return ref.entity == _ent.entity && _ent.generation == ref.generation;
+		}*/
+		// returns an INVALID_ENTITY if the ref is not valid.
+		Entity getEntity(EntityRef _ent) const
+		{
+			const EntityRef& ref = m_generations[_ent.entity.toIndex()];
+			if (ref.entity == _ent.entity && _ent.generation == ref.generation)
+				return _ent.entity;
+			else return INVALID_ENTITY;
 		}
 	private:
 		template<typename Action, typename Comp, typename... Comps>
