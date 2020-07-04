@@ -13,6 +13,7 @@ namespace game {
 	public:
 		Hud();
 
+		void draw();
 	protected:
 		using HudRegistry = Registry< components::Position2D,
 			components::Rotation2D,
@@ -20,7 +21,7 @@ namespace game {
 			components::FillBar>;
 
 		HudRegistry m_registry;
-		graphics::SpriteRenderer m_renderer;
+		graphics::SpriteRenderer m_spriteRenderer;
 		graphics::Camera m_camera;
 	};
 }

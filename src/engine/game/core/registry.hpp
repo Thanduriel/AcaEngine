@@ -104,6 +104,8 @@ namespace game {
 
 		struct EntityRef
 		{
+			EntityRef() : entity(INVALID_ENTITY), generation(0) {}
+
 		private:
 			EntityRef(Entity _ent, unsigned _generation)
 				: entity(_ent), generation(_generation)

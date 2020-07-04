@@ -1,4 +1,6 @@
 #include "hud.hpp"
+#include "../operations/drawSprites.hpp"
+#include "../../graphics/core/device.hpp"
 
 namespace game {
 
@@ -11,6 +13,13 @@ namespace game {
 	};
 
 	Hud::Hud()
-		: m_camera(glm::vec2(1.f,1.f))
+		: m_camera(graphics::Device::getBufferSize(), glm::vec2(0.f))
 	{}
+
+	void Hud::draw()
+	{
+		m_registry.execute(operations::DrawSprites2D(m_spriteRenderer));
+		m_spriteRenderer.present(m_camera);
+		m_spriteRenderer.clear();
+	}
 }

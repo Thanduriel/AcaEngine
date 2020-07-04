@@ -17,9 +17,11 @@ namespace game {
 			int _texWidth = -1, int _texHeight = -1)
 		{
 			_creator.addComponent<components::Position2D>(_position);
-		//	_creator.addComponent<components::Sprite>();
-			_creator.addComponent<components::FillBar>(_alignX, _alignY, _fillTex,
+			_creator.addComponent<components::Rotation2D>(0.f);
+			auto& fillBar = _creator.addComponent<components::FillBar>(_alignX, _alignY, _backgroundTex, _fillTex,
 				_texX, _texY, _texWidth, _texHeight);
+			_creator.addComponent<components::Sprite>(*fillBar.sprite);
+			_creator.addComponent<components::Sprite>(*fillBar.backgroundSprite);
 		}
 	};
 }

@@ -9,7 +9,9 @@ namespace graphics {
 	Camera::Camera(float _fov, float _zNear, float zFar)
 		: m_projection(glm::perspective(glm::radians(_fov), Device::getAspectRatio(), _zNear, zFar)),
 		m_view(glm::identity<glm::mat4>())
-	{}
+	{
+		updateMatrices();
+	}
 
 	Camera::Camera(glm::vec2 _size, glm::vec2 _origin, float _zNear, float _zFar)
 		: m_projection(glm::ortho(-_size.x*_origin.x, _size.x*(1.f-_origin.x), 
@@ -17,7 +19,7 @@ namespace graphics {
 			_zNear, _zFar)),
 		m_view(glm::identity<glm::mat4>())
 	{
-
+		updateMatrices();
 	}
 
 	vec3 Camera::toWorldSpace(const vec2& _screenSpace)
