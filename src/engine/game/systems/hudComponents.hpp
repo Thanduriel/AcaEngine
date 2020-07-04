@@ -6,6 +6,14 @@
 namespace game{ 
 namespace components{
 
+	struct BoundingRectangle
+	{
+		BoundingRectangle(glm::vec2 _size, glm::vec2 _center) : size(_size), center(_center) {}
+
+		glm::vec2 size;
+		glm::vec2 center;	// relative [0,1]
+	};
+
 	struct FillBar
 	{
 		// Same parameters as graphics::Sprite
