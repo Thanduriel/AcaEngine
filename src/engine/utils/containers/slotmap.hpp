@@ -42,6 +42,13 @@ namespace utils {
 			m_valuesToSlots.pop_back();
 		}
 
+		void clear()
+		{
+			m_slots.clear();
+			m_valuesToSlots.clear();
+			m_values.clear();
+		}
+
 		// iterators
 		class Iterator
 		{
@@ -116,6 +123,12 @@ namespace utils {
 			} while (cur != Base::INVALID_SLOT);
 
 			Base::m_slots[_key] = Base::INVALID_SLOT;
+		}
+
+		void clear()
+		{
+			Base::clear();
+			m_links.clear();
 		}
 	private:
 		void eraseSlot(Key _slot)
