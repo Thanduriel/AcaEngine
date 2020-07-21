@@ -72,6 +72,8 @@ namespace game {
 
 		void erase(Entity _ent)
 		{
+			ASSERT(m_generations[_ent.toIndex()].entity != INVALID_ENTITY, "Attempting to erase a non existent entity.");
+
 			removeHelper<void, Components...>(_ent);
 
 			m_unusedEntities.push_back(_ent);

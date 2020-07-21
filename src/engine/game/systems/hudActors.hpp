@@ -22,6 +22,7 @@ namespace game {
 				_texX, _texY, _texWidth, _texHeight);
 			_creator.addComponent<components::Sprite>(*fillBar.sprite);
 			_creator.addComponent<components::Sprite>(*fillBar.backgroundSprite);
+			_creator.addComponent<components::BoundingRectangle>(fillBar.backgroundSprite->size, glm::vec2(_alignX, _alignY));
 		}
 	};
 }
