@@ -34,7 +34,7 @@ int testOctree2D()
 	};
 
 	int testsFailed = 0;
-	TreeT tree;
+	TreeT tree(1.f);
 	std::vector<std::pair<TreeT::AABB, int>> expectedElements;
 	Processor proc;
 	int counter = 0;
@@ -51,14 +51,14 @@ int testOctree2D()
 		EXPECT(std::find(proc.found.begin(), proc.found.end(), el) != proc.found.end(), "Inserted elements can be retrieved.");
 
 	proc.reset();
-	insert({ vec2(0.1f), vec2(0.5f) }, counter++);
+	insert({ vec2(0.0f), vec2(0.5f, 0.51f) }, counter++);
 	tree.traverse(proc);
 	EXPECT(proc.descends == 1 && proc.processed == 2, "Insert element at upper edge.");
 	for (auto& el : expectedElements)
 		EXPECT(std::find(proc.found.begin(), proc.found.end(), el) != proc.found.end(), "Inserted elements can be retrieved.");
 
 	proc.reset();
-	insert({ vec2(0.0f), vec2(0.49f) }, counter++);
+	insert({ vec2(0.0f), vec2(0.5f) }, counter++);
 	tree.traverse(proc);
 	EXPECT(proc.descends == 2 && proc.processed == 3, "Insert subdividing element.");
 	for (auto& el : expectedElements)
@@ -73,7 +73,8 @@ int testOctree2D()
 	EXPECT(std::find(query.hits.begin(), query.hits.end(), 7) != query.hits.end(), "AABB query.");
 
 	proc.reset();
-	tree.remove({ vec2(0.0f), vec2(0.49f) }, 2);
+	EXPECT(tree.remove({ vec2(0.0f), vec2(0.49f) }, 2), "Remove existing element.");
+	EXPECT(!tree.remove({ vec2(0.0f), vec2(0.49f) }, 2), "Remove not existing element.");
 	tree.traverse(proc);
 	EXPECT(proc.descends == 18 && proc.processed == 18, "Remove element.");
 	for (auto& el : expectedElements)
