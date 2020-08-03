@@ -25,7 +25,7 @@ namespace utils {
 		/// @param _el The element to insert.
 		void insert(const AABB& _boundingBox, const T& _el);
 
-		void remove(const AABB& _boundingBox, const T& _el);
+		bool remove(const AABB& _boundingBox, const T& _el);
 		
 		// remove all elements
 		void clear()
@@ -120,12 +120,11 @@ namespace utils {
 			}
 
 			// Search in the tree rooted at this node and remove the element if found.
-			void remove(const AABB& _boundingBox, const T& el)
+			bool remove(const AABB& _boundingBox, const T& el)
 			{
 				if (box.max[0] - box.min[0] <= MIN_SIZE)
 				{
-					remove(el);
-					return;
+					return remove(el);
 				}
 
 				const VecT center = box.min + (box.max - box.min) * 0.5f;
@@ -135,8 +134,7 @@ namespace utils {
 				{
 					if (_boundingBox.min[i] < center[i] && _boundingBox.max[i] >= center[i])
 					{
-						remove(el);
-						return;
+						return remove(el);
 					}
 
 					if (_boundingBox.min[i] >= center[i])
@@ -146,19 +144,24 @@ namespace utils {
 				}
 
 				if (childs[index]) 
-					childs[index]->remove(_boundingBox, el);
+					return childs[index]->remove(_boundingBox, el);
+
+				return false;
 			}
 
 			// Remove element from this node.
-			void remove(const T& el)
+			bool remove(const T& el)
 			{
 				auto it = std::find_if(elements.begin(), elements.end(), [&](const std::pair<AABB, T>& _el)
 				{
 					return _el.second == el;
 				});
 
-				if (it != elements.end())
-					elements.erase(it);
+				if (it == elements.end())
+					return false;
+
+				elements.erase(it);
+				return true;
 			}
 
 			template<typename Proc>
@@ -223,9 +226,9 @@ namespace utils {
 	}
 
 	template<typename T, int Dim, typename FloatT>
-	void SparseOctree<T, Dim, FloatT>::remove(const AABB& _boundingBox, const T& el)
+	bool SparseOctree<T, Dim, FloatT>::remove(const AABB& _boundingBox, const T& el)
 	{
-		m_rootNode->remove(_boundingBox, el);
+		return m_rootNode->remove(_boundingBox, el);
 	}
 
 
