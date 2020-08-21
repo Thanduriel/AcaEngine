@@ -19,6 +19,9 @@ namespace utils {
 			// increase slots if necessary
 			if (m_slots.size() <= _key)
 				m_slots.resize(_key + 1, INVALID_SLOT);
+			else if(m_slots[_key] != INVALID_SLOT) // already exists
+				return m_values[m_slots[_key]];
+
 			m_slots[_key] = static_cast<Key>(m_values.size());
 
 			m_valuesToSlots.emplace_back(_key);
@@ -101,8 +104,8 @@ namespace utils {
 				const Key ind = Base::m_slots[_key];
 				m_links.push_back({ind, Base::INVALID_SLOT });
 				m_links[ind].next = static_cast<Key>(Base::m_values.size());
-				// slot points to the latest component
-				Base::m_slots[_key] = m_links[ind].next;
+				// Base::emplace will set this slot
+				Base::m_slots[_key] = Base::INVALID_SLOT; // m_links[ind].next;
 			}
 			else
 				m_links.push_back({ Base::INVALID_SLOT, Base::INVALID_SLOT });

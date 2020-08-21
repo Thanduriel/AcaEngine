@@ -43,4 +43,7 @@ namespace game { namespace components{
 
 		float timeLeft;
 	};
+
+	// temporarly mark a component to find it again
+	struct Mark {};
 }}

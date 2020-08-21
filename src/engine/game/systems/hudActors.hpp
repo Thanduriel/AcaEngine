@@ -23,6 +23,9 @@ namespace game {
 			_creator.addComponent<components::Sprite>(*fillBar.sprite);
 			_creator.addComponent<components::Sprite>(*fillBar.backgroundSprite);
 			_creator.addComponent<components::BoundingRectangle>(fillBar.backgroundSprite->size, glm::vec2(_alignX, _alignY));
+
+			// test
+			_creator.addComponent<components::Button>([]() { spdlog::info("button pressed"); });;
 		}
 	};
 }

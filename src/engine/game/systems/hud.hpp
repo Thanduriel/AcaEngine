@@ -14,7 +14,7 @@ namespace game {
 		Hud();
 
 		void draw();
-
+		void processInputs();
 	protected:
 		glm::vec2 getAbsolutePosition(Entity _entity, glm::vec2 _relativePosition) const;
 
@@ -22,7 +22,8 @@ namespace game {
 			components::Rotation2D,
 			components::Sprite,
 			components::FillBar,
-			components::BoundingRectangle>;
+			components::BoundingRectangle,
+			components::Button>;
 
 		HudRegistry m_registry;
 		Entity m_this; // Hud Entity to be used as parent

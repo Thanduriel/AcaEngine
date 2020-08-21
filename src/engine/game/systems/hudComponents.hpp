@@ -30,4 +30,12 @@ namespace components{
 		int initialSize;
 	};
 
+	struct Button
+	{
+		template<typename Fn>
+		Button(Fn _fn) : onClick(_fn) {}
+
+		std::function<void()> onClick;
+	};
+
 } }

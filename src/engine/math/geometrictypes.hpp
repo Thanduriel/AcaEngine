@@ -49,6 +49,15 @@ namespace math {
 			return true;
 		}
 
+		bool isIn(const VecT& _point) const
+		{
+			for (int i = 0; i < Dim; ++i)
+				if (min[i] > _point[i] || max[i] < _point[i])
+					return false;
+
+			return true;
+		}
+
 		bool operator==(const Box& oth) const
 		{
 			return min == oth.min && max == oth.max;
