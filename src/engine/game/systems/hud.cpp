@@ -50,10 +50,16 @@ namespace game {
 
 	void Hud::processInputs()
 	{
+		glm::vec2 cursorPos = input::InputManager::getCursorPos();
+		cursorPos.y = m_registry.getComponent<BoundingRectangle>(m_this).size.y - cursorPos.y;
+
+		if (m_cursor)
+		{
+			m_registry.getComponent<Position2D>(m_cursor).value = cursorPos;
+		}
+
 		if (input::InputManager::isButtonPressed(input::MouseButton::LEFT))
 		{
-			glm::vec2 cursorPos = input::InputManager::getCursorPos();
-			cursorPos.y = m_registry.getComponent<BoundingRectangle>(m_this).size.y - cursorPos.y;
 			m_registry.execute(ClickButton(cursorPos));
 		}
 	}
@@ -65,5 +71,15 @@ namespace game {
 
 		const glm::vec2 min = pos.value - rect.center * rect.size;
 		return min + _relativePosition * rect.size;
+	}
+
+	void Hud::createCursor(const graphics::Sprite& _sprite)
+	{
+		m_cursor = m_registry.create();
+		m_registry.addComponent<Position2D>(m_cursor, glm::vec2(0.f));
+		m_registry.addComponent<Position2D>(m_cursor, glm::vec2(0.f));
+		m_registry.addComponent<Rotation2D>(m_cursor, 0.f);
+
+		m_registry.addComponent<Sprite>(m_cursor, _sprite, glm::vec3(0.f, 0.f, 0.0f), glm::vec2(0.f, 0.f));
 	}
 }

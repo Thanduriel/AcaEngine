@@ -17,6 +17,7 @@ namespace game {
 		void processInputs();
 	protected:
 		glm::vec2 getAbsolutePosition(Entity _entity, glm::vec2 _relativePosition) const;
+		void createCursor(const graphics::Sprite& _sprite);
 
 		using HudRegistry = Registry< components::Position2D,
 			components::Rotation2D,
@@ -27,6 +28,7 @@ namespace game {
 
 		HudRegistry m_registry;
 		Entity m_this; // Hud Entity to be used as parent
+		Entity m_cursor;
 		graphics::SpriteRenderer m_spriteRenderer;
 		graphics::Camera m_camera;
 	};
