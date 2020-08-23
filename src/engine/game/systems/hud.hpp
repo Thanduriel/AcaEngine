@@ -16,7 +16,10 @@ namespace game {
 		void draw();
 		void processInputs();
 	protected:
+		// Gives the position inside an entity with a BoundingRectangle in screen space.
 		glm::vec2 getAbsolutePosition(Entity _entity, glm::vec2 _relativePosition) const;
+		
+		// Creates an activates a custom cursor for this hud.
 		void createCursor(const graphics::Sprite& _sprite);
 
 		using HudRegistry = Registry< components::Position2D,
@@ -28,7 +31,7 @@ namespace game {
 
 		HudRegistry m_registry;
 		Entity m_this; // Hud Entity to be used as parent
-		Entity m_cursor;
+		Entity m_cursor; // Cursor entity is invalid until createCursor was called
 		graphics::SpriteRenderer m_spriteRenderer;
 		graphics::Camera m_camera;
 	};

@@ -26,6 +26,7 @@ namespace game {
 		template<typename Val>
 		using SM = SlotMapDecider < Val, std::is_base_of_v<MultiComponent, Val>>;
 	public:
+		// Make a new entity managed by this registry.
 		Entity create()
 		{
 			Entity ent;
@@ -70,6 +71,7 @@ namespace game {
 			return ent;
 		}
 
+		// Remove an entity with all its components.
 		void erase(Entity _ent)
 		{
 			ASSERT(m_generations[_ent.toIndex()].entity != INVALID_ENTITY, "Attempting to erase a non existent entity.");
@@ -80,6 +82,9 @@ namespace game {
 			m_generations[_ent.toIndex()].entity = INVALID_ENTITY;
 		}
 
+		// Add a new component to an existing entity. No changes are done if Component is
+		// not a MultiComponent and _ent already has a component of this type.
+		// @return A reference to the new component or the already existing component.
 		template<component_type Component, typename... Args>
 		Component& addComponent(Entity _ent, Args&&... _args)
 		{
@@ -111,6 +116,7 @@ namespace game {
 		template<typename Action>
 		void execute(const Action& _action) { executeUnpack(_action, utils::UnpackFunction(&Action::operator())); }
 
+		// Basicly a weak pointer to an Entity.
 		struct EntityRef
 		{
 			EntityRef() : entity(INVALID_ENTITY), generation(0) {}
@@ -128,13 +134,13 @@ namespace game {
 
 		EntityRef getRef(Entity _ent) const { return m_generations[_ent.toIndex()]; }
 
-		bool isValid(Entity _ent) const { return m_generations[_ent.toIndex()].entity == _ent; }
-	/*	bool isValid(EntityRef _ent) const 
-		{
-			const EntityRef& ref = m_generations[_ent.toIndex()];
-			return ref.entity == _ent.entity && _ent.generation == ref.generation;
-		}*/
-		// returns an INVALID_ENTITY if the ref is not valid.
+		// Checks whether an entity is managed by this registry.
+		// An Entity can be valid even if previously deleted, if the id was reassigned.
+		// Use an EntityRef instead to prevent this possibility.
+		bool isValid(Entity _ent) const { return _ent && m_generations[_ent.toIndex()].entity == _ent; }
+
+		// Attempt to retrieve the referenced entity.
+		// @return The entity or an INVALID_ENTITY if the ref is not valid.
 		Entity getEntity(EntityRef _ent) const
 		{
 			const EntityRef& ref = m_generations[_ent.entity.toIndex()];

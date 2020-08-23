@@ -4,7 +4,8 @@
 #include <memory>
 
 namespace utils {
-
+	/// @brief 
+	/// @tparam T 
 	template<typename T, int ElemPerBlock>
 	class BlockAllocator
 	{
@@ -15,6 +16,7 @@ namespace utils {
 
 		}
 
+		// Create a new object.
 		template<typename... Args>
 		T* create(Args&&... args)
 		{
@@ -30,6 +32,7 @@ namespace utils {
 			return new(ptr)T(std::forward<Args>(args)...);
 		}
 
+		// Delete all objects and free all but one block.
 		void reset()
 		{
 			first.reset(new Node());

@@ -75,6 +75,8 @@ namespace game {
 
 	void Hud::createCursor(const graphics::Sprite& _sprite)
 	{
+		if (m_cursor) m_registry.erase(m_cursor);
+
 		m_cursor = m_registry.create();
 		m_registry.addComponent<Position2D>(m_cursor, glm::vec2(0.f));
 		m_registry.addComponent<Position2D>(m_cursor, glm::vec2(0.f));
