@@ -19,7 +19,7 @@ namespace graphics {
 
 		void setView(const glm::mat4& _view) { m_view = _view; updateMatrices(); }
 
-		glm::vec3 toWorldSpace(const glm::vec2& _sceenSpace);
+		glm::vec3 toWorldSpace(const glm::vec2& _sceenSpace) const;
 	private:
 		void updateMatrices();
 

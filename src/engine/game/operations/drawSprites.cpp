@@ -1,4 +1,5 @@
 #include "drawSprites.hpp"
+#include "../../graphics/renderer/spriterenderer.hpp"
 
 namespace game { namespace operations {
 

@@ -116,7 +116,7 @@ namespace game {
 		template<typename Action>
 		void execute(const Action& _action) { executeUnpack(_action, utils::UnpackFunction(&Action::operator())); }
 
-		// Basicly a weak pointer to an Entity.
+		// Basically a weak pointer to an Entity.
 		struct EntityRef
 		{
 			EntityRef() : entity(INVALID_ENTITY), generation(0) {}

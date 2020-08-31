@@ -3,6 +3,10 @@
 #include "../components/components2D.hpp"
 #include "../components/simpleComponents.hpp"
 
+namespace graphics {
+	class SpriteRenderer;
+}
+
 namespace game { namespace operations {
 
 	class DrawSprites

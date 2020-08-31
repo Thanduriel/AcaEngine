@@ -22,7 +22,7 @@ namespace graphics {
 		updateMatrices();
 	}
 
-	vec3 Camera::toWorldSpace(const vec2& _screenSpace)
+	vec3 Camera::toWorldSpace(const vec2& _screenSpace) const
 	{
 		vec2 clipSpace = _screenSpace / vec2(Device::getBufferSize());
 		clipSpace.y = 1.f - clipSpace.y;

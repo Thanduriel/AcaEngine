@@ -1,6 +1,6 @@
 #pragma once
 
-#include <engine/graphics/renderer/spriterenderer.hpp>
+#include <engine/graphics/renderer/sprite.hpp>
 #include <engine/graphics/core/texture.hpp>
 
 namespace game{ 
