@@ -7,6 +7,10 @@
 
 namespace math {
 
+	// predeclaration for the Box constructor
+	template<unsigned Dim, typename FloatT>
+	struct HyperSphere;
+
 	template<unsigned Dim, typename FloatT>
 	struct Box
 	{
@@ -15,7 +19,7 @@ namespace math {
 		VecT min;
 		VecT max;
 
-		/// \brief Create uninitialized rectangle.
+		/// \brief Create uninitialized box.
 		Box() noexcept {}
 
 		/// \brief Construct from minimal and maximal coordinates.
@@ -38,6 +42,13 @@ namespace math {
 			}
 		}
 
+		/// \brief Create a minimal bounding box for a Sphere.
+		explicit Box(const HyperSphere<Dim, FloatT>& _sphere) noexcept
+			: min(_sphere.center - VecT(_sphere.radius)),
+			max(_sphere.center + VecT(_sphere.radius))
+		{
+		}
+
 		// Intersection check with another Box.
 		// Matching lines are considered intersecting.
 		bool intersect(const Box& oth) const
@@ -49,6 +60,7 @@ namespace math {
 			return true;
 		}
 
+		/// \brief Check whether a point is inside the box.
 		bool isIn(const VecT& _point) const
 		{
 			for (int i = 0; i < Dim; ++i)
@@ -82,6 +94,16 @@ namespace math {
 
 		HyperSphere(const VecT& _center, FloatT _radius) noexcept
 			: center(_center), radius(_radius) {}
+
+		// Construct the largest sphere which fits inside _box.
+		explicit HyperSphere(const Box<Dim, FloatT>& _box) noexcept
+			: center((_box.min + _box.max) * 0.5f),
+			radius(std::numeric_limits<FloatT>::max())
+		{
+			const VecT dif = _box.max - _box.min;
+			for (unsigned i = 0; i < Dim; ++i)
+				if (radius > dif[i]) radius = dif[i];
+		}
 	};
 
 	using Circle = HyperSphere<2, float>;
