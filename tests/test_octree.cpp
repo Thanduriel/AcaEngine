@@ -2,41 +2,45 @@
 #include <engine/utils/containers/octree.hpp>
 #include <glm/glm.hpp>
 
+using namespace glm;
+
+template<typename TreeT>
+struct Processor
+{
+	using AABB = typename TreeT::AABB;
+	bool descend(const AABB& box)
+	{
+		++descends;
+		return true;
+	}
+
+	void process(const AABB& box, int val)
+	{
+		found.emplace_back(box, val);
+		++processed;
+	}
+
+	void reset()
+	{
+		found.clear();
+		descends = 0;
+		processed = 0;
+	}
+
+	std::vector<std::pair<AABB, int>> found;
+	int descends = 0;
+	int processed = 0;
+};
+
 int testOctree2D()
 {
-	using namespace glm;
 	using TreeT = utils::SparseOctree<int, 2, float>;
 
-	struct Processor
-	{
-		bool descend(const TreeT::AABB& box)
-		{
-			++descends;
-			return true;
-		}
-
-		void process(const TreeT::AABB& box, int val)
-		{
-			found.emplace_back(box, val);
-			++processed;
-		}
-
-		void reset()
-		{
-			found.clear();
-			descends = 0;
-			processed = 0;
-		}
-
-		std::vector<std::pair<TreeT::AABB, int>> found;
-		int descends = 0;
-		int processed = 0;
-	};
-
 	int testsFailed = 0;
+
 	TreeT tree(1.f);
 	std::vector<std::pair<TreeT::AABB, int>> expectedElements;
-	Processor proc;
+	Processor<TreeT> proc;
 	int counter = 0;
 	auto insert = [&](const TreeT::AABB& aabb, int i)
 	{
@@ -89,7 +93,41 @@ int testOctree2D()
 	return testsFailed;
 }
 
+int testOctree3D()
+{
+	using TreeT = utils::SparseOctree<int, 2, double>;
+
+	int testsFailed = 0;
+
+	TreeT tree(1.f);
+	std::vector<std::pair<TreeT::AABB, int>> expectedElements;
+	Processor<TreeT> proc;
+	int counter = 0;
+	auto insert = [&](const TreeT::AABB& aabb, int i)
+	{
+		tree.insert(aabb, i);
+		expectedElements.emplace_back(aabb, i);
+	};
+
+	insert({ dvec3(0.21), dvec3(0.5, 0.25, 0.8) }, 2);
+	insert({ dvec3(1.0), dvec3(3.0) }, 3);
+	insert({ dvec3(0.1, 0.5, 0.8), dvec3(0.2, 0.7, 0.9) }, 3);
+	insert({ dvec3(0.2), dvec3(0.3) }, 1);
+	tree.traverse(proc);
+	for (auto& el : expectedElements)
+		EXPECT(std::find(proc.found.begin(), proc.found.end(), el) != proc.found.end(), "Inserted elements can be retrieved in 3D.");
+
+	tree.remove({ dvec3(0.2), dvec3(0.3) }, 1);
+	proc.reset();
+	tree.traverse(proc);
+	expectedElements.pop_back();
+	for (auto& el : expectedElements)
+		EXPECT(std::find(proc.found.begin(), proc.found.end(), el) != proc.found.end(), "3D tree is consistent after removal.");
+
+	return 0;
+}
+
 int main() 
 {
-	return testOctree2D();
+	return testOctree2D() + testOctree3D();
 }

@@ -42,7 +42,7 @@ namespace utils {
 			};
 		*/
 		template<class Processor>
-		void traverse(Processor& proc)
+		void traverse(Processor& proc) const
 		{
 			m_rootNode->traverse(proc);
 		}
@@ -58,7 +58,7 @@ namespace utils {
 			{
 				return aabb.intersect(currentBox);
 			}
-			void process(const AABB& key, T& el)
+			void process(const AABB& key, const T& el)
 			{
 				if (aabb.intersect(key)) hits.push_back(el);
 			}
@@ -91,7 +91,7 @@ namespace utils {
 					return;
 				}
 
-				const VecT center = box.min + (box.max - box.min)*0.5f;
+				const VecT center = box.min + (box.max - box.min) * static_cast<FloatT>(0.5);
 				AABB newBox;
 				int index = 0;
 				for (int i = 0; i < Dim; ++i)
@@ -127,7 +127,7 @@ namespace utils {
 					return remove(el);
 				}
 
-				const VecT center = box.min + (box.max - box.min) * 0.5f;
+				const VecT center = box.min + (box.max - box.min) * static_cast<FloatT>(0.5);
 				AABB newBox;
 				int index = 0;
 				for (int i = 0; i < Dim; ++i)
@@ -165,7 +165,7 @@ namespace utils {
 			}
 
 			template<typename Proc>
-			void traverse(Proc& _proc)
+			void traverse(Proc& _proc) const
 			{
 				if (!_proc.descend(box)) return;
 
