@@ -8,11 +8,17 @@
 
 namespace input
 {
+	// Actions can be mapped to mouse or keyboard buttons.
 	using MKBKey = std::variant<std::monostate, Key, MouseButton>;
 
 	class KeyboardInterface : public InputInterface
 	{
 	public:
+		/// \brief Creates an interface for mouse and keyboard inputs.
+		/// \param _config Read mappings from this config.
+		/// \param _defaults List of names to read from the config with default values if the key is not found.
+		///		The order needs to be the same as that of the Actions.
+		/// \param _axis List of Actions to be used as Axis.
 		KeyboardInterface(nlohmann::json& _config,
 			const std::vector<std::pair<std::string, MKBKey>>& _defaults,
 			const std::vector<VirtualAxis>& _axis);

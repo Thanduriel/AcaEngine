@@ -8,7 +8,7 @@ struct GLFWwindow;
 
 namespace input
 {
-	// Simple wrapper to handle for glfw inputs.
+	// Simple wrapper to handle glfw inputs.
 	class InputManager
 	{
 	public:

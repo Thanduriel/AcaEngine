@@ -7,6 +7,9 @@ namespace input
 	using namespace std::string_literals;
 	using namespace nlohmann;
 
+	// Mouse and keyboard mappings are encoded as a single int.
+	// To differentiate between them mouse buttons k are stored as 
+	// negative numbers -k-1 .
 	void to_json(json& j, const MKBKey& _key) 
 	{
 		if (std::holds_alternative<MouseButton>(_key))
@@ -17,6 +20,7 @@ namespace input
 
 	void from_json(const json& j, MKBKey& _key)
 	{
+		// entry not found -> mark as such
 		if (j.is_null()) _key = std::monostate{};
 		else
 		{

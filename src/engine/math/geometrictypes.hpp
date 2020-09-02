@@ -70,10 +70,8 @@ namespace math {
 			return true;
 		}
 
-		bool operator==(const Box& oth) const
-		{
-			return min == oth.min && max == oth.max;
-		}
+		bool operator==(const Box& oth) const { return min == oth.min && max == oth.max; }
+		bool operator!=(const Box& oth) const { return min != oth.min || max != oth.max; }
 	};
 
 	// common box types

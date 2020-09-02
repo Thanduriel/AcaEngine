@@ -2,7 +2,8 @@
 
 namespace input {
 
-	enum class Key : int{
+	// Type safe list of all GLFW_KEY_*
+	enum class Key : int {
 		UNKNOWN = -1,
 		/* Printable keys */
 		SPACE = 32,
@@ -129,6 +130,7 @@ namespace input {
 		MENU = 348
 	};
 
+	// Type safe list of all GLFW_MOUSE_BUTTON_*
 	enum class MouseButton : int{
 		LEFT = 0,
 		RIGHT = 1,
