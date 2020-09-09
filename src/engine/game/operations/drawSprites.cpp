@@ -16,6 +16,7 @@ namespace game { namespace operations {
 	{
 		m_renderer.draw(*_sprite.sprite,
 			glm::vec3(_position.value, 0.f) + _sprite.position,
-			_rotation.value + _sprite.rotation, _sprite.scale);
+			_rotation.value + _sprite.rotation, _sprite.scale,
+			static_cast<float>(_sprite.tile.x), static_cast<float>(_sprite.tile.y));
 	}
 }}

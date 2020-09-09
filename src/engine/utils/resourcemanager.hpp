@@ -24,7 +24,7 @@ namespace utils {
 		/// \param [inout] _args Additional arguments which might be required by
 		///		the resource's load() funtion
 		template<typename... Args>
-		static typename TLoader::Handle get(const char* _name, const Args&... _args);
+		static typename TLoader::Handle get(const char* _name, Args&&... _args);
 		
 		/// Call to unload all resources. Should always be done on shut-down!
 		static void clear();
@@ -71,7 +71,7 @@ namespace utils {
 
 	template<typename TLoader>
 	template<typename... Args>
-	typename TLoader::Handle ResourceManager<TLoader>::get(const char* _name, const Args&... _args)
+	typename TLoader::Handle ResourceManager<TLoader>::get(const char* _name, Args&&... _args)
 	{
 		using namespace std::string_literals;
 		std::string name(RESOURCE_PATH + _name);
@@ -83,7 +83,9 @@ namespace utils {
 		}
 
 		// Add/Load new element
-		handle = inst().m_resourceMap.add(move(name), TLoader::load(name.c_str(), _args...));
+		handle = inst().m_resourceMap.add(move(name), 
+			TLoader::load(name.c_str(), 
+				std::forward<Args>(_args)...));
 		return handle.data();
 	}
 

@@ -15,13 +15,14 @@ namespace game { namespace components{
 			const glm::vec3& _pos = glm::vec3(0.f), 
 			const glm::vec2 _size = glm::vec2(0.f),
 			float _rotation = 0.f)
-			: sprite(&_sprite), position(_pos), rotation(_rotation), 
+			: sprite(&_sprite), position(_pos), rotation(_rotation), tile(0),
 			scale(_size == glm::vec2(0.f) ? glm::vec2(1.f) : _size / glm::vec2(_sprite.size))
 		{}
 
 		glm::vec3 position; // z for depth buffer
 		glm::vec2 scale;
 		float rotation;
+		glm::u16vec2 tile;
 		const graphics::Sprite* sprite;
 	};
 
