@@ -18,16 +18,23 @@ namespace utils {
 		using AABB = math::AABB<Dim, FloatT>;
 		using VecT = glm::vec<Dim, FloatT, glm::defaultp>;
 		
+		/// @brief Construct a sparse octree with a single node.
+		/// @param _rootSize The initial size of the outer bounding box.
 		SparseOctree(FloatT _rootSize = 1.f) : m_size(_rootSize) { initRoot(_rootSize); }
 
 		/// @brief Insert a new element into the tree. Does not check for duplicates.
+		/// @details If the box lies outside the current tree the root is expanded first.
 		/// @param _boundingBox The bounding box used to determine the proper location.
 		/// @param _el The element to insert.
 		void insert(const AABB& _boundingBox, const T& _el);
 
+		/// @brief Remove an element from the tree.
+		/// @param _boundingBox The box used to search for the element.
+		/// @param _el The element to remove.
+		/// @return True if the element was found.
 		bool remove(const AABB& _boundingBox, const T& _el);
 		
-		// remove all elements
+		/// @brief Remove all elements from the tree.
 		void clear()
 		{
 			m_allocator.reset();
@@ -54,7 +61,7 @@ namespace utils {
 			AABB aabb;
 			std::vector<T> hits;
 
-			bool descend(const AABB& currentBox)
+			bool descend(const AABB& currentBox) const
 			{
 				return aabb.intersect(currentBox);
 			}
@@ -79,11 +86,12 @@ namespace utils {
 
 		struct Node
 		{
-			Node(const AABB& _box)
+			explicit Node(const AABB& _box) noexcept
 				: box{_box}, childs{}
 			{}
 
-			void insert(const AABB& _boundingBox, const T& el, BlockAllocator<Node, 128>& _allocator)
+			template<typename Alloc>
+			void insert(const AABB& _boundingBox, const T& el, Alloc& _allocator)
 			{
 				if (box.max[0] - box.min[0] <= MIN_SIZE)
 				{

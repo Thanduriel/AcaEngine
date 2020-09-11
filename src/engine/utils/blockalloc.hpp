@@ -4,8 +4,12 @@
 #include <memory>
 
 namespace utils {
-	/// @brief 
-	/// @tparam T 
+	/// @brief A simple allocator which maintains memory blocks holding multiple 
+	///		elements of the same type.
+	/// @param T The type of objects to handle.
+	/// @param ElemPerBlock Number elements to hold in a single memory block.
+	///		A larger value leads to fewer allocations but more wasted space if 
+	///		the lifetimes differ.
 	template<typename T, int ElemPerBlock>
 	class BlockAllocator
 	{
@@ -16,7 +20,8 @@ namespace utils {
 
 		}
 
-		// Create a new object.
+		/// @brief Create a new object.
+		/// Arguments are forwarded to the constructor of T.
 		template<typename... Args>
 		T* create(Args&&... args)
 		{

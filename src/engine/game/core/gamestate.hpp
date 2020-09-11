@@ -19,6 +19,8 @@ namespace game {
 		bool isFinished() const { return m_isFinished; }
 		// Terminate this state after the current frame.
 		void finish() { m_isFinished = true; }
+
+		// Introduce a new state which will become active in the next frame.
 		void setNewState(GameState& _state) { m_newState.reset(&_state); }
 		std::unique_ptr<GameState> fetchNewState();
 	private:
