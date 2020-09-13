@@ -24,6 +24,7 @@ namespace input
 			const std::vector<VirtualAxis>& _axis);
 
 		bool isKeyPressed(Action _action) const override;
+		ActionState getKeyState(Action _action) const override;
 		float getAxis(Axis _axis) const override;
 		glm::vec2 getCursorPos() const override;
 	private:

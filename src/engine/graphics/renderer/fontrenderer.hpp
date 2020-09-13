@@ -18,7 +18,7 @@ namespace graphics {
 
 	/// Renderer for text.
 	/// \details This renderer represents a single font type and a set of texts. It buffers all
-	///		draw-text calls until present. The text buffer is not cleared automaticall. For
+	///		draw-text calls until present. The text buffer is not cleared automatically. For
 	///		dynamic text call clearText() once at the beginning of a frame.
 	class FontRenderer
 	{

@@ -56,6 +56,18 @@ namespace input
 		ASSERT(!!hndl, "Action is not mapped to a key.");
 		return isKeyPressed(hndl.data());
 	}
+
+	ActionState KeyboardInterface::getKeyState(Action _action) const
+	{
+		auto hndl = m_inputMap.find(_action);
+		ASSERT(!!hndl, "Action is not mapped to a key.");
+		const MKBKey& key = hndl.data();
+
+		if (std::holds_alternative<MouseButton>(key))
+			return InputManager::getButtonState(std::get<MouseButton>(key));
+		else
+			return InputManager::getKeyState(std::get<Key>(key));
+	}
 	
 	float KeyboardInterface::getAxis(Axis _axis) const
 	{

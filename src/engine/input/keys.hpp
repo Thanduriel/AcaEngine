@@ -127,7 +127,8 @@ namespace input {
 		RIGHT_CONTROL = 345,
 		RIGHT_ALT = 346,
 		RIGHT_SUPER = 347,
-		MENU = 348
+		MENU = 348,
+		Count
 	};
 
 	// Type safe list of all GLFW_MOUSE_BUTTON_*
@@ -139,6 +140,7 @@ namespace input {
 		X5 = 4,
 		X6 = 5,
 		X7 = 6,
-		X8 = 7
+		X8 = 7,
+		Count
 	};
 }

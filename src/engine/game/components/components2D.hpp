@@ -3,6 +3,7 @@
 #include "../../graphics/renderer/sprite.hpp"
 #include "../core/component.hpp"
 #include <glm/glm.hpp>
+#include <string>
 
 namespace game { namespace components{
 
@@ -26,6 +27,16 @@ namespace game { namespace components{
 		const graphics::Sprite* sprite;
 	};
 
+	struct Label
+	{
+		float fontSize;
+		glm::vec3 position;
+		std::string text;
+		glm::vec4 color;
+		float rotation;
+		glm::vec2 alignment; 
+		bool roundToPixel;
+	};
 
 	struct Position2D
 	{

@@ -33,6 +33,7 @@ namespace game{
 		GLFWwindow* window = graphics::Device::getWindow();
 		auto start = high_resolution_clock::now();
 		glClearColor(0.0f, 0.3f, 0.6f, 1.f);
+
 		while (!m_gameStates.empty())
 		{
 			const auto end = high_resolution_clock::now();
@@ -48,7 +49,7 @@ namespace game{
 			current.draw(dt);
 			glfwSwapBuffers(window);
 
-			// state managment with a stack
+			// state management with a stack
 			bool changedState = false;
 			std::unique_ptr<GameState> newState = current.fetchNewState();
 			// check older states to prevent another frame of them being rendered
@@ -59,6 +60,9 @@ namespace game{
 				m_gameStates.emplace_back(std::move(newState)); changedState = true;
 			}
 			if (changedState && !m_gameStates.empty()) m_gameStates.back()->onActivate();
+
+			// input handling
+			input::InputManager::updateKeyStates();
 			glfwPollEvents();
 			if (glfwWindowShouldClose(window)) m_gameStates.clear();
 
