@@ -1,5 +1,6 @@
 #include "game.hpp"
 #include "../../graphics/core/device.hpp"
+#include "../../graphics/renderer/fontrenderer.hpp"
 #include "../../input/inputmanager.hpp"
 #include "../../utils/meshLoader.hpp"
 #include "../../utils/config.hpp"
@@ -17,6 +18,7 @@ namespace game{
 
 	Game::~Game()
 	{
+		graphics::FontManager::clear();
 		graphics::Device::close();
 		utils::MeshLoader::clear();
 		utils::Config::save();

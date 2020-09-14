@@ -2,10 +2,12 @@
 #include "../../math/glmext.hpp"
 #include "../core/opengl.hpp"
 #include "../core/vertexformat.hpp"
+#include "../core/shader.hpp"
 
 #include <glm/gtx/norm.hpp>
 #include <string>
 #include <algorithm>
+#include <filesystem>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -22,6 +24,11 @@ namespace graphics {
 	FontRenderer::FontRenderer() :
 		m_texture(nullptr)
 	{
+		m_program.attach(ShaderManager::get("../resources/shader/font.vert", ShaderType::VERTEX));
+		m_program.attach(ShaderManager::get("../resources/shader/font.geom", ShaderType::GEOMETRY));
+		m_program.attach(ShaderManager::get("../resources/shader/font.frag", ShaderType::FRAGMENT));
+		m_program.link();
+
 		glCall(glGenVertexArrays, 1, &m_vao);
 		glCall(glBindVertexArray, m_vao);
 		// Create buffer without data for now
@@ -61,6 +68,44 @@ namespace graphics {
 		m_sampler = nullptr;
 
 		spdlog::info("[graphics] Destroyed font renderer.");
+	}
+
+	FontRenderer::Handle FontRenderer::load(const char* _fileName, bool _generateCaf)
+	{
+		namespace fs = std::filesystem;
+
+		FontRenderer* renderer = new FontRenderer();
+		fs::path path(_fileName);
+		fs::path cafPath(_fileName);
+		cafPath.replace_extension("caf");
+		const std::string cafPathStr = cafPath.string();
+		std::string pathStr;
+
+		if (fs::exists(cafPath))
+		{
+			renderer->loadCaf(cafPathStr.c_str());
+		}
+		else if(fs::exists(path.replace_extension("ttf")))
+		{
+			pathStr = path.string();
+			renderer->createFont(pathStr.c_str(), reinterpret_cast<const char*>(u8" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\u00E4\u00FC\u00F6\u00DF\u0060#'\"^_@%&|,;.:!?~+-*/(){}[]<>\u03B5\u03A9\u262F\u2713"));
+			if (_generateCaf)
+			{
+				renderer->storeCaf(cafPathStr.c_str());
+				spdlog::info("[graphics] Generating Cartographer font '{}' from '{}'.", cafPathStr, pathStr);
+			}
+		}
+		else
+		{
+			spdlog::error("[graphics] Could not load either '{}' or '{}'.", cafPathStr, pathStr);
+		}
+
+		return renderer;
+	}
+
+	void FontRenderer::unload(FontRenderer::Handle _renderer)
+	{
+		delete _renderer;
 	}
 
 	void FontRenderer::draw(const glm::vec3& _position, const char* _text, float _size, const glm::vec4& _color, float _rotation, float _alignX, float _alignY, bool _roundToPixel)
@@ -174,8 +219,11 @@ namespace graphics {
 		m_instances.clear();
 	}
 
-	void FontRenderer::present() const
+	void FontRenderer::present(const Camera& _camera)
 	{
+		m_program.use();
+		m_program.setUniform(0, _camera.getViewProjection()); //todo: move this into an uniform buffer object?
+
 		// Update buffer
 		// TODO: ringbuffer
 		if(m_dirty)

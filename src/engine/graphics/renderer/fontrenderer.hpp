@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../core/texture.hpp"
+#include "../core/shader.hpp"
+#include "../camera.hpp"
 #include "../../math/geometrictypes.hpp"
 
 #include <glm/glm.hpp>
@@ -28,10 +30,14 @@ namespace graphics {
 		/// Destroy OpenGL-resources
 		~FontRenderer();
 
+		using Handle = FontRenderer*;
+		static Handle load(const char* _fileName, bool _generateCaf = true);
+		static void unload(Handle _font);
+
 		/// Initialize the renderer for a specific font.
 		/// \details This will create a freetype-instance internally, load the font and render
 		///		textures. Because of distance computations this is a heavyweight operation.
-		///		Avoid creation of unessesary renderers.
+		///		Avoid creation of unnecessary renderers.
 		///
 		///		If you stored the rendered font to a .caf (Cartographer font) file, then loading
 		///		becomes much faster. To load caf-files use \ref loadCaf.
@@ -67,7 +73,7 @@ namespace graphics {
 		void clearText();
 		
 		/// Single instanced draw call for all characters.
-		void present() const;
+		void present(const Camera& _camera);
 
 		/// Check if there are any characters to draw.
 		bool isEmpty() const { return m_instances.empty(); }
@@ -92,7 +98,7 @@ namespace graphics {
 		{
 			glm::u16vec4 texCoords;	///< l, u, r and b texture coordinates.
 			glm::uint size;			///< two packed half-floats
-			glm::u16vec2 color;
+			glm::u8vec4 color;
 			glm::vec3 position;
 			float rotation;
 		};
@@ -107,6 +113,8 @@ namespace graphics {
 		std::unordered_map<char32_t, CharacterDef> m_chars;
 		std::vector<CharacterVertex> m_instances;
 		int m_baseLineOffset;				///< Offset to the original text base line (normalization lifts all characters)
+
+		Program m_program;
 
 		/// Create smallest mipmap.
 		/// \param [in] _fontSize Font height in pixels.
@@ -132,5 +140,8 @@ namespace graphics {
 		glm::vec2 renderingKernel(const glm::vec3& _position, const char* _text, float _size, const glm::mat2x2& _transformation, bool _roundToPixel,
 			PlaceCharacterFunc _place);
 	};
+
+	// todo split into Font + Renderer and use ResourceManager only for Font
+	using FontManager = utils::ResourceManager<FontRenderer>;
 
 } // namespace graphics

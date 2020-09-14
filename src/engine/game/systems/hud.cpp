@@ -1,7 +1,9 @@
 #include "hud.hpp"
 #include "../operations/drawSprites.hpp"
+#include "../operations/drawText.hpp"
 #include "../../graphics/core/device.hpp"
-#include <engine/input/inputmanager.hpp>
+#include "../../graphics/renderer/fontrenderer.hpp"
+#include "../../input/inputmanager.hpp"
 
 namespace game {
 
@@ -33,8 +35,9 @@ namespace game {
 
 	using namespace components;
 
-	Hud::Hud()
+	Hud::Hud(graphics::FontRenderer* _fontRenderer)
 		: m_this(m_registry.create()),
+		m_fontRenderer(_fontRenderer),
 		m_camera(graphics::Device::getBufferSize(), glm::vec2(0.f))
 	{
 		m_registry.addComponent<Position2D>(m_this, glm::vec2(0.f));
@@ -46,6 +49,13 @@ namespace game {
 		m_registry.execute(operations::DrawSprites2D(m_spriteRenderer));
 		m_spriteRenderer.present(m_camera);
 		m_spriteRenderer.clear();
+
+		if (m_fontRenderer)
+		{
+			m_fontRenderer->clearText();
+			m_registry.execute(operations::DrawText2D(*m_fontRenderer));
+			m_fontRenderer->present(m_camera);
+		}
 	}
 
 	void Hud::processInputs()

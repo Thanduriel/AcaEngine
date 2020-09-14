@@ -27,14 +27,30 @@ namespace game { namespace components{
 		const graphics::Sprite* sprite;
 	};
 
+	// todo move this to a better location and namespace
+	using Color = glm::vec4;
+	using Alignment = glm::vec2;
+
 	struct Label
 	{
+		Label(const std::string& _text = "", 
+			float _fontSize = 10.f,
+			const glm::vec3& _pos = glm::vec3(0.f, 0.f, -0.5f),
+			const Color& _color = Color(1.f),
+			const Alignment& _alignment = Alignment(0.f, 0.f),
+			float _rotation = 0.f,
+			bool _roundToPixel = false)
+			: text(_text), fontSize(_fontSize), position(_pos), color(_color), 
+			rotation(_rotation), alignment(_alignment),
+			roundToPixel(_roundToPixel)
+		{}
+
+		std::string text;
 		float fontSize;
 		glm::vec3 position;
-		std::string text;
-		glm::vec4 color;
+		Color color;
 		float rotation;
-		glm::vec2 alignment; 
+		Alignment alignment;
 		bool roundToPixel;
 	};
 

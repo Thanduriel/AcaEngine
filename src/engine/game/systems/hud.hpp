@@ -6,12 +6,16 @@
 #include "../../graphics/camera.hpp"
 #include "../../graphics/renderer/spriterenderer.hpp"
 
+namespace graphics {
+	class FontRenderer;
+}
+
 namespace game {
 
 	class Hud
 	{
 	public:
-		Hud();
+		Hud(graphics::FontRenderer* _fontRenderer = nullptr);
 
 		void draw();
 		void processInputs();
@@ -25,6 +29,7 @@ namespace game {
 		using HudRegistry = Registry< components::Position2D,
 			components::Rotation2D,
 			components::Sprite,
+			components::Label,
 			components::FillBar,
 			components::BoundingRectangle,
 			components::Button>;
@@ -33,6 +38,7 @@ namespace game {
 		Entity m_this; // Hud Entity to be used as parent
 		Entity m_cursor; // Cursor entity is invalid until createCursor was called
 		graphics::SpriteRenderer m_spriteRenderer;
+		graphics::FontRenderer* m_fontRenderer;
 		graphics::Camera m_camera;
 	};
 }
