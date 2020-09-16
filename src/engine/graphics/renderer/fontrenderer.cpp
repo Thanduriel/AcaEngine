@@ -3,6 +3,7 @@
 #include "../core/opengl.hpp"
 #include "../core/vertexformat.hpp"
 #include "../core/shader.hpp"
+#include "../core/device.hpp"
 
 #include <glm/gtx/norm.hpp>
 #include <string>
@@ -233,8 +234,9 @@ namespace graphics {
 			m_dirty = false;
 		}
 		// Enable alpha blending (permultiplied)
-		glCall(glEnable, GL_BLEND);
-		glCall(glBlendFunci, 0, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		//glCall(glEnable, GL_BLEND);
+		Device::setBlendOp(BlendOp::ADD);
+		Device::setBlendFactor(BlendFactor::ONE, BlendFactor::INV_SRC_ALPHA);
 		// Draw
 		m_texture->bind(0);
 		glCall(glBindVertexArray, m_vao);

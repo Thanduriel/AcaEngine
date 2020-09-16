@@ -11,6 +11,7 @@ namespace graphics {
 	BlendOp Device::s_blendOp[8] 				= {BlendOp::ADD};
 	BlendFactor Device::s_srcFactor[8] 			= {BlendFactor::ONE};
 	BlendFactor Device::s_dstFactor[8] 			= {BlendFactor::ZERO};
+	glm::vec4 Device::s_blendColor				= { 0.f, 0.f, 0.f, 0.f };
 	bool Device::s_blendEnable					= false;
 	bool Device::s_alphaToCoverageEnable		= false;
 	CullMode Device::s_cullMode 				= CullMode::BACK;
@@ -126,6 +127,14 @@ namespace graphics {
 			glCall(glBlendFunci, _target, unsigned(_srcFactor), unsigned(_dstFactor));
 			s_srcFactor[_target] = _srcFactor;
 			s_dstFactor[_target] = _dstFactor;
+		}
+	}
+
+	void Device::setBlendColor(const glm::vec4& _color)
+	{
+		if (s_blendColor != _color)
+		{
+			glCall(glBlendColor, _color.r, _color.g, _color.b, _color.a);
 		}
 	}
 

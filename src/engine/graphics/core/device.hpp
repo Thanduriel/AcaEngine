@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
 
 struct GLFWwindow;
 
@@ -26,9 +27,13 @@ namespace graphics {
 		INV_SRC_COLOR = 0x0301,		///< GL_ONE_MINUS_SRC_COLOR
 		DST_COLOR = 0x0306,			///< GL_DST_COLOR
 		INV_DST_COLOR = 0x0307,		///< GL_ONE_MINUS_DST_COLOR,
-		// TODO Color
+		// only available with GL_ARB_imaging
+		CONST_COLOR = 0x8001,		///< GL_CONSTANT_COLOR
+		INV_CONST_COLOR = 0x8002,	///< GL_ONE_MINUS_CONSTANT_COLOR
+		CONST_ALPHA = 0x8003,		///< GL_CONSTANT_ALPHA
+		INV_CONST_ALPHA = 0x8004,	///< GL_ONE_MINUS_CONSTANT_ALPHA
 	};
-
+	
 	enum class CullMode
 	{
 		FRONT = 0x0404,			///< GL_FRONT
@@ -81,7 +86,7 @@ namespace graphics {
 		/// \param _target The render target when MRT are used.
 		static void setBlendOp(BlendOp _operation, int _target = 0);
 		static void setBlendFactor(BlendFactor _srcFactor, BlendFactor _dstFactor, int _target = 0);
-		static void setBlendColor();
+		static void setBlendColor(const glm::vec4& _color);
 		static void enableBlending(bool _enable);
 		static void enableAlphaToCoverage(bool _enable);
 		
@@ -105,6 +110,7 @@ namespace graphics {
 	private:
 		static BlendOp s_blendOp[8];
 		static BlendFactor s_srcFactor[8], s_dstFactor[8];
+		static glm::vec4 s_blendColor;
 		static bool s_blendEnable;
 		static bool s_alphaToCoverageEnable;
 		static CullMode s_cullMode;

@@ -8,6 +8,7 @@ using namespace glm;
 namespace graphics {
 
 SpriteRenderer::SpriteRenderer()
+	: m_dirty(true)
 {
 	m_program.attach(ShaderManager::get("../resources/shader/sprite.vert", ShaderType::VERTEX));
 	m_program.attach(ShaderManager::get("../resources/shader/sprite.geom", ShaderType::GEOMETRY));
