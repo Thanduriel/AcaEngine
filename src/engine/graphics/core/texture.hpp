@@ -73,7 +73,7 @@ namespace graphics {
 	public:
 		typedef const Texture2D* Handle;
 
-		static Handle load(const char* _fileName, const Sampler& _sampler, bool _srgb = true);
+		static Handle load(const char* _fileName, const Sampler& _sampler, bool _srgb = false);
 		static void unload(Handle _texture);
 
 		/// Create a new empty texture.
