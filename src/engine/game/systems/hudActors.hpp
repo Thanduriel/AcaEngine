@@ -23,9 +23,23 @@ namespace game {
 			_creator.addComponent<components::Sprite>(*fillBar.sprite);
 			_creator.addComponent<components::Sprite>(*fillBar.backgroundSprite);
 			_creator.addComponent<components::BoundingRectangle>(fillBar.backgroundSprite->size, glm::vec2(_alignX, _alignY));
+		}
+	};
 
-			// test
-			_creator.addComponent<components::Button>([]() { spdlog::info("button pressed"); });;
+	class Label
+	{
+	public:
+		template< class Creator>
+		Label(Creator& _creator, const std::string& _text = "",
+			float _fontSize = 10.f,
+			const glm::vec3& _pos = glm::vec3(0.f, 0.f, -0.5f),
+			const Color& _color = Color(1.f),
+			const Alignment& _alignment = Alignment(0.f, 0.f),
+			float _rotation = 0.f)
+		{
+			_creator.addComponent<components::Position2D>(glm::vec2(_pos.x, _pos.y));
+			_creator.addComponent<components::Rotation2D>(0.f);
+			_creator.addComponent<components::Label>(_text, _fontSize, glm::vec3(0.f,0.f, _pos.z), _color, _alignment, _rotation);
 		}
 	};
 }

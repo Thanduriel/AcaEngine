@@ -5,6 +5,10 @@
 #include <glm/glm.hpp>
 #include <string>
 
+// todo move this to a better location and namespace
+using Color = glm::vec4;
+using Alignment = glm::vec2;
+
 namespace game { namespace components{
 
 	struct Sprite : public MultiComponent
@@ -26,10 +30,6 @@ namespace game { namespace components{
 		glm::u16vec2 tile;
 		const graphics::Sprite* sprite;
 	};
-
-	// todo move this to a better location and namespace
-	using Color = glm::vec4;
-	using Alignment = glm::vec2;
 
 	struct Label
 	{
