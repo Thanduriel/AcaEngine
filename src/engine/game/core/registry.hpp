@@ -2,6 +2,7 @@
 
 #include "../../utils/containers/slotmap.hpp"
 #include "../../utils/metaProgHelpers.hpp"
+#include "../../utils/typeIndex.hpp"
 #include "entity.hpp"
 #include "component.hpp"
 #include <tuple>

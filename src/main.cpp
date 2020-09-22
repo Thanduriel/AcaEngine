@@ -16,6 +16,7 @@
 #include "engine/input/inputmanager.hpp"
 #include "engine/utils/config.hpp"
 #include "engine/input/keyboardInterface.hpp"
+#include <engine/utils/typeIndex.hpp>
 #include <spdlog/spdlog.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -23,6 +24,7 @@
 #include <glm/gtx/compatibility.hpp>
 #include <fstream>
 #include <filesystem>
+#include <iostream>
 
 // CRT's memory leak detection
 #ifndef NDEBUG 
@@ -54,6 +56,7 @@ class MainState : public game::GameState
 {
 public:
 	MainState()
+		: m_manager(m_registry)
 	{
 		m_inputs = std::unique_ptr<input::InputInterface>(
 			new input::KeyboardInterface(utils::Config::get()["inputs"]["keyboard"], 
@@ -94,14 +97,10 @@ public:
 
 	void draw(float _deltaTime)
 	{
-		int w, h;
-		glfwGetFramebufferSize(Device::getWindow(), &w, &h);
-		Camera camera;
-		camera.projection = perspective(glm::radians(70.f), 16.f / 9.f, 0.01f, 100.f);
-		camera.view = lookAt(vec3(0.f, 0.f, 10.f), vec3(0.f), vec3(0.f, 1.f, 0.f));
+		Camera camera(70.f, 0.01f, 100.f);
+		camera.setView(lookAt(vec3(0.f, 0.f, 10.f), vec3(0.f), vec3(0.f, 1.f, 0.f)));
 
-		Camera orthoCam;
-		orthoCam.viewProjection = glm::ortho(0.0f, (float)w, 0.0f, (float)h, 0.f, 1.f);
+		Camera orthoCam(Device::getBufferSize());
 
 		operations::DrawModels drawModels;
 		drawModels.setCamera(camera);
@@ -117,7 +116,7 @@ public:
 
 private:
 	Registry<Model, Position, Velocity, Transform, Lifetime> m_registry;
-	LifetimeManager m_manager;
+	LifetimeManager<Model, Position, Velocity, Transform, Lifetime> m_manager;
 	std::unique_ptr<input::InputInterface> m_inputs;
 };
 
@@ -129,6 +128,10 @@ int main()
 //	_CrtSetBreakAlloc(2760);
 #endif
 #endif
+	utils::TypeIndex ind;
+	std::cout << ind.value<int>() << "\n";
+	std::cout << ind.value<float>() << "\n";
+	std::cout << ind.value<char>() << "\n";
 
 	Game game;
 	game.run(std::make_unique<MainState>());
