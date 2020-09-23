@@ -17,14 +17,18 @@
 #include "engine/utils/config.hpp"
 #include "engine/input/keyboardInterface.hpp"
 #include <engine/utils/typeIndex.hpp>
+#include <engine/utils/containers/slotmap2.hpp>
 #include <spdlog/spdlog.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtx/color_space.hpp>
 #include <glm/gtx/compatibility.hpp>
+
 #include <fstream>
 #include <filesystem>
 #include <iostream>
+#include <random>
+#include <chrono>
 
 // CRT's memory leak detection
 #ifndef NDEBUG 
@@ -34,14 +38,11 @@
 #endif
 #endif
 
-#include <random>
-#include <chrono>
-
 using namespace game;
 using namespace components;
 using namespace graphics;
 using namespace glm;
-
+/*
 enum struct Actions {
 	EXIT,
 	MOVE_LEFT,
@@ -119,7 +120,7 @@ private:
 	LifetimeManager<Model, Position, Velocity, Transform, Lifetime> m_manager;
 	std::unique_ptr<input::InputInterface> m_inputs;
 };
-
+*/
 int main()
 {
 #ifndef NDEBUG 
@@ -128,13 +129,16 @@ int main()
 //	_CrtSetBreakAlloc(2760);
 #endif
 #endif
-	utils::TypeIndex ind;
-	std::cout << ind.value<int>() << "\n";
-	std::cout << ind.value<float>() << "\n";
-	std::cout << ind.value<char>() << "\n";
+	using Ty = components::Position;
+	utils::WeakSlotMap<int> slotMap(static_cast<Ty*>(nullptr));
+	for(int i = 0; i < 10; i+= 2)
+		slotMap.emplace<Ty>(i, glm::vec3(1.f));
 
-	Game game;
-	game.run(std::make_unique<MainState>());
+	slotMap.erase(4);
+	slotMap.erase(8);
+
+//	Game game;
+//	game.run(std::make_unique<MainState>());
 
 	return 0;
 }

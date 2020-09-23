@@ -11,7 +11,7 @@
 #include <optional>
 
 namespace game {
-
+	
 	template<component_type... Components>
 	class Registry
 	{

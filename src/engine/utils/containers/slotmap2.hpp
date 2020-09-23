@@ -5,27 +5,58 @@
 #include <limits>
 #include <utility>
 #include <concepts>
+#include <memory>
 
 namespace utils {
-	template<std::integral Key, std::movable Value>
-	class SlotMap
+	// std::integral Key, std::movable Value
+	template<typename Key>
+	class WeakSlotMap
 	{
 	protected:
+		using SizeType = Key;
 		constexpr static Key INVALID_SLOT = std::numeric_limits<Key>::max();
 	public:
-		template<typename... Args>
+		template<typename Value>
+		WeakSlotMap(Value* dummy)
+			: m_elementSize(sizeof(Value)),
+			m_destructor(destroyElement<Value>),
+			m_move(moveElement<Value>),
+			m_size(0),
+			m_capacity(4),
+			m_values(new char[m_capacity * m_elementSize])
+		{}
+
+		~WeakSlotMap()
+		{
+			destroyValues();
+		}
+
+		template<typename Value, typename... Args>
 		Value& emplace(Key _key, Args&&... _args)
 		{
 			// increase slots if necessary
 			if (m_slots.size() <= _key)
 				m_slots.resize(_key + 1, INVALID_SLOT);
 			else if(m_slots[_key] != INVALID_SLOT) // already exists
-				return m_values[m_slots[_key]];
+				return at<Value>(_key);
 
-			m_slots[_key] = static_cast<Key>(m_values.size());
+			m_slots[_key] = m_size;
 
 			m_valuesToSlots.emplace_back(_key);
-			return m_values.emplace_back(std::forward<Args>(_args)...);
+			if(m_capacity == m_size)
+			{
+				m_capacity = static_cast<SizeType>(1.5 * m_capacity);
+				char* newBuf = new char[m_capacity * m_elementSize];
+				for (SizeType i = 0; i < m_size; ++i)
+				{
+					new(&newBuf[i*m_elementSize]) Value(std::move(get<Value>(i)));
+					get<Value>(i).~Value();
+				}
+
+				m_values.reset(newBuf);
+			}
+			
+			return *new (&get<Value>(m_size++)) Value (std::forward<Args>(_args)...);
 		}
 
 		void erase(Key _key)
@@ -34,14 +65,17 @@ namespace utils {
 
 			const Key ind = m_slots[_key];
 			m_slots[_key] = INVALID_SLOT;
+			char* back = &m_values[(m_size - 1) * m_elementSize];
 
-			if (ind+1 < m_values.size())
+			if (ind+1 < m_size)
 			{
-				m_values[ind] = std::move(m_values.back());
+				m_move(&m_values[m_elementSize * ind], back);
 				m_slots[m_valuesToSlots.back()] = ind;
 				m_valuesToSlots[ind] = m_valuesToSlots.back();
 			}
-			m_values.pop_back();
+
+			--m_size;
+			m_destructor(back);
 			m_valuesToSlots.pop_back();
 		}
 
@@ -49,11 +83,12 @@ namespace utils {
 		{
 			m_slots.clear();
 			m_valuesToSlots.clear();
-			m_values.clear();
+			destroyValues();
+			m_size = 0;
 		}
 
 		// iterators
-		class Iterator
+	/*	class Iterator
 		{
 		public:
 			Iterator(SlotMap& _target, std::size_t _ind) : m_target(_target), m_index(_ind) {}
@@ -73,25 +108,55 @@ namespace utils {
 			SlotMap& m_target;
 		};
 		auto begin() { return Iterator(*this, 0); }
-		auto end() { return Iterator(*this, m_values.size()); }
+		auto end() { return Iterator(*this, m_values.size()); }*/
 
 		// access operations
 		bool contains(Key _key) const { return _key < m_slots.size() && m_slots[_key] != INVALID_SLOT; }
 		
-		Value& operator[](Key _key) { return m_values[m_slots[_key]]; }
-		const Value& operator[](Key _key) const { return m_values[m_slots[_key]]; }
+		template<typename Value>
+		Value& at(Key _key) { return reinterpret_cast<Value&>(m_values[m_slots[_key] * m_elementSize]); }
+		template<typename Value>
+		const Value& at(Key _key) const { return reinterpret_cast<const Value&>(m_values[m_slots[_key] * m_elementSize]); }
 
 		std::size_t size() const { return m_values.size(); }
 		bool empty() const { return m_values.empty(); }
 	protected:
+		template<typename Value>
+		Value& get(SizeType _ind) { return reinterpret_cast<Value&>(m_values[_ind * m_elementSize]); }
 
+		void destroyValues()
+		{
+			for (SizeType i = 0; i < m_size; ++i)
+				m_destructor(&m_values[i * m_elementSize]);
+		}
+
+		template<typename Value>
+		static void destroyElement(void* ptr)
+		{
+			static_cast<Value*>(ptr)->~Value();
+		}
+		using Destructor = void(*)(void*);
+
+		template<typename Value>
+		static void moveElement(void* dst, void* src)
+		{
+			*static_cast<Value*>(dst) = std::move(*static_cast<Value*>(src));
+		}
+		using Move = void(*)(void*, void*);
+
+		Destructor m_destructor;
+		Move m_move;
+		int m_elementSize;
 		std::vector<Key> m_slots;
 		std::vector<Key> m_valuesToSlots;
-		std::vector<Value> m_values;
+
+		SizeType m_size;
+		SizeType m_capacity;
+		std::unique_ptr<char[]> m_values;
 	};
 
 	// Allows multiple values for the same Key to be stored.
-	template<typename Key, typename Value>
+/*	template<typename Key, typename Value>
 	class MultiSlotMap : public SlotMap<Key, Value>
 	{
 		using Base = SlotMap<Key, Value>;
@@ -160,5 +225,5 @@ namespace utils {
 			Key prev, next;
 		};
 		std::vector<Link> m_links;
-	};
+	};*/
 }
