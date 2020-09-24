@@ -118,8 +118,8 @@ namespace utils {
 		template<typename Value>
 		const Value& at(Key _key) const { return reinterpret_cast<const Value&>(m_values[m_slots[_key] * m_elementSize]); }
 
-		std::size_t size() const { return m_values.size(); }
-		bool empty() const { return m_values.empty(); }
+		SizeType size() const { return m_size; }
+		bool empty() const { return m_size == 0; }
 	protected:
 		template<typename Value>
 		Value& get(SizeType _ind) { return reinterpret_cast<Value&>(m_values[_ind * m_elementSize]); }
