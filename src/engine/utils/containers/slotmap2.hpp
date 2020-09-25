@@ -88,6 +88,42 @@ namespace utils {
 		}
 
 		// iterators
+
+		template<typename Value>
+		class Range
+		{
+		public:
+			Range(WeakSlotMap& _target) : m_target(_target) {}
+
+			class Iterator
+			{
+			public:
+				Iterator(WeakSlotMap& _target, SizeType _ind) : m_target(_target), m_index(_ind) {}
+
+				Key key() const { return m_target.m_valuesToSlots[m_index]; }
+				Value& value() { return m_target.m_values[m_index]; }
+
+				Value& operator*() { return m_target.get<Value>(m_index); }
+				const Value& operator*() const { return m_target.get<Value>(m_index); }
+
+				Iterator& operator++() { ++m_index; return *this; }
+				Iterator operator++(int) { Iterator tmp(*this);  ++m_index; return tmp; }
+				bool operator==(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index == _oth.m_index; }
+				bool operator!=(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index != _oth.m_index; }
+			private:
+				SizeType m_index;
+				WeakSlotMap& m_target;
+			};
+
+			Iterator begin() { return Iterator(m_target, 0); }
+			Iterator end() { return Iterator(m_target, m_target.m_size); }
+
+		private:
+			WeakSlotMap& m_target;
+		};
+
+		template<typename Value>
+		Range<Value> iterate() { return Range<Value>(*this); }
 	/*	class Iterator
 		{
 		public:

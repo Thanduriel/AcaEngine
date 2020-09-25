@@ -121,6 +121,46 @@ private:
 	std::unique_ptr<input::InputInterface> m_inputs;
 };
 */
+
+int numElements = 2 << 16;
+
+void benchmarkSlotMap()
+{
+	namespace chrono = std::chrono;
+
+	std::default_random_engine rng;
+	std::uniform_int_distribution<int> dist(0, numElements);
+	std::vector<int> entities(numElements, 0);
+	std::iota(entities.begin(), entities.end(), 0);
+	std::shuffle(entities.begin(), entities.end(), rng);
+
+	using Ty = components::Position;
+
+	utils::WeakSlotMap<int> slotMap(static_cast<Ty*>(nullptr));
+	auto start = chrono::high_resolution_clock::now();
+	for (int i = 0; i < numElements; i++)
+		slotMap.emplace<Ty>(entities[i], glm::vec3(static_cast<float>(i)));
+	auto end = chrono::high_resolution_clock::now();
+	std::cout << "insert random elements: " << chrono::duration<float>(end - start).count() << std::endl;
+
+	start = chrono::high_resolution_clock::now();
+	glm::vec3 sum(0.f);
+	for (const Ty& el : slotMap.iterate<Ty>())
+	{
+		sum += el.value;
+	}
+	end = chrono::high_resolution_clock::now();
+	std::cout << "iterate over all elements: " << chrono::duration<float>(end - start).count() << std::endl;
+
+	start = chrono::high_resolution_clock::now();
+	for (int i = 0; i < numElements; i+=2)
+		slotMap.erase(entities[i]);
+	end = chrono::high_resolution_clock::now();
+	std::cout << "remove every other element: " << chrono::duration<float>(end - start).count() << std::endl;
+
+	std::cout << glm::length(sum);
+}
+
 int main()
 {
 #ifndef NDEBUG 
@@ -129,14 +169,8 @@ int main()
 //	_CrtSetBreakAlloc(2760);
 #endif
 #endif
-	using Ty = components::Position;
-	utils::WeakSlotMap<int> slotMap(static_cast<Ty*>(nullptr));
-	for(int i = 0; i < 10; i+= 2)
-		slotMap.emplace<Ty>(i, glm::vec3(1.f));
 
-	slotMap.erase(4);
-	slotMap.erase(8);
-
+	benchmarkSlotMap();
 //	Game game;
 //	game.run(std::make_unique<MainState>());
 
