@@ -9,7 +9,7 @@
 
 namespace utils {
 	// std::integral Key, std::movable Value
-	template<typename Key>
+	template<typename Key,  Key InitSize = 4>
 	class WeakSlotMap
 	{
 	protected:
@@ -22,9 +22,21 @@ namespace utils {
 			m_destructor(destroyElement<Value>),
 			m_move(moveElement<Value>),
 			m_size(0),
-			m_capacity(4),
+			m_capacity(InitSize),
 			m_values(new char[m_capacity * m_elementSize])
 		{}
+
+		WeakSlotMap(WeakSlotMap&& _oth) noexcept
+			: m_elementSize(_oth.m_elementSize),
+			m_destructor(_oth.m_destructor),
+			m_move(_oth.m_move),
+			m_size(_oth.m_size),
+			m_capacity(_oth.m_capacity),
+			m_values(std::move(_oth.m_values))
+		{
+			_oth.m_size = 0;
+			_oth.m_capacity = 0;
+		}
 
 		~WeakSlotMap()
 		{
@@ -124,27 +136,6 @@ namespace utils {
 
 		template<typename Value>
 		Range<Value> iterate() { return Range<Value>(*this); }
-	/*	class Iterator
-		{
-		public:
-			Iterator(SlotMap& _target, std::size_t _ind) : m_target(_target), m_index(_ind) {}
-
-			Key key() const { return m_target.m_valuesToSlots[m_index]; }
-			Value& value() { return m_target.m_values[m_index]; }
-
-			Value& operator*() { return m_target.m_values[m_index]; }
-			const Value& operator*() const { return m_target.m_values[m_index]; }
-
-			Iterator& operator++() { ++m_index; return *this; }
-			Iterator operator++(int) { Iterator tmp(*this);  ++m_index; return tmp; }
-			bool operator==(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index == _oth.m_index; }
-			bool operator!=(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index != _oth.m_index; }
-		private:
-			std::size_t m_index;
-			SlotMap& m_target;
-		};
-		auto begin() { return Iterator(*this, 0); }
-		auto end() { return Iterator(*this, m_values.size()); }*/
 
 		// access operations
 		bool contains(Key _key) const { return _key < m_slots.size() && m_slots[_key] != INVALID_SLOT; }
