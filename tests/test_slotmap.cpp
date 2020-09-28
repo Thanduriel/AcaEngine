@@ -1,6 +1,6 @@
 #include "testutils.hpp"
 
-#include <engine/utils/containers/slotmap2.hpp>
+#include <engine/utils/containers/weakSlotMap.hpp>
 #include <unordered_set>
 
 int constructed = 0;
@@ -48,12 +48,12 @@ int main()
 
 	constexpr int indicies[] = { 2,5,8,11,3 };
 	for (int i = 0; i < 5; ++i)
-		insert(indicies[i], std::to_string(i));
+		insert(indicies[i], std::to_string(i) + "aabbccddeeffgg");
 	EXPECT(slotMap.size() == 6, "Insert multiple elements with capacity increase.");
 	EXPECT(slotMap.at<Dummy>(4).s == "4444", "Retrieve a single element after capacity increase.");
 	for (int i = 0; i < 5; ++i)
 	{
-		EXPECT(slotMap.at<Dummy>(indicies[i]).s == std::to_string(i), "Retrieve multiple elements.");
+		EXPECT(slotMap.at<Dummy>(indicies[i]).s == std::to_string(i) + "aabbccddeeffgg", "Retrieve multiple elements.");
 	}
 
 	for (const Dummy& dummy : slotMap.iterate<Dummy>())

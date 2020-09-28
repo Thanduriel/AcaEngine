@@ -8,6 +8,7 @@
 #include "engine/graphics/core/texture.hpp"
 #include "engine/graphics/core/sampler.hpp"
 #include "engine/game/core/registry.hpp"
+#include "engine/game/core/registry2.hpp"
 #include "engine/game/operations/drawModels.hpp"
 #include "engine/game/operations/applyVelocity.hpp"
 #include "engine/game/operations/updateTransform.hpp"
@@ -17,7 +18,7 @@
 #include "engine/utils/config.hpp"
 #include "engine/input/keyboardInterface.hpp"
 #include <engine/utils/typeIndex.hpp>
-#include <engine/utils/containers/slotmap2.hpp>
+#include <engine/utils/containers/weakSlotMap.hpp>
 #include <spdlog/spdlog.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -122,43 +123,125 @@ private:
 };
 */
 
-int numElements = 2 << 16;
+namespace chrono = std::chrono;
 
-void benchmarkSlotMap()
+template<bool RequiresTy, class Constructor>
+std::tuple<float,float,float> benchmarkSlotMap(Constructor constructor)
 {
-	namespace chrono = std::chrono;
+	constexpr int numElements = 2 << 17;
+	constexpr int numRuns = 128;
 
-	std::default_random_engine rng;
-	std::uniform_int_distribution<int> dist(0, numElements);
-	std::vector<int> entities(numElements, 0);
-	std::iota(entities.begin(), entities.end(), 0);
-	std::shuffle(entities.begin(), entities.end(), rng);
+	float tInsert = 0.f;
+	float tIterate = 0.f;
+	float tRemove = 0.f;
+	float lenSum = 0.f;
 
-	using Ty = components::Position;
-
-	utils::WeakSlotMap<int> slotMap(static_cast<Ty*>(nullptr));
-	auto start = chrono::high_resolution_clock::now();
-	for (int i = 0; i < numElements; i++)
-		slotMap.emplace<Ty>(entities[i], glm::vec3(static_cast<float>(i)));
-	auto end = chrono::high_resolution_clock::now();
-	std::cout << "insert random elements: " << chrono::duration<float>(end - start).count() << std::endl;
-
-	start = chrono::high_resolution_clock::now();
-	glm::vec3 sum(0.f);
-	for (const Ty& el : slotMap.iterate<Ty>())
+	for (int i = 1; i < numRuns+1; ++i)
 	{
-		sum += el.value;
+		std::default_random_engine rng(i * 13567);
+		std::uniform_int_distribution<int> dist(0, numElements);
+		std::vector<int> entities(numElements, 0);
+		std::iota(entities.begin(), entities.end(), 0);
+		std::shuffle(entities.begin(), entities.end(), rng);
+
+		using Ty = components::Position;
+
+		auto slotMap = constructor();
+		//utils::WeakSlotMap<int> slotMap(static_cast<Ty*>(nullptr));
+		auto start = chrono::high_resolution_clock::now();
+		for (int i = 0; i < numElements; i++)
+			if constexpr(RequiresTy)
+				slotMap.emplace<Ty>(entities[i], glm::vec3(static_cast<float>(i)));
+			else
+				slotMap.emplace(entities[i], glm::vec3(static_cast<float>(i)));
+		auto end = chrono::high_resolution_clock::now();
+		tInsert += chrono::duration<float>(end - start).count();
+
+		start = chrono::high_resolution_clock::now();
+		glm::vec3 sum(0.f);
+		if constexpr (RequiresTy)
+			for (const Ty& el : slotMap.iterate<Ty>())
+				sum += el.value;
+		else 
+			for (const Ty& el : slotMap)
+				sum += el.value;
+		end = chrono::high_resolution_clock::now();
+		tIterate += chrono::duration<float>(end - start).count();
+
+		start = chrono::high_resolution_clock::now();
+		for (int i = 0; i < numElements; i += 2)
+			slotMap.erase(entities[i]);
+		end = chrono::high_resolution_clock::now();
+		tRemove += chrono::duration<float>(end - start).count();
+
+		lenSum += glm::length(sum) / 2.f;
 	}
-	end = chrono::high_resolution_clock::now();
-	std::cout << "iterate over all elements: " << chrono::duration<float>(end - start).count() << std::endl;
 
-	start = chrono::high_resolution_clock::now();
-	for (int i = 0; i < numElements; i+=2)
-		slotMap.erase(entities[i]);
-	end = chrono::high_resolution_clock::now();
-	std::cout << "remove every other element: " << chrono::duration<float>(end - start).count() << std::endl;
+	std::cout << "insert random elements: " << tInsert / numRuns << std::endl;
+	std::cout << "iterate over all elements: " << tIterate / numRuns << std::endl;
+	std::cout << "remove every other element: " << tRemove / numRuns << std::endl;
+	std::cout << lenSum << "\n";
 
-	std::cout << glm::length(sum);
+	return { tInsert, tIterate, tRemove };
+}
+
+template<typename Registry>
+std::tuple<float, float, float> benchmarkRegistry()
+{
+	constexpr int numEntities = 2 << 16;
+	constexpr int numRuns = 16;
+
+	float tInsert = 0.f;
+	float tIterate = 0.f;
+	float tRemove = 0.f;
+
+	for (int j = 0; j < numRuns; ++j)
+	{
+		Registry registry;
+
+		std::vector<Entity> entities;
+		entities.reserve(numEntities);
+
+		for (int i = 0; i < numEntities; ++i)
+			entities.push_back(registry.create());
+
+		auto start = chrono::high_resolution_clock::now();
+		for (int i = 0; i < numEntities; ++i)
+		{
+			registry.addComponent<components::Position>(entities[i], glm::vec3(static_cast<float>(i)));
+			registry.addComponent<components::Velocity>(entities[i], glm::vec3(1.f, 0.f, static_cast<float>(i)));
+		}
+		auto end = chrono::high_resolution_clock::now();
+		tInsert += chrono::duration<float>(end - start).count();
+
+		std::default_random_engine rng(13567);
+		std::shuffle(entities.begin(), entities.end(), rng);
+
+		start = chrono::high_resolution_clock::now();
+		for (int i = 0; i < numEntities; i += 7)
+			registry.addComponent<components::Label>(entities[i], std::to_string(i) + "2poipnrpuipo");
+		for (int i = 0; i < numEntities; i += 3)
+			registry.addComponent<components::Transform>(entities[i], glm::identity<glm::mat4>());
+		end = chrono::high_resolution_clock::now();
+		tInsert += chrono::duration<float>(end - start).count();
+
+		start = chrono::high_resolution_clock::now();
+		registry.execute(operations::ApplyVelocity(0.01677f));
+		end = chrono::high_resolution_clock::now();
+		tIterate += chrono::duration<float>(end - start).count();
+
+		start = chrono::high_resolution_clock::now();
+		for (int i = 0; i < numEntities; ++i)
+			registry.erase(entities[i]);
+		end = chrono::high_resolution_clock::now();
+		tRemove += chrono::duration<float>(end - start).count();
+	}
+
+	std::cout << "add components: " << tInsert / numRuns << std::endl;
+	std::cout << "erase entities: " << tRemove / numRuns << std::endl;
+	std::cout << "execute operation: " << tIterate / numRuns << std::endl;
+
+	return { tInsert, tIterate, tRemove };
 }
 
 int main()
@@ -170,7 +253,15 @@ int main()
 #endif
 #endif
 
-	benchmarkSlotMap();
+	/*
+	auto [t0, t1, t2] = benchmarkSlotMap<true>([]() { return utils::WeakSlotMap<int>(static_cast<components::Position*>(nullptr)); }, 128);
+	auto [t3, t4, t5] = benchmarkSlotMap<false>([]() { return utils::SlotMap<int, components::Position>(); }, 128);
+	std::cout << "ratios: " << t0 / t3 << " | " << t1 / t4 << " | " << t2 / t5 << std::endl;
+	*/
+	using GameRegistry = game::Registry < components::Position, components::Velocity, components::Transform, components::Label>;
+	auto [tr0, tr1, tr2] = benchmarkRegistry<GameRegistry>();
+	auto [tr3, tr4, tr5] = benchmarkRegistry<game::Registry2>();
+	std::cout << "ratios: " << tr0 / tr3 << " | " << tr1 / tr4 << " | " << tr2 / tr5 << std::endl;
 //	Game game;
 //	game.run(std::make_unique<MainState>());
 

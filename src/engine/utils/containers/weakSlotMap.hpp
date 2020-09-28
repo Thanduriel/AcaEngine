@@ -32,7 +32,9 @@ namespace utils {
 			m_move(_oth.m_move),
 			m_size(_oth.m_size),
 			m_capacity(_oth.m_capacity),
-			m_values(std::move(_oth.m_values))
+			m_values(std::move(_oth.m_values)),
+			m_slots(std::move(_oth.m_slots)),
+			m_valuesToSlots(std::move(_oth.m_valuesToSlots))
 		{
 			_oth.m_size = 0;
 			_oth.m_capacity = 0;
@@ -113,7 +115,7 @@ namespace utils {
 				Iterator(WeakSlotMap& _target, SizeType _ind) : m_target(_target), m_index(_ind) {}
 
 				Key key() const { return m_target.m_valuesToSlots[m_index]; }
-				Value& value() { return m_target.m_values[m_index]; }
+				Value& value() { return m_target.get<Value>(m_index); }
 
 				Value& operator*() { return m_target.get<Value>(m_index); }
 				const Value& operator*() const { return m_target.get<Value>(m_index); }
@@ -174,12 +176,13 @@ namespace utils {
 		Destructor m_destructor;
 		Move m_move;
 		int m_elementSize;
-		std::vector<Key> m_slots;
-		std::vector<Key> m_valuesToSlots;
-
 		SizeType m_size;
 		SizeType m_capacity;
+
 		std::unique_ptr<char[]> m_values;
+
+		std::vector<Key> m_slots;
+		std::vector<Key> m_valuesToSlots;
 	};
 
 	// Allows multiple values for the same Key to be stored.
