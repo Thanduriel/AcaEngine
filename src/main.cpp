@@ -147,7 +147,7 @@ std::tuple<float,float,float> benchmarkSlotMap(Constructor constructor)
 		using Ty = components::Position;
 
 		auto slotMap = constructor();
-		//utils::WeakSlotMap<int> slotMap(static_cast<Ty*>(nullptr));
+
 		auto start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numElements; i++)
 			if constexpr(RequiresTy)
@@ -185,14 +185,29 @@ std::tuple<float,float,float> benchmarkSlotMap(Constructor constructor)
 	return { tInsert, tIterate, tRemove };
 }
 
+class TestOperation
+{
+public:
+	void operator()(components::Label& _label,
+		const components::Transform& _transform,
+		const components::Position& _position,
+		const components::Velocity& _velocity) const
+	{
+		const glm::vec4 v = _transform.value * glm::vec4(_position.value, 1.f);
+		_label.text = std::to_string(v.x) + ", " 
+			+ std::to_string(v.y) + std::to_string(_velocity.value.z);
+	}
+};
+
 template<typename Registry>
-std::tuple<float, float, float> benchmarkRegistry()
+std::tuple<float, float, float, float> benchmarkRegistry()
 {
 	constexpr int numEntities = 2 << 16;
 	constexpr int numRuns = 16;
 
 	float tInsert = 0.f;
 	float tIterate = 0.f;
+	float tIterate2 = 0.f;
 	float tRemove = 0.f;
 
 	for (int j = 0; j < numRuns; ++j)
@@ -231,6 +246,11 @@ std::tuple<float, float, float> benchmarkRegistry()
 		tIterate += chrono::duration<float>(end - start).count();
 
 		start = chrono::high_resolution_clock::now();
+		registry.execute(TestOperation());
+		end = chrono::high_resolution_clock::now();
+		tIterate2 += chrono::duration<float>(end - start).count();
+
+		start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numEntities; ++i)
 			registry.erase(entities[i]);
 		end = chrono::high_resolution_clock::now();
@@ -238,10 +258,11 @@ std::tuple<float, float, float> benchmarkRegistry()
 	}
 
 	std::cout << "add components: " << tInsert / numRuns << std::endl;
+	std::cout << "execute fast operation: " << tIterate / numRuns << std::endl;
+	std::cout << "execute large operation: " << tIterate2 / numRuns << std::endl;
 	std::cout << "erase entities: " << tRemove / numRuns << std::endl;
-	std::cout << "execute operation: " << tIterate / numRuns << std::endl;
 
-	return { tInsert, tIterate, tRemove };
+	return { tInsert, tIterate, tIterate2, tRemove };
 }
 
 int main()
@@ -259,9 +280,13 @@ int main()
 	std::cout << "ratios: " << t0 / t3 << " | " << t1 / t4 << " | " << t2 / t5 << std::endl;
 	*/
 	using GameRegistry = game::Registry < components::Position, components::Velocity, components::Transform, components::Label>;
-	auto [tr0, tr1, tr2] = benchmarkRegistry<GameRegistry>();
-	auto [tr3, tr4, tr5] = benchmarkRegistry<game::Registry2>();
-	std::cout << "ratios: " << tr0 / tr3 << " | " << tr1 / tr4 << " | " << tr2 / tr5 << std::endl;
+	auto [tr0, tr1, tr2, tr3] = benchmarkRegistry<GameRegistry>();
+	auto [tr4, tr5, tr6, tr7] = benchmarkRegistry<game::Registry2>();
+	std::cout << "ratios: " 
+		<< tr0 / tr4 << " | " 
+		<< tr1 / tr5 << " | " 
+		<< tr2 / tr6 << " | "
+		<< tr3 / tr7 << std::endl;
 //	Game game;
 //	game.run(std::make_unique<MainState>());
 

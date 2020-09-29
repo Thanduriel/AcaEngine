@@ -13,7 +13,8 @@ namespace game {
 
 		constexpr Entity() noexcept : m_id(INVALID_ID) {}
 
-		explicit operator BaseType() const { return m_id; }
+		/* explicit */
+		operator BaseType() const { return m_id; }
 		BaseType toIndex() const { return m_id; }
 
 		constexpr operator bool() const { return m_id != INVALID_ID; }

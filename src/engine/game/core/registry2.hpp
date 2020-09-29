@@ -164,32 +164,40 @@ namespace game {
 		template<bool WithEnt, typename Action, component_type Comp, component_type... Comps>
 		void executeImpl(Action& _action)
 		{
-			auto mainContainer = getContainer<Comp>().iterate<Comp>();
+			auto mainContainer = getContainerUnsafe<Comp>().iterate<Comp>();
+			std::array< SM<Comp>*, sizeof...(Comps)> containers{ &getContainerUnsafe<Comps>()... };
 		//	std::vector<SM<Comp>*> othContainers{ &getContainer<Comps>()... };
 
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{
 				Entity ent(it.key());
-				if ((getContainer<Comps>().contains(ent) && ...))
+				auto hasComponents = [&]() 
 				{
-					if constexpr (WithEnt)
-						_action(_ent, it.value(), getContainer<Comps>().at<Comps>(ent)...);
+					for (SM<Comp>* comps : containers)
+						if (!comps->contains(ent.toIndex())) return false;
+					return true;
+				};
+				
+				if(hasComponents())
+		//		if ((getContainerUnsafe<Comps>().contains(ent.toIndex()) && ...))
+				{
+					executeHelper< WithEnt, 0, Comps...>(_action, ent, containers, it.value());
+				/*	if constexpr (WithEnt)
+						_action(_ent, it.value(), getContainerUnsafe<Comps>().at<Comps>(ent.toIndex())...);
 					else
-						_action(it.value(), getContainer<Comps>().at<Comps>(ent)...);
+						_action(it.value(), getContainerUnsafe<Comps>().at<Comps>(ent.toIndex())...);*/
 				}
 			}
 		}
 
-		template<bool WithEntity, component_type Comp, component_type... Comps, typename Action, typename... Args>
-		void executeHelper(Action& _action, Entity _ent, Args&... _args)
-		{	
-			auto& comps = getContainer<Comp>();
-			if(comps.contains(_ent.toIndex()))
-				executeHelper<WithEntity, Comps...>(_action, _ent, _args..., comps.at(_ent.toIndex()));
+		template<bool WithEntity, int Cur, component_type Comp, component_type... Comps, typename Action, typename... Args, size_t NumComps>
+		void executeHelper(Action& _action, Entity _ent, std::array< SM<int>*, NumComps>& _containers, Args&... _args)
+		{
+			executeHelper<WithEntity, Cur+1, Comps...>(_action, _ent, _containers, _args..., _containers[Cur]->at<Comp>(_ent.toIndex()));
 		}
 
-		template<bool WithEntity, typename Action, typename... Args>
-		void executeHelper(Action& _action, Entity _ent,  Args&... _args)
+		template<bool WithEntity, int Cur, typename Action, typename... Args, size_t NumComps>
+		void executeHelper(Action& _action, Entity _ent, std::array< SM<int>*, NumComps>& _containers,  Args&... _args)
 		{
 			if constexpr (WithEntity)
 				_action(_ent, _args...);
@@ -210,13 +218,16 @@ namespace game {
 		void removeHelper(Entity _ent) {}
 
 		template<component_type Comp>
-		SM<Comp>& getContainer() 
+		SM<Comp>& getContainer()
 		{
 			const int idx = m_typeIndex.value<Comp>();
 			if (idx == m_components.size())
 				m_components.emplace_back(static_cast<Comp*>(nullptr));
 			return m_components[idx]; 
 		}
+
+		template<component_type Comp>
+		SM<Comp>& getContainerUnsafe() { return m_components[m_typeIndex.value<Comp>()]; };
 
 		template<component_type Comp>
 		const SM<Comp>& getContainer() const { return m_components[m_typeIndex.value<Comp>()]; };
