@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../utils/containers/slotmap.hpp"
 #include "../../utils/containers/weakSlotMap.hpp"
 #include "../../utils/metaProgHelpers.hpp"
 #include "../../utils/typeIndex.hpp"
@@ -10,6 +9,7 @@
 #include <utility>
 #include <type_traits>
 #include <optional>
+#include <array>
 
 namespace game {
 	
@@ -107,9 +107,9 @@ namespace game {
 		// Retrieve a component associated with an entity.
 		// Does not check whether it exits.
 		template<component_type Component>
-		Component& getComponent(Entity _ent) { return getContainer<Component>().at<Component>(_ent.toIndex()); }
+		Component& getComponent(Entity _ent) { return getContainerUnsafe<Component>().at<Component>(_ent.toIndex()); }
 		template<component_type Component>
-		const Component& getComponent(Entity _ent) const { getContainer<Component>().at<Component>(_ent.toIndex()); }
+		const Component& getComponent(Entity _ent) const { getContainerUnsafe<Component>().at<Component>(_ent.toIndex()); }
 
 		// Execute an Action on all entities having the components
 		// expected by Action::operator(...).
@@ -179,14 +179,7 @@ namespace game {
 				};
 				
 				if(hasComponents())
-		//		if ((getContainerUnsafe<Comps>().contains(ent.toIndex()) && ...))
-				{
 					executeHelper< WithEnt, 0, Comps...>(_action, ent, containers, it.value());
-				/*	if constexpr (WithEnt)
-						_action(_ent, it.value(), getContainerUnsafe<Comps>().at<Comps>(ent.toIndex())...);
-					else
-						_action(it.value(), getContainerUnsafe<Comps>().at<Comps>(ent.toIndex())...);*/
-				}
 			}
 		}
 
@@ -236,6 +229,6 @@ namespace game {
 		uint32_t m_maxNumEntities = 0u;
 		std::vector<SM<int>> m_components;
 		std::vector<EntityRef> m_generations;
-		utils::TypeIndex m_typeIndex;
+		mutable utils::TypeIndex m_typeIndex;
 	};
 }
