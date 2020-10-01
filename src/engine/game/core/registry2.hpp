@@ -164,9 +164,13 @@ namespace game {
 		template<bool WithEnt, typename Action, component_type Comp, component_type... Comps>
 		void executeImpl(Action& _action)
 		{
-			auto mainContainer = getContainerUnsafe<Comp>().iterate<Comp>();
-			std::array< SM<Comp>*, sizeof...(Comps)> containers{ &getContainerUnsafe<Comps>()... };
-		//	std::vector<SM<Comp>*> othContainers{ &getContainer<Comps>()... };
+			// ensure that the adresses of components wont change
+		//	m_components.reserve(m_components.size() + sizeof...(Comps));
+
+			// fetch primary container
+			// todo: try using the container with the least elements
+			auto mainContainer = getContainer<Comp>().iterate<Comp>();
+			std::array< SM<Comp>*, sizeof...(Comps)> containers{ &getContainer<Comps>()... };
 
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{

@@ -165,25 +165,15 @@ namespace game {
 			auto& mainContainer = std::get<SM<Comp>>(m_components);
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{
-				executeHelper<WithEnt, Comps...>(_action, Entity(it.key()), it.value());
+				Entity ent(it.key());
+				if ((... && getContainer<Comps>().contains(ent.toIndex())))
+				{
+					if constexpr (WithEnt)
+						_action(ent, it.value(), getContainer<Comps>()[ent.toIndex()]...);
+					else
+						_action(it.value(), getContainer<Comps>()[ent.toIndex()]...);
+				}
 			}
-		}
-
-		template<bool WithEntity, component_type Comp, component_type... Comps, typename Action, typename... Args>
-		void executeHelper(Action& _action, Entity _ent, Args&... _args)
-		{	
-			auto& comps = std::get<SM<Comp>>(m_components);
-			if(comps.contains(_ent.toIndex()))
-				executeHelper<WithEntity, Comps...>(_action, _ent, _args..., comps[_ent.toIndex()]);
-		}
-
-		template<bool WithEntity, typename Action, typename... Args>
-		void executeHelper(Action& _action, Entity _ent,  Args&... _args)
-		{
-			if constexpr (WithEntity)
-				_action(_ent, _args...);
-			else
-				_action(_args...);
 		}
 
 		template<typename Dummy, typename Comp, typename... Comps>

@@ -128,8 +128,8 @@ namespace chrono = std::chrono;
 template<bool RequiresTy, class Constructor>
 std::tuple<float,float,float> benchmarkSlotMap(Constructor constructor)
 {
-	constexpr int numElements = 2 << 17;
-	constexpr int numRuns = 128;
+	constexpr int numElements = 2 << 8; //17
+	constexpr int numRuns = 1024;
 
 	float tInsert = 0.f;
 	float tIterate = 0.f;
@@ -202,8 +202,8 @@ public:
 template<typename Registry>
 std::tuple<float, float, float, float> benchmarkRegistry()
 {
-	constexpr int numEntities = 2 << 16;
-	constexpr int numRuns = 16;
+	constexpr int numEntities = 2 << 8;
+	constexpr int numRuns = 1024;
 
 	float tInsert = 0.f;
 	float tIterate = 0.f;
@@ -274,11 +274,11 @@ int main()
 #endif
 #endif
 
-	/*
-	auto [t0, t1, t2] = benchmarkSlotMap<true>([]() { return utils::WeakSlotMap<int>(static_cast<components::Position*>(nullptr)); }, 128);
-	auto [t3, t4, t5] = benchmarkSlotMap<false>([]() { return utils::SlotMap<int, components::Position>(); }, 128);
+	
+	auto [t3, t4, t5] = benchmarkSlotMap<true>([]() { return utils::WeakSlotMap<int>(static_cast<components::Position*>(nullptr)); });
+	auto [t0, t1, t2] = benchmarkSlotMap<false>([]() { return utils::SlotMap<int, components::Position>(); });
 	std::cout << "ratios: " << t0 / t3 << " | " << t1 / t4 << " | " << t2 / t5 << std::endl;
-	*/
+	
 	using GameRegistry = game::Registry < components::Position, components::Velocity, components::Transform, components::Label>;
 	auto [tr0, tr1, tr2, tr3] = benchmarkRegistry<GameRegistry>();
 	auto [tr4, tr5, tr6, tr7] = benchmarkRegistry<game::Registry2>();
