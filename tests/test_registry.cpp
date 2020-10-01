@@ -42,6 +42,10 @@ void testRegistry()
 	EXPECT(registry.getComponent<Position>(entities[0]).value == glm::vec3(1.f, 2.f, 3.f),
 		"Component was created correctly.");
 
+	// not implemented!
+	//registry.removeComponent<Position>(entities[0]);
+	//EXPECT(!registry.hasComponent<Position>(entities[0]), "Remove component.");
+
 	for (int i = 0; i < 13; ++i)
 		entities.push_back(registry.create());
 	
@@ -73,11 +77,14 @@ void testRegistry()
 	for (size_t i = 0; i < 13; i += 2)
 		registry.addComponent<TestComponent>(entities[i], std::to_string(i) + "aaaaaaaa");
 
-//	registry.removeComponent<Position>(entities[0]);
+	Registry::EntityRef ref = registry.getRef(entities[2]);
+	EXPECT(registry.getEntity(ref), "Create valid entity ref.");
 
 	for (size_t i = 0; i < 4; ++i)
 		registry.erase(entities[i]);
 	entities.erase(entities.begin(), entities.begin() + 4);
+
+	EXPECT(!registry.getEntity(ref), "Ref is no longer valid after erasing the entity.");
 
 	TestOperation op;
 	registry.execute(op);
