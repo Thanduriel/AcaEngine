@@ -9,7 +9,7 @@
 
 namespace utils {
 	// std::integral Key, std::movable Value
-	template<typename Key,  Key InitSize = 4>
+	template<typename Key, bool TrivialDestruct = false>
 	class WeakSlotMap
 	{
 	protected:
@@ -17,14 +17,17 @@ namespace utils {
 		constexpr static Key INVALID_SLOT = std::numeric_limits<Key>::max();
 	public:
 		template<typename Value>
-		WeakSlotMap(Value* dummy)
+		WeakSlotMap(Value* dummy, SizeType _initialSize = 4)
 			: m_elementSize(sizeof(Value)),
 			m_destructor(destroyElement<Value>),
 			m_move(moveElement<Value>),
 			m_size(0),
-			m_capacity(InitSize),
+			m_capacity(_initialSize),
 			m_values(new char[m_capacity * m_elementSize])
-		{}
+		{
+			static_assert(std::is_trivially_destructible_v<Value> || !TrivialDestruct,
+				"Managed element require a destructor call.");
+		}
 
 		WeakSlotMap(WeakSlotMap&& _oth) noexcept
 			: m_elementSize(_oth.m_elementSize),
@@ -89,7 +92,7 @@ namespace utils {
 			}
 
 			--m_size;
-			m_destructor(back);
+			if constexpr (!TrivialDestruct) m_destructor(back);
 			m_valuesToSlots.pop_back();
 		}
 
@@ -155,6 +158,8 @@ namespace utils {
 
 		void destroyValues()
 		{
+			if constexpr (TrivialDestruct) return;
+
 			for (SizeType i = 0; i < m_size; ++i)
 				m_destructor(&m_values[i * m_elementSize]);
 		}
