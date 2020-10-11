@@ -26,7 +26,7 @@ namespace utils {
 			m_values(new char[m_capacity * m_elementSize])
 		{
 			static_assert(std::is_trivially_destructible_v<Value> || !TrivialDestruct,
-				"Managed element require a destructor call.");
+				"Managed elements require a destructor call.");
 		}
 
 		WeakSlotMap(WeakSlotMap&& _oth) noexcept

@@ -15,17 +15,8 @@ namespace game {
 	
 	class Registry2
 	{
-		template<typename Val, bool MultiSlot>
-		class SlotMapDecider {};
-
 		template<typename Val>
-		class SlotMapDecider<Val, false> : public utils::SlotMap<Entity::BaseType, Val> {};
-
-		template<typename Val>
-		class SlotMapDecider<Val, true> : public utils::MultiSlotMap<Entity::BaseType, Val> {};
-
-		template<typename Val>
-		using SM = utils::WeakSlotMap<Entity::BaseType>;//SlotMapDecider < Val, std::is_base_of_v<MultiComponent, Val>>;
+		using SM = utils::WeakSlotMap<Entity::BaseType>;
 	public:
 		// Make a new entity managed by this registry.
 		Entity create()
@@ -55,7 +46,7 @@ namespace game {
 			{}
 
 			template<component_type Component, typename... Args>
-			Component& addComponent(Args&&... _args)
+			Component& add(Args&&... _args)
 			{
 				return m_registry.addComponent<Component>(entity, std::forward<Args>(_args)...);
 			}
@@ -165,7 +156,7 @@ namespace game {
 		void executeImpl(Action& _action)
 		{
 			// ensure that the adresses of components wont change
-		//	m_components.reserve(m_components.size() + sizeof...(Comps));
+			m_components.reserve(m_components.size() + sizeof...(Comps));
 
 			// fetch primary container
 			// todo: try using the container with the least elements
@@ -202,18 +193,6 @@ namespace game {
 				_action(_args...);
 		}
 
-		template<typename Dummy, typename Comp, typename... Comps>
-		void removeHelper(Entity _ent)
-		{
-			auto& comps = std::get<SM<Comp>>(m_components);
-			if (comps.contains(_ent.toIndex()))
-				comps.erase(_ent.toIndex());
-			removeHelper<void, Comps...>(_ent);
-		}
-
-		template<typename Dummy>
-		void removeHelper(Entity _ent) {}
-
 		template<component_type Comp>
 		SM<Comp>& getContainer()
 		{
@@ -224,15 +203,23 @@ namespace game {
 		}
 
 		template<component_type Comp>
-		SM<Comp>& getContainerUnsafe() { return m_components[m_typeIndex.value<Comp>()]; };
+		const SM<Comp>& getContainer() const 
+		{
+			// allow adding a new component
+			return const_cast<Registry2*>(this)->getContainer<Comp>();
+		};
 
+		// Unsafe variants: use only if you know the container exists
 		template<component_type Comp>
-		const SM<Comp>& getContainer() const { return m_components[m_typeIndex.value<Comp>()]; };
+		SM<Comp>& getContainerUnsafe() { return m_components[m_typeIndex.value<Comp>()]; };
+		template<component_type Comp>
+		const SM<Comp>& getContainerUnsafe() const { return m_components[m_typeIndex.value<Comp>()]; };
 
 		std::vector<Entity> m_unusedEntities;
+		std::vector<EntityRef> m_generations;
+
 		uint32_t m_maxNumEntities = 0u;
 		std::vector<SM<int>> m_components;
-		std::vector<EntityRef> m_generations;
-		mutable utils::TypeIndex m_typeIndex;
+		mutable utils::TypeIndex m_typeIndex; // mutable to enable container retrieval in const context
 	};
 }

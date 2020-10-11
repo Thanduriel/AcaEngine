@@ -6,7 +6,7 @@
 namespace game {
 
 	// Handles ordered construction and deletion of entities.
-/*	template<component_type... Components>
+	template<component_type... Components>
 	class LifetimeManager
 	{
 	public:
@@ -65,5 +65,5 @@ namespace game {
 		Registry<Components...>& m_registry;
 		std::vector<Entity> m_deleted;
 		std::tuple<std::vector<std::pair<Entity, Components>>...> m_newComponents;
-	}; */
+	};
 }
