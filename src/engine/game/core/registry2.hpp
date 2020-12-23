@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../utils/containers/slotmap.hpp"
 #include "../../utils/containers/weakSlotMap.hpp"
 #include "../../utils/metaProgHelpers.hpp"
 #include "../../utils/typeIndex.hpp"
@@ -15,8 +16,17 @@ namespace game {
 	
 	class Registry2
 	{
+		template<typename Val, bool MultiSlot>
+		class SlotMapDecider {};
+
 		template<typename Val>
-		using SM = utils::WeakSlotMap<Entity::BaseType>;
+		class SlotMapDecider<Val, false> : public utils::SlotMap<Entity::BaseType, Val> {};
+
+		template<typename Val>
+		class SlotMapDecider<Val, true> : public utils::MultiSlotMap<Entity::BaseType, Val> {};
+
+		template<typename Val>
+		using SM = utils::WeakSlotMap<Entity::BaseType>;//SlotMapDecider < Val, std::is_base_of_v<MultiComponent, Val>>;
 	public:
 		// Make a new entity managed by this registry.
 		Entity create()
@@ -46,7 +56,7 @@ namespace game {
 			{}
 
 			template<component_type Component, typename... Args>
-			Component& add(Args&&... _args)
+			Component& addComponent(Args&&... _args)
 			{
 				return m_registry.addComponent<Component>(entity, std::forward<Args>(_args)...);
 			}
@@ -85,6 +95,12 @@ namespace game {
 			return getContainer<Component>().emplace<Component>(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
+		template<component_type Component>
+		void removeComponent(Entity _ent)
+		{
+			getContainer<Component>().erase(_ent.toIndex());
+		}
+
 		// Remove all components of the specified type.
 		template<component_type Component>
 		void clearComponent()
@@ -98,9 +114,27 @@ namespace game {
 		// Retrieve a component associated with an entity.
 		// Does not check whether it exits.
 		template<component_type Component>
-		Component& getComponent(Entity _ent) { return getContainerUnsafe<Component>().at<Component>(_ent.toIndex()); }
+		Component& getComponentUnsafe(Entity _ent) { return getContainer<Component>().at<Component>(_ent.toIndex()); }
 		template<component_type Component>
-		const Component& getComponent(Entity _ent) const { getContainerUnsafe<Component>().at<Component>(_ent.toIndex()); }
+		const Component& getComponentUnsafe(Entity _ent) const { getContainer<Component>().at<Component>(_ent.toIndex()); }
+
+		// Retrieve a component associated with an entity.
+		template<component_type Component>
+		Component* getComponent(Entity _ent) 
+		{ 
+			auto& container = getContainer<Component>();
+			if (container.contains(_ent.toIndex()))
+				return &container.at<Component>(_ent.toIndex());
+			else return nullptr;
+		}
+		template<component_type Component>
+		const Component* getComponent(Entity _ent) const 
+		{
+			auto& container = getContainer<Component>();
+			if (container.contains(_ent.toIndex()))
+				return &container.at<Component>(_ent.toIndex());
+			else return nullptr;
+		}
 
 		// Execute an Action on all entities having the components
 		// expected by Action::operator(...).
@@ -155,13 +189,9 @@ namespace game {
 		template<bool WithEnt, typename Action, component_type Comp, component_type... Comps>
 		void executeImpl(Action& _action)
 		{
-			// ensure that the adresses of components wont change
-			m_components.reserve(m_components.size() + sizeof...(Comps));
-
-			// fetch primary container
-			// todo: try using the container with the least elements
-			auto mainContainer = getContainer<Comp>().iterate<Comp>();
-			std::array< SM<Comp>*, sizeof...(Comps)> containers{ &getContainer<Comps>()... };
+			auto mainContainer = getContainerUnsafe<Comp>().iterate<Comp>();
+			std::array< SM<Comp>*, sizeof...(Comps)> containers{ &getContainerUnsafe<Comps>()... };
+		//	std::vector<SM<Comp>*> othContainers{ &getContainer<Comps>()... };
 
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{
@@ -174,7 +204,14 @@ namespace game {
 				};
 				
 				if(hasComponents())
+		//		if ((getContainerUnsafe<Comps>().contains(ent.toIndex()) && ...))
+				{
 					executeHelper< WithEnt, 0, Comps...>(_action, ent, containers, it.value());
+				/*	if constexpr (WithEnt)
+						_action(_ent, it.value(), getContainerUnsafe<Comps>().at<Comps>(ent.toIndex())...);
+					else
+						_action(it.value(), getContainerUnsafe<Comps>().at<Comps>(ent.toIndex())...);*/
+				}
 			}
 		}
 
@@ -193,6 +230,18 @@ namespace game {
 				_action(_args...);
 		}
 
+		template<typename Dummy, typename Comp, typename... Comps>
+		void removeHelper(Entity _ent)
+		{
+			auto& comps = std::get<SM<Comp>>(m_components);
+			if (comps.contains(_ent.toIndex()))
+				comps.erase(_ent.toIndex());
+			removeHelper<void, Comps...>(_ent);
+		}
+
+		template<typename Dummy>
+		void removeHelper(Entity _ent) {}
+
 		template<component_type Comp>
 		SM<Comp>& getContainer()
 		{
@@ -203,23 +252,15 @@ namespace game {
 		}
 
 		template<component_type Comp>
-		const SM<Comp>& getContainer() const 
-		{
-			// allow adding a new component
-			return const_cast<Registry2*>(this)->getContainer<Comp>();
-		};
-
-		// Unsafe variants: use only if you know the container exists
-		template<component_type Comp>
 		SM<Comp>& getContainerUnsafe() { return m_components[m_typeIndex.value<Comp>()]; };
+
 		template<component_type Comp>
-		const SM<Comp>& getContainerUnsafe() const { return m_components[m_typeIndex.value<Comp>()]; };
+		const SM<Comp>& getContainer() const { return m_components[m_typeIndex.value<Comp>()]; };
 
 		std::vector<Entity> m_unusedEntities;
-		std::vector<EntityRef> m_generations;
-
 		uint32_t m_maxNumEntities = 0u;
 		std::vector<SM<int>> m_components;
-		mutable utils::TypeIndex m_typeIndex; // mutable to enable container retrieval in const context
+		std::vector<EntityRef> m_generations;
+		utils::TypeIndex m_typeIndex;
 	};
 }
