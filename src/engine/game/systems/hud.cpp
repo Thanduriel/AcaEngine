@@ -65,7 +65,7 @@ namespace game {
 
 		if (m_cursor)
 		{
-			m_registry.getComponent<Position2D>(m_cursor).value = cursorPos;
+			m_registry.getComponent<Transform2D>(m_cursor).position = cursorPos;
 		}
 
 		if (input::InputManager::isButtonPressed(input::MouseButton::LEFT))
@@ -88,9 +88,7 @@ namespace game {
 		if (m_cursor) m_registry.erase(m_cursor);
 
 		m_cursor = m_registry.create();
-		m_registry.addComponent<Position2D>(m_cursor, glm::vec2(0.f));
-		m_registry.addComponent<Position2D>(m_cursor, glm::vec2(0.f));
-		m_registry.addComponent<Rotation2D>(m_cursor, 0.f);
+		m_registry.addComponent<Transform2D>(m_cursor, glm::vec2(0.f));
 
 		m_registry.addComponent<Sprite>(m_cursor, _sprite, glm::vec3(0.f, 0.f, 0.0f), glm::vec2(0.f, 0.f));
 	}

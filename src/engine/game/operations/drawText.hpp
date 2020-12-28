@@ -27,8 +27,7 @@ namespace game {
 			DrawText2D(graphics::FontRenderer& _renderer) : m_renderer(_renderer) {}
 
 			void operator()(const components::Label& _label,
-				const components::Position2D& _position,
-				const components::Rotation2D& _rotation) const;
+				const components::Transform2D& _transform) const;
 
 		private:
 			graphics::FontRenderer& m_renderer;
