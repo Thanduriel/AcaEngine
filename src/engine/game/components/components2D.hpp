@@ -11,6 +11,25 @@ using Alignment = glm::vec2;
 
 namespace game { namespace components{
 
+	struct Transform2D
+	{
+		Transform2D(const glm::vec2& _pos = {}, float _rot = 0.f, const glm::vec2& _scale = glm::vec2(1.f))
+			: position(_pos), rotation(_rot), scale(_scale)
+		{}
+
+		glm::vec2 position;
+		float rotation;
+		glm::vec2 scale;
+
+		Transform2D operator*(const Transform2D& oth) const
+		{
+			return Transform2D{
+				position + oth.position,
+				rotation + oth.rotation,
+				scale * oth.scale };
+		}
+	};
+
 	struct Sprite : public MultiComponent
 	{
 		/// @brief Create a sprite component.
@@ -20,13 +39,14 @@ namespace game { namespace components{
 			const glm::vec3& _pos = glm::vec3(0.f), 
 			const glm::vec2 _size = glm::vec2(0.f),
 			float _rotation = 0.f)
-			: sprite(&_sprite), position(_pos), rotation(_rotation), tile(0),
-			scale(_size == glm::vec2(0.f) ? glm::vec2(1.f) : _size / glm::vec2(_sprite.size))
+			: sprite(&_sprite), 
+			depth(_pos.z),
+			transform(_pos, _rotation, _size == glm::vec2(0.f) ? glm::vec2(1.f) : _size / glm::vec2(_sprite.size)), 
+			tile(0)
 		{}
 
-		glm::vec3 position; // z for depth buffer
-		glm::vec2 scale;
-		float rotation;
+		float depth;
+		Transform2D transform;
 		glm::u16vec2 tile;
 		const graphics::Sprite* sprite;
 	};
@@ -76,11 +96,5 @@ namespace game { namespace components{
 	{
 		Scale2D(const glm::vec2 v) : value(v){}
 		glm::vec2 value;
-	};
-
-	struct Transform2D
-	{
-		Transform2D(const glm::mat3& m) : value{ m } {}
-		glm::mat3 value;
 	};
 } }

@@ -54,7 +54,7 @@ namespace game {
 			{}
 
 			template<component_type Component, typename... Args>
-			Component& addComponent(Args&&... _args)
+			Component& addComponent(Args&&... _args) const
 			{
 				return m_registry.addComponent<Component>(entity, std::forward<Args>(_args)...);
 			}
@@ -67,7 +67,8 @@ namespace game {
 		Entity create(Args&&... _args)
 		{
 			Entity ent = create();
-			Actor act(ComponentCreator(*this, ent), std::forward<Args>(_args)...);
+			ComponentCreator creator(*this, ent);
+			Actor act(creator, std::forward<Args>(_args)...);
 			return ent;
 		}
 

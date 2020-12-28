@@ -6,17 +6,18 @@ namespace game { namespace operations {
 	void DrawSprites::operator()(const components::Sprite& _sprite, const components::Position& _position) const
 	{
 		m_renderer.draw(*_sprite.sprite, 
-			_position.value + _sprite.position, 
-			_sprite.rotation, _sprite.scale);
+			_position.value + glm::vec3(_sprite.transform.position, _sprite.depth), 
+			_sprite.transform.rotation, _sprite.transform.scale);
 	}
 
 	void DrawSprites2D::operator()(const components::Sprite& _sprite,
-		const components::Position2D& _position,
-		const components::Rotation2D& _rotation) const
+		const components::Transform2D& _transform) const
 	{
+		const components::Transform2D transform = _sprite.transform * _transform;
+
 		m_renderer.draw(*_sprite.sprite,
-			glm::vec3(_position.value, 0.f) + _sprite.position,
-			_rotation.value + _sprite.rotation, _sprite.scale,
+			glm::vec3(transform.position, _sprite.depth),
+			transform.rotation, transform.scale,
 			static_cast<float>(_sprite.tile.x), static_cast<float>(_sprite.tile.y));
 	}
 }}

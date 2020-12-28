@@ -28,6 +28,8 @@ namespace game {
 
 		using HudRegistry = Registry< components::Position2D,
 			components::Rotation2D,
+			components::Scale2D,
+			components::Transform2D,
 			components::Sprite,
 			components::Label,
 			components::FillBar,

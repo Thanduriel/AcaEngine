@@ -1,9 +1,10 @@
 #pragma once
 
+#include "../core/entity.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-namespace game { namespace components{
+namespace game { namespace components {
 
 	struct Position 
 	{
@@ -42,6 +43,11 @@ namespace game { namespace components{
 		Lifetime(float _time) : timeLeft(_time) {}
 
 		float timeLeft;
+	};
+
+	struct Parent
+	{
+		Entity parent;
 	};
 
 	// temporarly mark a component to find it again

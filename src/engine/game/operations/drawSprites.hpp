@@ -26,8 +26,7 @@ namespace game { namespace operations {
 		DrawSprites2D(graphics::SpriteRenderer& _renderer) : m_renderer(_renderer) {}
 
 		void operator()(const components::Sprite& _sprite, 
-			const components::Position2D& _position,
-			const components::Rotation2D& _rotation) const;
+			const components::Transform2D& _transform) const;
 
 	private:
 		graphics::SpriteRenderer& m_renderer;
