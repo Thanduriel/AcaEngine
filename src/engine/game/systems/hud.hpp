@@ -2,6 +2,7 @@
 
 #include "hudComponents.hpp"
 #include "../core/registry.hpp"
+#include "../core/lifetimeManager.hpp"
 #include "../components/components2D.hpp"
 #include "../../graphics/camera.hpp"
 #include "../../graphics/renderer/spriterenderer.hpp"
@@ -26,7 +27,8 @@ namespace game {
 		// Creates an activates a custom cursor for this hud.
 		void createCursor(const graphics::Sprite& _sprite);
 
-		using HudRegistry = Registry< components::Position2D,
+		using HudComponentList = ComponentList<
+			components::Position2D,
 			components::Rotation2D,
 			components::Scale2D,
 			components::Transform2D,
@@ -35,8 +37,12 @@ namespace game {
 			components::FillBar,
 			components::BoundingRectangle,
 			components::Button>;
+		using HudRegistry = HudComponentList::Registry;
+		using HudManager = HudComponentList::LifetimeManager;
 
 		HudRegistry m_registry;
+		HudManager m_manager;
+
 		Entity m_this; // Hud Entity to be used as parent
 		Entity m_cursor; // Cursor entity is invalid until createCursor was called
 		graphics::SpriteRenderer m_spriteRenderer;

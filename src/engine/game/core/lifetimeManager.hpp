@@ -20,9 +20,40 @@ namespace game {
 		void destroy(Entity _ent) { m_deleted.push_back(_ent); }
 
 		template<component_type Component, typename... Args>
-		void addComponent(Entity _ent, Args&&... _args)
+		Component& addComponent(Entity _ent, Args&&... _args)
 		{
-			getContainer<Component>().emplace_back(_ent, Component{ std::forward<Args>(_args)... });
+			auto& container = getContainer<Component>();
+			container.emplace_back(_ent, Component{ std::forward<Args>(_args)... });
+			return container.back().second;
+		}
+
+		class ComponentCreator
+		{
+		public:
+			template<component_type Component, typename... Args>
+			Component& add(Args&&... _args) const
+			{
+				return m_manager.addComponent<Component>(entity, std::forward<Args>(_args)...);
+			}
+
+			const Entity entity;
+
+		private:
+			friend class LifetimeManager;
+			ComponentCreator(LifetimeManager& _manager, Entity _ent)
+				: entity(_ent), m_manager(_manager)
+			{}
+
+			LifetimeManager& m_manager;
+
+		};
+		template<typename Actor, typename... Args>
+		Entity create(Args&&... _args)
+		{
+			Entity ent = create();
+			ComponentCreator creator(*this, ent);
+			Actor act(creator, std::forward<Args>(_args)...);
+			return ent;
 		}
 
 		// Move newly created components into the registry.
@@ -65,5 +96,12 @@ namespace game {
 		Registry<Components...>& m_registry;
 		std::vector<Entity> m_deleted;
 		std::tuple<std::vector<std::pair<Entity, Components>>...> m_newComponents;
+	};
+
+	template<component_type... Components>
+	struct ComponentList
+	{
+		using Registry = Registry<Components...>;
+		using LifetimeManager = LifetimeManager<Components...>;
 	};
 }

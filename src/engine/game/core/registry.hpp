@@ -46,32 +46,6 @@ namespace game {
 			return ent;
 		}
 
-		class ComponentCreator
-		{
-		public:
-			ComponentCreator(Registry& _registry, Entity _ent)
-				: entity(_ent), m_registry(_registry)
-			{}
-
-			template<component_type Component, typename... Args>
-			Component& addComponent(Args&&... _args) const
-			{
-				return m_registry.addComponent<Component>(entity, std::forward<Args>(_args)...);
-			}
-
-			const Entity entity;
-		private:
-			Registry& m_registry;
-		};
-		template<typename Actor, typename... Args>
-		Entity create(Args&&... _args)
-		{
-			Entity ent = create();
-			ComponentCreator creator(*this, ent);
-			Actor act(creator, std::forward<Args>(_args)...);
-			return ent;
-		}
-
 		// Remove an entity with all its components.
 		void erase(Entity _ent)
 		{
@@ -101,6 +75,20 @@ namespace game {
 
 		template<component_type Component>
 		bool hasComponent(Entity _ent) const { return getContainer<Component>().contains(_ent.toIndex()); }
+
+		// Retrieve a component associated with an entity.
+		// @return nullptr if the entity has no component of this type
+	/*	template<component_type Component>
+		Component* getComponentOpt(Entity _ent) 
+		{
+			// todo: only do one access
+			return getContainer<Component>().contains(_ent.toIndex()) ? &getContainer<Component>()[_ent.toIndex()]; : nullptr;
+		}
+		template<component_type Component>
+		const Component* getComponentOpt(Entity _ent) const
+		{
+			return getContainer<Component>().contains(_ent.toIndex()) ? &getContainer<Component>()[_ent.toIndex()]; : nullptr;
+		}*/
 
 		// Retrieve a component associated with an entity.
 		// Does not check whether it exits.

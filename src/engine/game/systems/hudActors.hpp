@@ -16,12 +16,12 @@ namespace game {
 			int _texX = 0, int _texY = 0,
 			int _texWidth = -1, int _texHeight = -1)
 		{
-			_creator.addComponent<components::Transform2D>(_position);
-			auto& fillBar = _creator.addComponent<components::FillBar>(_alignX, _alignY, _backgroundTex, _fillTex,
+			_creator.add<components::Transform2D>(_position);
+			auto& fillBar = _creator.add<components::FillBar>(_alignX, _alignY, _backgroundTex, _fillTex,
 				_texX, _texY, _texWidth, _texHeight);
-			_creator.addComponent<components::Sprite>(*fillBar.sprite);
-			_creator.addComponent<components::Sprite>(*fillBar.backgroundSprite);
-			_creator.addComponent<components::BoundingRectangle>(fillBar.backgroundSprite->size, glm::vec2(_alignX, _alignY));
+			_creator.add<components::Sprite>(*fillBar.sprite);
+			_creator.add<components::Sprite>(*fillBar.backgroundSprite);
+			_creator.add<components::BoundingRectangle>(fillBar.backgroundSprite->size, glm::vec2(_alignX, _alignY));
 		}
 	};
 
@@ -36,8 +36,8 @@ namespace game {
 			const Alignment& _alignment = Alignment(0.f, 0.f),
 			float _rotation = 0.f)
 		{
-			_creator.addComponent<components::Transform2D>(glm::vec2(_pos.x, _pos.y));
-			_creator.addComponent<components::Label>(_text, _fontSize, glm::vec3(0.f,0.f, _pos.z), _color, _alignment, _rotation);
+			_creator.add<components::Transform2D>(glm::vec2(_pos.x, _pos.y));
+			_creator.add<components::Label>(_text, _fontSize, glm::vec3(0.f,0.f, _pos.z), _color, _alignment, _rotation);
 		}
 	};
 }

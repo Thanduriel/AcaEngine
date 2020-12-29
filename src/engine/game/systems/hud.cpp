@@ -36,7 +36,8 @@ namespace game {
 	using namespace components;
 
 	Hud::Hud(graphics::FontRenderer* _fontRenderer)
-		: m_this(m_registry.create()),
+		: m_manager(m_registry),
+		m_this(m_registry.create()),
 		m_fontRenderer(_fontRenderer),
 		m_camera(graphics::Device::getBufferSize(), glm::vec2(0.f))
 	{
