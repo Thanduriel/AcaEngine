@@ -268,6 +268,8 @@ public:
 				// and will not cause a resize.
 				uint32_t h = (uint32_t)m_hash(m_keys[i].key);
 				tmp.reinsertUnique(move(m_keys[i].key), move(m_data[i]), h);
+				// destructor still needs to be called
+				// todo: compare performance with destructor call here
 			//	m_keys[i].dist = 0xffffffff;
 			}
 		}

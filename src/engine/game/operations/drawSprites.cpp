@@ -15,8 +15,12 @@ namespace game { namespace operations {
 	{
 		const components::Transform2D transform = _sprite.transform * _transform;
 
+		// ordering of sprites should be dependend on x due to the isometric perspective
+		constexpr float DEPTH_SCALE = 1.f / 1000000.f;
+		const float depth = std::clamp(_sprite.depth - transform.position.y * DEPTH_SCALE, -1.f, 0.f);
+
 		m_renderer.draw(*_sprite.sprite,
-			glm::vec3(transform.position, _sprite.depth),
+			glm::vec3(transform.position, depth),
 			transform.rotation, transform.scale,
 			static_cast<float>(_sprite.tile.x), static_cast<float>(_sprite.tile.y));
 	}

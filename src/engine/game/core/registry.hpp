@@ -66,6 +66,12 @@ namespace game {
 			return getContainer<Component>().emplace(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
+		template<component_type Component>
+		void removeComponent(Entity _ent)
+		{
+			removeHelper<void, Component>(_ent);
+		}
+
 		// Remove all components of the specified type.
 		template<component_type Component>
 		void clearComponent()
