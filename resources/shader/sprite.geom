@@ -7,6 +7,7 @@ layout(location = 3) in vec3 in_position[1];
 layout(location = 4) in float in_rotation[1];
 layout(location = 5) in vec4 in_scale[1];
 layout(location = 6) in vec2 in_anim[1];
+layout(location = 7) in vec4 in_color[1];
 
 layout(location = 0) uniform mat4 c_viewProjection;
 
@@ -16,6 +17,7 @@ layout(location = 0) out vec2 out_texCoord;
 layout(location = 1) out flat uvec2 out_textureHandle;
 layout(location = 2) out flat vec4 out_anim;
 layout(location = 3) out flat vec2 out_numTiles;
+layout(location = 4) out flat vec4 out_color;
 
 void main()
 {
@@ -25,6 +27,7 @@ void main()
 	out_anim.zw = in_texCoords[0].zw - in_texCoords[0].xy;
 	out_anim.w = -out_anim.w;
 	out_numTiles = in_numTiles[0];
+	out_color = in_color[0];
 	
 	mat2 rot;
 	rot[0][0] = rot[1][1] = cos(in_rotation[0]);

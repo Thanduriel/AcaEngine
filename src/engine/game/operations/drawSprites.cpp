@@ -21,7 +21,9 @@ namespace game { namespace operations {
 
 		m_renderer.draw(*_sprite.sprite,
 			glm::vec3(transform.position, depth),
-			transform.rotation, transform.scale,
+			transform.rotation, 
+			transform.scale,
+			_sprite.color,
 			static_cast<float>(_sprite.tile.x), static_cast<float>(_sprite.tile.y));
 	}
 }}

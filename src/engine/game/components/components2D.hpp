@@ -38,17 +38,20 @@ namespace game { namespace components{
 		Sprite(const graphics::Sprite& _sprite, 
 			const glm::vec3& _pos = glm::vec3(0.f), 
 			const glm::vec2 _size = glm::vec2(0.f),
-			float _rotation = 0.f)
+			float _rotation = 0.f,
+			const Color& _color = Color(0.f))
 			: sprite(&_sprite), 
 			depth(_pos.z),
 			transform(_pos, _rotation, _size == glm::vec2(0.f) ? glm::vec2(1.f) : _size / glm::vec2(_sprite.size)), 
-			tile(0)
+			tile(0),
+			color(_color)
 		{}
 
+		const graphics::Sprite* sprite;
 		float depth;
 		Transform2D transform;
 		glm::u16vec2 tile;
-		const graphics::Sprite* sprite;
+		Color color;
 	};
 
 	struct Label
