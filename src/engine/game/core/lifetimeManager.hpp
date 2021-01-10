@@ -59,7 +59,7 @@ namespace game {
 		// Move newly created components into the registry.
 		void moveComponents()
 		{
-			moveComponentsImpl<void, Components...>();
+			moveComponentsImpl<void, components::Parent, components::Children, Components...>();
 		}
 
 		// Remove marked entities.
@@ -95,7 +95,10 @@ namespace game {
 
 		Registry<Components...>& m_registry;
 		std::vector<Entity> m_deleted;
-		std::tuple<std::vector<std::pair<Entity, Components>>...> m_newComponents;
+		std::tuple<
+			std::vector<std::pair<Entity, components::Parent>>,
+			std::vector<std::pair<Entity, components::Children>>,
+			std::vector<std::pair<Entity, Components>>...> m_newComponents;
 	};
 
 	template<component_type... Components>

@@ -45,12 +45,6 @@ namespace game { namespace components {
 		float timeLeft;
 	};
 
-	// Currently only works correctly together with Position, Rotation, Scale components
-	struct Parent
-	{
-		Entity parent;
-	};
-
 	// temporarly mark a component to find it again
 	struct Mark {};
 }}

@@ -8,8 +8,25 @@
 #include <utility>
 #include <type_traits>
 #include <optional>
+#include <vector>
+#include <concepts>
 
 namespace game {
+
+	namespace components {
+		// Currently only works correctly together with Position, Rotation, Scale components
+		struct Parent
+		{
+			Parent(Entity ent) : entity(ent) {}
+
+			Entity entity;
+		};
+
+		struct Children
+		{
+			std::vector<Entity> entities;
+		};
+	}
 
 	template<component_type... Components>
 	class Registry
@@ -51,25 +68,77 @@ namespace game {
 		{
 			ASSERT(m_generations[_ent.toIndex()].entity != INVALID_ENTITY, "Attempting to erase a non existent entity.");
 
-			removeHelper<void, Components...>(_ent);
+			(removeComponent<Components>(_ent), ...);
 
-			m_unusedEntities.push_back(_ent);
+			// mark invalid before removing components so that Children removal is simpler
 			m_generations[_ent.toIndex()].entity = INVALID_ENTITY;
+			removeComponent<components::Parent>(_ent);
+			removeComponent<components::Children>(_ent);
+			m_unusedEntities.push_back(_ent);
 		}
 
 		// Add a new component to an existing entity. No changes are done if Component is
 		// not a MultiComponent and _ent already has a component of this type.
 		// @return A reference to the new component or the already existing component.
 		template<component_type Component, typename... Args>
+		requires !std::same_as<Component, components::Parent>
 		Component& addComponent(Entity _ent, Args&&... _args)
 		{
 			return getContainer<Component>().emplace(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
 		template<component_type Component>
+		requires std::same_as<Component, components::Parent>
+		Component& addComponent(Entity _ent, components::Parent _parent)
+		{
+			auto& childs = addComponent<components::Children>(_parent.entity);
+			childs.entities.push_back(_ent);
+			return getContainer<components::Parent>().emplace(_ent.toIndex(), _parent.entity);
+		}
+
+		template<component_type Component>
+		requires !std::same_as<Component, components::Parent> && !std::same_as<Component, components::Children>
 		void removeComponent(Entity _ent)
 		{
-			removeHelper<void, Component>(_ent);
+			auto& comps = std::get<SM<Component>>(m_components);
+			if (comps.contains(_ent.toIndex()))
+				comps.erase(_ent.toIndex());
+		}
+
+		template<component_type Component>
+		requires std::same_as<Component, components::Parent>
+		void removeComponent(Entity _ent)
+		{
+			auto& comps = std::get<SM<Component>>(m_components);
+			if (comps.contains(_ent.toIndex()))
+			{
+				// remove from parent list
+				auto& parent = comps[_ent.toIndex()];
+				if (isValid(parent.entity))
+				{
+					auto& childs = std::get<SM<components::Children>>(m_components)[parent.entity.toIndex()].entities;
+					auto it = std::find(childs.begin(), childs.end(), _ent);
+					assert(it != childs.end());
+					*it = childs.back();
+					childs.pop_back();
+				}
+				comps.erase(_ent.toIndex());
+			}
+		}
+
+		template<component_type Component>
+		requires std::same_as<Component, components::Children>
+		void removeComponent(Entity _ent)
+		{
+			auto& comps = std::get<SM<Component>>(m_components);
+			if (comps.contains(_ent.toIndex()))
+			{
+				auto& childs = comps[_ent.toIndex()].entities;
+				// erase all children
+				for (Entity ent : childs)
+					erase(ent);
+				comps.erase(_ent.toIndex());
+			}
 		}
 
 		// Remove all components of the specified type.
@@ -180,18 +249,6 @@ namespace game {
 				_action(_args...);
 		}
 
-		template<typename Dummy, typename Comp, typename... Comps>
-		void removeHelper(Entity _ent)
-		{
-			auto& comps = std::get<SM<Comp>>(m_components);
-			if (comps.contains(_ent.toIndex()))
-				comps.erase(_ent.toIndex());
-			removeHelper<void, Comps...>(_ent);
-		}
-
-		template<typename Dummy>
-		void removeHelper(Entity _ent) {}
-
 		template<component_type Comp>
 		SM<Comp>& getContainer() { return std::get<SM<Comp>>(m_components); }
 
@@ -200,7 +257,7 @@ namespace game {
 
 		std::vector<Entity> m_unusedEntities;
 		uint32_t m_maxNumEntities = 0u;
-		std::tuple<SM<Components>...> m_components;
+		std::tuple<SM<components::Parent>, SM<components::Children>, SM<Components>...> m_components;
 		std::vector<EntityRef> m_generations;
 	};
 }

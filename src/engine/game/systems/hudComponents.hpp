@@ -1,7 +1,8 @@
 #pragma once
 
-#include <engine/graphics/renderer/sprite.hpp>
-#include <engine/graphics/core/texture.hpp>
+#include "../../graphics/renderer/sprite.hpp"
+#include "../../graphics/core/texture.hpp"
+#include "../core/entity.hpp"
 
 namespace game{ 
 namespace components{
@@ -38,4 +39,8 @@ namespace components{
 		std::function<void()> onClick;
 	};
 
+	struct BoxContainer
+	{
+		std::vector<Entity> childs;
+	};
 } }

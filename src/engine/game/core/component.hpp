@@ -8,7 +8,7 @@ namespace game {
 	class MultiComponent
 	{};
 
-	// Requirements that a component type needs to fullfill.
+	// Requirements that a component type needs to fulfill.
 	template<class T>
 	concept component_type = std::movable<T>;
 }
