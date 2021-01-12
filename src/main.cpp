@@ -185,32 +185,62 @@ std::tuple<float,float,float> benchmarkSlotMap(Constructor constructor)
 	return { tInsert, tIterate, tRemove };
 }
 
+namespace game { namespace components {
+	struct TestComponent
+	{
+		TestComponent( const std::string& _text,
+			float _fontSize = 10.f,
+			const glm::vec3& _pos = glm::vec3(0.f, 0.f, -0.5f),
+			const Color& _color = Color(1.f),
+			const Alignment& _alignment = Alignment(0.f, 0.f),
+			float _rotation = 0.f,
+			bool _roundToPixel = false)
+			: size(_text.length()), fontSize(_fontSize), position(_pos), color(_color),
+			rotation(_rotation), alignment(_alignment),
+			roundToPixel(_roundToPixel)
+		{}
+
+		size_t size;
+		float fontSize;
+		glm::vec3 position;
+		Color color;
+		float rotation;
+		Alignment alignment;
+		bool roundToPixel;
+	};
+}}
+
 class TestOperation
 {
 public:
-	void operator()(components::Label& _label,
+	void operator()(components::TestComponent& _label,
 		const components::Transform& _transform,
 		const components::Position& _position,
 		const components::Velocity& _velocity) const
 	{
 		const glm::vec4 v = _transform.value * glm::vec4(_position.value, 1.f);
-		_label.text = std::to_string(v.x) + ", " 
-			+ std::to_string(v.y) + std::to_string(_velocity.value.z);
+		_label.size = (std::to_string(v.x) + ", " + std::to_string(v.y) + std::to_string(_velocity.value.z)).size();
+	//	_label.text = std::to_string(v.x) + ", " 
+	//		+ std::to_string(v.y) + std::to_string(_velocity.value.z);
 	}
 };
 
-template<typename Registry>
-std::tuple<float, float, float, float> benchmarkRegistry()
+struct Results
 {
-	constexpr int numEntities = 2 << 16;
-	constexpr int numRuns = 64;
-
-	float tInsert = 0.f;
-	float tIterate = 0.f;
-	float tIterate2 = 0.f;
-	float tRemove = 0.f;
-
-	for (int j = 0; j < numRuns; ++j)
+	union{
+		struct {
+			float tInsert;
+			float tIterateSimple;
+			float tIterateComplex;
+			float tRemove;
+		};
+		std::array<float, 4> values = {};
+	};
+};
+template<typename Registry>
+Results benchmarkRegistry(int numEntities, int numRuns)
+{
+	auto run = [&](Results& results) 
 	{
 		Registry registry;
 
@@ -220,6 +250,9 @@ std::tuple<float, float, float, float> benchmarkRegistry()
 		for (int i = 0; i < numEntities; ++i)
 			entities.push_back(registry.create());
 
+		registry.addComponent<components::Position2D>(entities.front(), glm::vec2(0.2f));
+		registry.addComponent<components::Rotation2D>(entities.front(), 42.f);
+
 		auto start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numEntities; ++i)
 		{
@@ -227,42 +260,85 @@ std::tuple<float, float, float, float> benchmarkRegistry()
 			registry.addComponent<components::Velocity>(entities[i], glm::vec3(1.f, 0.f, static_cast<float>(i)));
 		}
 		auto end = chrono::high_resolution_clock::now();
-		tInsert += chrono::duration<float>(end - start).count();
+		results.tInsert += chrono::duration<float>(end - start).count();
 
 		std::default_random_engine rng(13567);
 		std::shuffle(entities.begin(), entities.end(), rng);
 
 		start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numEntities; i += 7)
-			registry.addComponent<components::Label>(entities[i], std::to_string(i) + "2poipnrpuipo");
+			registry.addComponent<components::TestComponent>(entities[i], std::to_string(i) + "2poipnrpuipo");
 		for (int i = 0; i < numEntities; i += 3)
 			registry.addComponent<components::Transform>(entities[i], glm::identity<glm::mat4>());
 		end = chrono::high_resolution_clock::now();
-		tInsert += chrono::duration<float>(end - start).count();
+		results.tInsert += chrono::duration<float>(end - start).count();
 
+		std::uniform_real_distribution<float> dt(0.01f, 0.5f);
 		start = chrono::high_resolution_clock::now();
-		registry.execute(operations::ApplyVelocity(0.01677f));
+		registry.execute(operations::ApplyVelocity(dt(rng)));
 		end = chrono::high_resolution_clock::now();
-		tIterate += chrono::duration<float>(end - start).count();
+		results.tIterateSimple += chrono::duration<float>(end - start).count();
 
 		start = chrono::high_resolution_clock::now();
 		registry.execute(TestOperation());
 		end = chrono::high_resolution_clock::now();
-		tIterate2 += chrono::duration<float>(end - start).count();
+		results.tIterateComplex += chrono::duration<float>(end - start).count();
+
+		/*	int count = 0;
+			registry.execute([&](const components::Label& label) {
+				count += label.text.size();
+			});
+			std::cout << count << "\n";*/
 
 		start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numEntities; ++i)
 			registry.erase(entities[i]);
 		end = chrono::high_resolution_clock::now();
-		tRemove += chrono::duration<float>(end - start).count();
+		results.tRemove += chrono::duration<float>(end - start).count();
+	};
+
+	Results tempResults;
+	run(tempResults);
+	run(tempResults);
+
+	Results results;
+	for (int j = 0; j < numRuns; ++j)
+	{
+		run(results);
 	}
 
-	std::cout << "add components: " << tInsert / numRuns << std::endl;
-	std::cout << "execute fast operation: " << tIterate / numRuns << std::endl;
-	std::cout << "execute large operation: " << tIterate2 / numRuns << std::endl;
-	std::cout << "erase entities: " << tRemove / numRuns << std::endl;
+	for (float& f : results.values)
+		f /= numRuns;
+/*	std::cout << "add components: " << results.tInsert << std::endl;
+	std::cout << "execute fast operation: " << results.tIterateSimple << std::endl;
+	std::cout << "execute large operation: " << results.tIterateComplex << std::endl;
+	std::cout << "erase entities: " << results.tRemove << std::endl;*/
 
-	return { tInsert, tIterate, tIterate2, tRemove };
+	return results;
+}
+
+template<typename Warmup, typename... RegistryTypes>
+void runComparison()
+{
+//	(benchmarkRegistry<RegistryTypes>(2 << 16, 8), ...);
+	benchmarkRegistry<Warmup>(2 << 16, 64);
+
+	std::vector<Results> results;
+	(results.push_back(benchmarkRegistry<RegistryTypes>(2 << 16, 32)), ...);
+
+	for (const float& f : results.front().values)
+		std::cout << f << "\n";
+
+	printf("\ninsert     simple_op  complex_op remove     \n");
+	for (const auto& result : results)
+	{
+		for (size_t i = 0; i < result.values.size(); ++i)
+		{
+			printf("%.3f      ", result.values[i] / results.front().values[i]);
+		}
+		printf("\n");
+	}
+
 }
 
 int main()
@@ -279,14 +355,17 @@ int main()
 	auto [t0, t1, t2] = benchmarkSlotMap<false>([]() { return utils::SlotMap<int, components::Position>(); });
 	std::cout << "ratios: " << t0 / t3 << " | " << t1 / t4 << " | " << t2 / t5 << std::endl;
 	*/
-	using GameRegistry = game::Registry < components::Position, components::Velocity, components::Transform, components::Label>;
-	auto [tr0, tr1, tr2, tr3] = benchmarkRegistry<GameRegistry>();
-	auto [tr4, tr5, tr6, tr7] = benchmarkRegistry<game::Registry2>();
-	std::cout << "ratios: " 
-		<< tr0 / tr4 << " | " 
-		<< tr1 / tr5 << " | " 
-		<< tr2 / tr6 << " | "
-		<< tr3 / tr7 << std::endl;
+
+	using GameRegistry = game::Registry <
+		components::Position,
+		components::Velocity,
+		components::Transform,
+		components::Label,
+		components::TestComponent,
+		components::Position2D,
+		components::Rotation2D>;
+
+	runComparison<GameRegistry, GameRegistry, game::Registry2>();
 //	Game game;
 //	game.run(std::make_unique<MainState>());
 

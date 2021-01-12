@@ -77,7 +77,7 @@ void testRegistry()
 	for (size_t i = 0; i < 13; i += 2)
 		registry.addComponent<TestComponent>(entities[i], std::to_string(i) + "aaaaaaaa");
 
-	Registry::EntityRef ref = registry.getRef(entities[2]);
+	typename Registry::EntityRef ref = registry.getRef(entities[2]);
 	EXPECT(registry.getEntity(ref), "Create valid entity ref.");
 
 	for (size_t i = 0; i < 4; ++i)
