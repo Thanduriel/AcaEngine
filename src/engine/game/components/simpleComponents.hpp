@@ -22,7 +22,7 @@ namespace game { namespace components {
 		glm::vec3 value;
 	};
 
-	struct Rotation 
+	struct Rotation
 	{
 		Rotation(const glm::quat& q) : value{q}{}
 		Rotation(glm::quat&& q) : value{q}{}
@@ -30,7 +30,15 @@ namespace game { namespace components {
 		glm::quat value;
 	};
 
-	struct Transform 
+	struct AngularVelocity
+	{
+		AngularVelocity(const glm::quat& q) : value{q}{}
+		AngularVelocity(glm::quat&& q) : value{q}{}
+
+		glm::quat value;
+	};
+
+	struct Transform
 	{
 		Transform(const glm::mat4& m) : value{m}{}
 		Transform(glm::mat4&& m) : value{m}{}

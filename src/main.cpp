@@ -24,6 +24,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtx/color_space.hpp>
 #include <glm/gtx/compatibility.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <fstream>
 #include <filesystem>
 
@@ -86,7 +87,6 @@ public:
 		shootTime += _deltaTime;
 		if (shootTime >= SHOOT_DELAY) {
 			if (m_inputs->isKeyPressed(Actions::SHOOT)) {
-				spdlog::info("shoot");
 				shootTime = 0.f;
 				Entity ent = m_manager.create();
 				m_manager.addComponent<Model>(ent, planetMesh, planetTex, glm::identity<mat4>());
@@ -95,13 +95,10 @@ public:
 				m_manager.addComponent<BoundingBox>(ent, vec3(-1,-1,-1),vec3(1,1,1));
 
 				auto dir = m_camera.toWorldSpace(m_inputs->getCursorPos()) - CAM_POS;
-				dir.z /= -3000.f;
+				dir.z /= -1000.f;
 				dir = glm::normalize(dir);
-				spdlog::info(std::to_string(dir.x));
-				spdlog::info(std::to_string(dir.y));
-				spdlog::info(std::to_string(dir.z));
-				m_manager.addComponent<Velocity>(ent, dir*10.f);
-				m_manager.addComponent<Lifetime>(ent, 10.f);
+				m_manager.addComponent<Velocity>(ent, dir*30.f);
+				m_manager.addComponent<Lifetime>(ent, 5.f);
 				m_manager.addComponent<Ammonition>(ent);
 			}
 		}
@@ -111,11 +108,14 @@ public:
 			m_manager.addComponent<Model>(ent, mesh, texture, glm::identity<mat4>());
 			m_manager.addComponent<Model>(ent, mesh, texture, rotate(glm::identity<mat4>(), pi<float>() / 2.f, vec3(0.f, 0.f, 1.f)));
 			m_manager.addComponent<Position>(ent, vec3(0.f));
+			m_manager.addComponent<Rotation>(ent, glm::angleAxis(dist(rng)*1.8f-0.9f,
+						vec3(dist(rng)*2.f - 1.f, dist(rng)*2.f-1.f, dist(rng)*2.f - 1.f)));
+			m_manager.addComponent<AngularVelocity>(ent, glm::angleAxis(0.01f, vec3(dist(rng)*2.f - 1.f, dist(rng)*2.f-1.f, dist(rng)*2.f - 1.f)));
 			m_manager.addComponent<Transform>(ent, identity<mat4>());
-			m_manager.addComponent<Velocity>(ent, vec3(dist(rng) * 2.f - 1.0f, dist(rng) * 2.f - 1.0f, 0.f));
+			m_manager.addComponent<Velocity>(ent, vec3(dist(rng) * 4.f - 2.0f, dist(rng) * 4.f - 2.0f, 0.f));
 			m_manager.addComponent<BoundingBox>(ent, vec3(-2.1,-2.1,-2.1), vec3(2.1,2.1,2.1));
 			m_manager.addComponent<CanExplode>(ent);
-			// m_manager.addComponent<Lifetime>(ent, 1.f + dist(rng) * 5.f); TODO: give back life time
+			m_manager.addComponent<Lifetime>(ent, 30.f + dist(rng) * 5.f);
 
 			spawnTime = 0.f;
 		}
@@ -126,6 +126,8 @@ public:
 		m_manager.cleanup();
 
 		m_registry.execute(operations::ApplyVelocity(_deltaTime));
+		m_registry.execute(operations::ApplyAngularVelocity(_deltaTime));
+		m_registry.execute(operations::UpdateTransformRotation());
 		m_registry.execute(operations::UpdateTransformPosition());
 		m_registry.execute(operations::ProcessLifetime(m_manager, _deltaTime));
 
@@ -150,8 +152,8 @@ public:
 	}
 
 private:
-	static constexpr glm::vec3 CAM_POS = vec3(0.f,0.f,50.f);
-	using CL = ComponentList<Model, Position, Velocity, Transform, Lifetime, BoundingBox, CanExplode,Ammonition>;
+	static constexpr glm::vec3 CAM_POS = vec3(0.f,0.f,30.f);
+	using CL = ComponentList<Model, Rotation, Position, Velocity, Transform, Lifetime, BoundingBox, CanExplode,Ammonition,AngularVelocity>;
 	Camera m_camera;
 	CL::Registry m_registry;
 	CL::LifetimeManager m_manager;

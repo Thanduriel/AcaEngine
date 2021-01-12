@@ -15,4 +15,14 @@ namespace operations {
 	private:
 		float m_deltaTime;
 	};
+
+	class ApplyAngularVelocity
+	{
+	public:
+		ApplyAngularVelocity(float _deltaTime) : m_deltaTime(_deltaTime){}
+
+		void operator()(const components::AngularVelocity& _vel, components::Rotation& _rot) const;
+	private:
+		float m_deltaTime;
+	};
 }}

@@ -1,11 +1,18 @@
 #include "updateTransform.hpp"
 
+#include <glm/gtx/quaternion.hpp>
+
 namespace game {
 namespace operations {
 
 	void UpdateTransformPosition::operator()(components::Transform& _transform, const components::Position& _position) const
 	{
 		_transform.value[3] = glm::vec4(_position.value, 1.f);
+	}
+
+	void UpdateTransformRotation::operator()(components::Transform& _transform, const components::Rotation& _rotation) const
+	{
+		_transform.value = glm::toMat4(_rotation.value);
 	}
 
 	void UpdateTransformPosition2D::operator()(components::Transform2D& _transform, const components::Position2D& _position) const

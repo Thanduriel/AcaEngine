@@ -12,6 +12,11 @@ namespace operations {
 	public:
 		void operator()(components::Transform& _transform, const components::Position& _position) const;
 	};
+	class UpdateTransformRotation
+	{
+	public:
+		void operator()(components::Transform& _transform, const components::Rotation& _rotation) const;
+	};
 
 	class UpdateTransformPosition2D
 	{

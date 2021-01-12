@@ -7,4 +7,10 @@ namespace operations {
 	{
 		_position.value += m_deltaTime * _velocity.value;
 	}
+
+	void ApplyAngularVelocity::operator()(const components::AngularVelocity& _velocity, components::Rotation& _rot) const {
+		// FIXME: not valid for dt > 1
+		const glm::quat& vel = _velocity.value;
+		_rot.value *= glm::slerp(vel,vel*vel, m_deltaTime);
+	}
 }}
