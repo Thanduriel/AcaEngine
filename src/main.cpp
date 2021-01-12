@@ -98,7 +98,6 @@ public:
 				m_manager.addComponent<BoundingBox>(ent, vec3(-1,-1,-1),vec3(1,1,1));
 
 				auto dir = m_camera.toWorldSpace(m_inputs->getCursorPos()) - CAM_POS;
-				dir.z /= -1000.f;
 				dir = glm::normalize(dir);
 				m_manager.addComponent<Velocity>(ent, dir*30.f);
 				m_manager.addComponent<Lifetime>(ent, 5.f);
