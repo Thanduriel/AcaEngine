@@ -19,6 +19,7 @@
 #include "engine/utils/config.hpp"
 #include "engine/input/keyboardInterface.hpp"
 #include "engine/utils/containers/octree.hpp"
+#include "engine/graphics/renderer/fontrenderer.hpp"
 #include <spdlog/spdlog.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -61,6 +62,7 @@ public:
 	MainState()
 		: m_manager{m_registry}, m_camera(45.f, 0.01f, 100.f)
 	{
+		m_fontRenderer = FontManager::get("../resources/fonts/Anonymous Pro.ttf");
 		m_camera.setView(lookAt(CAM_POS, vec3(0.f), vec3(0.f, 1.f, 0.f)));
 		m_inputs = std::unique_ptr<input::InputInterface>(
 			new input::KeyboardInterface(utils::Config::get()["inputs"]["keyboard"], 
@@ -85,6 +87,7 @@ public:
 		static float shootTime = SHOOT_DELAY;
 		spawnTime += _deltaTime;
 		shootTime += _deltaTime;
+
 		if (shootTime >= SHOOT_DELAY) {
 			if (m_inputs->isKeyPressed(Actions::SHOOT)) {
 				shootTime = 0.f;
@@ -121,9 +124,11 @@ public:
 		}
 		m_manager.moveComponents();
 		utils::SparseOctree<Entity, 3, float> octree;
+		int count = 0;
 		m_registry.execute(operations::InsertBoundsInOctree(octree));
-		m_registry.execute(operations::DestroyHits(m_manager, octree));
+		m_registry.execute(operations::DestroyHits(m_manager, octree, count));
 		m_manager.cleanup();
+		m_score += count;
 
 		m_registry.execute(operations::ApplyVelocity(_deltaTime));
 		m_registry.execute(operations::ApplyAngularVelocity(_deltaTime));
@@ -148,6 +153,12 @@ public:
 
 		m_registry.execute(drawModels);
 		drawModels.present();
+		if (m_fontRenderer)
+		{
+			m_fontRenderer->clearText();
+			m_fontRenderer->draw(vec3(0,10,0.5), std::to_string(m_score).c_str(), 4, vec4(1,1,1,1), 0, 0.5f,.5f);
+			m_fontRenderer->present(m_camera);
+		}
 	//	spriteRenderer.present(orthoCam);
 	}
 
@@ -158,6 +169,8 @@ private:
 	CL::Registry m_registry;
 	CL::LifetimeManager m_manager;
 	std::unique_ptr<input::InputInterface> m_inputs;
+	graphics::FontRenderer* m_fontRenderer = nullptr;
+	int m_score = 0;
 };
 
 int main()
