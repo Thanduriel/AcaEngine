@@ -155,9 +155,11 @@ public:
 		drawModels.present();
 		if (m_fontRenderer)
 		{
+			Device::setZFunc(ComparisonFunc::ALWAYS);
 			m_fontRenderer->clearText();
-			m_fontRenderer->draw(vec3(0,10,0.5), std::to_string(m_score).c_str(), 4, vec4(1,1,1,1), 0, 0.5f,.5f);
+			m_fontRenderer->draw(vec3(0,10,0), std::to_string(m_score).c_str(), 4, vec4(1,1,1,1), 0, 0.5f,.5f);
 			m_fontRenderer->present(m_camera);
+			Device::setZFunc(ComparisonFunc::LESS);
 		}
 	//	spriteRenderer.present(orthoCam);
 	}
