@@ -81,7 +81,7 @@ namespace game {
 		// not a MultiComponent and _ent already has a component of this type.
 		// @return A reference to the new component or the already existing component.
 		template<component_type Component, typename... Args>
-		requires !std::same_as<Component, components::Parent>
+		requires (!std::same_as<Component, components::Parent>)
 		Component& addComponent(Entity _ent, Args&&... _args)
 		{
 			return getContainer<Component>().emplace(_ent.toIndex(), std::forward<Args>(_args)...);
@@ -97,7 +97,7 @@ namespace game {
 		}
 
 		template<component_type Component>
-		requires !std::same_as<Component, components::Parent> && !std::same_as<Component, components::Children>
+		requires (!std::same_as<Component, components::Parent> && !std::same_as<Component, components::Children>)
 		void removeComponent(Entity _ent)
 		{
 			auto& comps = std::get<SM<Component>>(m_components);
