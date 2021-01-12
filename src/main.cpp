@@ -12,10 +12,13 @@
 #include "engine/game/operations/applyVelocity.hpp"
 #include "engine/game/operations/updateTransform.hpp"
 #include "engine/game/operations/processLifetime.hpp"
+#include "engine/game/operations/insertBoundsInOctree.hpp"
+#include "engine/game/operations/destroyHits.hpp"
 #include "engine/game/core/game.hpp"
 #include "engine/input/inputmanager.hpp"
 #include "engine/utils/config.hpp"
 #include "engine/input/keyboardInterface.hpp"
+#include "engine/utils/containers/octree.hpp"
 #include <spdlog/spdlog.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -89,6 +92,7 @@ public:
 				m_manager.addComponent<Model>(ent, planetMesh, planetTex, glm::identity<mat4>());
 				m_manager.addComponent<Position>(ent, CAM_POS);
 				m_manager.addComponent<Transform>(ent, glm::identity<mat4>());
+				m_manager.addComponent<BoundingBox>(ent, vec3(-1,-1,-1),vec3(1,1,1));
 
 				auto dir = m_camera.toWorldSpace(m_inputs->getCursorPos()) - CAM_POS;
 				dir.z /= -3000.f;
@@ -98,6 +102,7 @@ public:
 				spdlog::info(std::to_string(dir.z));
 				m_manager.addComponent<Velocity>(ent, dir*10.f);
 				m_manager.addComponent<Lifetime>(ent, 10.f);
+				m_manager.addComponent<Ammonition>(ent);
 			}
 		}
 		if (spawnTime >= 0.5f)
@@ -108,11 +113,16 @@ public:
 			m_manager.addComponent<Position>(ent, vec3(0.f));
 			m_manager.addComponent<Transform>(ent, identity<mat4>());
 			m_manager.addComponent<Velocity>(ent, vec3(dist(rng) * 2.f - 1.0f, dist(rng) * 2.f - 1.0f, 0.f));
-			m_manager.addComponent<Lifetime>(ent, 1.f + dist(rng) * 5.f);
+			m_manager.addComponent<BoundingBox>(ent, vec3(-2.1,-2.1,-2.1), vec3(2.1,2.1,2.1));
+			m_manager.addComponent<CanExplode>(ent);
+			// m_manager.addComponent<Lifetime>(ent, 1.f + dist(rng) * 5.f); TODO: give back life time
 
 			spawnTime = 0.f;
 		}
 		m_manager.moveComponents();
+		utils::SparseOctree<Entity, 3, float> octree;
+		m_registry.execute(operations::InsertBoundsInOctree(octree));
+		m_registry.execute(operations::DestroyHits(m_manager, octree));
 		m_manager.cleanup();
 
 		m_registry.execute(operations::ApplyVelocity(_deltaTime));
@@ -141,7 +151,7 @@ public:
 
 private:
 	static constexpr glm::vec3 CAM_POS = vec3(0.f,0.f,50.f);
-	using CL = ComponentList<Model, Position, Velocity, Transform, Lifetime>;
+	using CL = ComponentList<Model, Position, Velocity, Transform, Lifetime, BoundingBox, CanExplode,Ammonition>;
 	Camera m_camera;
 	CL::Registry m_registry;
 	CL::LifetimeManager m_manager;

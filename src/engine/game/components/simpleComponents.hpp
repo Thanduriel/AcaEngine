@@ -38,6 +38,25 @@ namespace game { namespace components {
 		glm::mat4 value;
 	};
 
+	struct BoundingBox
+	{
+		BoundingBox(const glm::vec3& _min, glm::vec3& _max) : min{_min}, max{_max}{}
+		BoundingBox(glm::vec3&& _min, glm::vec3&& _max) : min{_min}, max{_max}{}
+
+		glm::vec3 min;
+		glm::vec3 max;
+	};
+
+	struct CanExplode
+	{
+		CanExplode(){}
+	};
+
+	struct Ammonition
+	{
+		Ammonition(){}
+	};
+
 	struct Lifetime
 	{
 		Lifetime(float _time) : timeLeft(_time) {}
