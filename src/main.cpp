@@ -24,6 +24,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtx/color_space.hpp>
 #include <glm/gtx/compatibility.hpp>
+#include <spdlog/fmt/fmt.h>
 
 #include <fstream>
 #include <filesystem>
@@ -309,16 +310,12 @@ Results benchmarkRegistry(int numEntities, int numRuns)
 
 	for (float& f : results.values)
 		f /= numRuns;
-/*	std::cout << "add components: " << results.tInsert << std::endl;
-	std::cout << "execute fast operation: " << results.tIterateSimple << std::endl;
-	std::cout << "execute large operation: " << results.tIterateComplex << std::endl;
-	std::cout << "erase entities: " << results.tRemove << std::endl;*/
 
 	return results;
 }
 
 template<typename Warmup, typename... RegistryTypes>
-void runComparison()
+void runComparison(const std::array<std::string, sizeof...(RegistryTypes)>& _names)
 {
 //	(benchmarkRegistry<RegistryTypes>(2 << 16, 8), ...);
 	benchmarkRegistry<Warmup>(2 << 16, 64);
@@ -329,9 +326,16 @@ void runComparison()
 	for (const float& f : results.front().values)
 		std::cout << f << "\n";
 
-	printf("\ninsert     simple_op  complex_op remove     \n");
-	for (const auto& result : results)
+	size_t maxLen = 0;
+	for(const auto& name : _names)
+		if (name.length() > maxLen)
+			maxLen = name.length();
+
+	fmt::print("\n{:<{}} {:<10} {:<10} {:<10} {:<10}\n", "registry", maxLen, "insert", "simple_op", "complex_op", "remove");
+	for (size_t i = 0; i < _names.size(); ++i)
 	{
+		fmt::print("{:<{}} ", _names[i], maxLen);
+		const auto& result = results[i];
 		for (size_t i = 0; i < result.values.size(); ++i)
 		{
 			printf("%.3f      ", result.values[i] / results.front().values[i]);
@@ -365,7 +369,7 @@ int main()
 		components::Position2D,
 		components::Rotation2D>;
 
-	runComparison<GameRegistry, GameRegistry, game::Registry2>();
+	runComparison<GameRegistry, GameRegistry, game::Registry2>({"static", "type erasure"});
 //	Game game;
 //	game.run(std::make_unique<MainState>());
 
