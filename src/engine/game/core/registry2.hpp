@@ -92,7 +92,7 @@ namespace game {
 		template<component_type Component, typename... Args>
 		Component& addComponent(Entity _ent, Args&&... _args)
 		{
-			return getContainer<Component>().emplace<Component>(_ent.toIndex(), std::forward<Args>(_args)...);
+			return getContainer<Component>().template emplace<Component>(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
 		template<component_type Component>
@@ -114,9 +114,9 @@ namespace game {
 		// Retrieve a component associated with an entity.
 		// Does not check whether it exits.
 		template<component_type Component>
-		Component& getComponentUnsafe(Entity _ent) { return getContainer<Component>().at<Component>(_ent.toIndex()); }
+		Component& getComponentUnsafe(Entity _ent) { return getContainer<Component>().template at<Component>(_ent.toIndex()); }
 		template<component_type Component>
-		const Component& getComponentUnsafe(Entity _ent) const { getContainer<Component>().at<Component>(_ent.toIndex()); }
+		const Component& getComponentUnsafe(Entity _ent) const { getContainer<Component>().template at<Component>(_ent.toIndex()); }
 
 		// Retrieve a component associated with an entity.
 		template<component_type Component>
@@ -124,7 +124,7 @@ namespace game {
 		{ 
 			auto& container = getContainer<Component>();
 			if (container.contains(_ent.toIndex()))
-				return &container.at<Component>(_ent.toIndex());
+				return &container.template at<Component>(_ent.toIndex());
 			else return nullptr;
 		}
 		template<component_type Component>
@@ -132,7 +132,7 @@ namespace game {
 		{
 			auto& container = getContainer<Component>();
 			if (container.contains(_ent.toIndex()))
-				return &container.at<Component>(_ent.toIndex());
+				return &container.template at<Component>(_ent.toIndex());
 			else return nullptr;
 		}
 
@@ -189,7 +189,7 @@ namespace game {
 		template<bool WithEnt, typename Action, component_type Comp, component_type... Comps>
 		void executeImpl(Action& _action)
 		{
-			auto mainContainer = getContainerUnsafe<Comp>().iterate<Comp>();
+			auto mainContainer = getContainerUnsafe<Comp>().template iterate<Comp>();
 			std::array< SM<Comp>*, sizeof...(Comps)> containers{ &getContainerUnsafe<Comps>()... };
 		//	std::vector<SM<Comp>*> othContainers{ &getContainer<Comps>()... };
 
@@ -218,7 +218,7 @@ namespace game {
 		template<bool WithEntity, int Cur, component_type Comp, component_type... Comps, typename Action, typename... Args, size_t NumComps>
 		void executeHelper(Action& _action, Entity _ent, std::array< SM<int>*, NumComps>& _containers, Args&... _args)
 		{
-			executeHelper<WithEntity, Cur+1, Comps...>(_action, _ent, _containers, _args..., _containers[Cur]->at<Comp>(_ent.toIndex()));
+			executeHelper<WithEntity, Cur+1, Comps...>(_action, _ent, _containers, _args..., _containers[Cur]->template at<Comp>(_ent.toIndex()));
 		}
 
 		template<bool WithEntity, int Cur, typename Action, typename... Args, size_t NumComps>

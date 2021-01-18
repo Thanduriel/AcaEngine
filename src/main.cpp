@@ -152,7 +152,7 @@ std::tuple<float,float,float> benchmarkSlotMap(Constructor constructor)
 		auto start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numElements; i++)
 			if constexpr(RequiresTy)
-				slotMap.emplace<Ty>(entities[i], glm::vec3(static_cast<float>(i)));
+				slotMap.template emplace<Ty>(entities[i], glm::vec3(static_cast<float>(i)));
 			else
 				slotMap.emplace(entities[i], glm::vec3(static_cast<float>(i)));
 		auto end = chrono::high_resolution_clock::now();
@@ -161,7 +161,7 @@ std::tuple<float,float,float> benchmarkSlotMap(Constructor constructor)
 		start = chrono::high_resolution_clock::now();
 		glm::vec3 sum(0.f);
 		if constexpr (RequiresTy)
-			for (const Ty& el : slotMap.iterate<Ty>())
+			for (const Ty& el : slotMap.template iterate<Ty>())
 				sum += el.value;
 		else 
 			for (const Ty& el : slotMap)
@@ -251,14 +251,14 @@ Results benchmarkRegistry(int numEntities, int numRuns)
 		for (int i = 0; i < numEntities; ++i)
 			entities.push_back(registry.create());
 
-		registry.addComponent<components::Position2D>(entities.front(), glm::vec2(0.2f));
-		registry.addComponent<components::Rotation2D>(entities.front(), 42.f);
+		registry.template addComponent<components::Position2D>(entities.front(), glm::vec2(0.2f));
+		registry.template addComponent<components::Rotation2D>(entities.front(), 42.f);
 
 		auto start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numEntities; ++i)
 		{
-			registry.addComponent<components::Position>(entities[i], glm::vec3(static_cast<float>(i)));
-			registry.addComponent<components::Velocity>(entities[i], glm::vec3(1.f, 0.f, static_cast<float>(i)));
+			registry.template addComponent<components::Position>(entities[i], glm::vec3(static_cast<float>(i)));
+			registry.template addComponent<components::Velocity>(entities[i], glm::vec3(1.f, 0.f, static_cast<float>(i)));
 		}
 		auto end = chrono::high_resolution_clock::now();
 		results.tInsert += chrono::duration<float>(end - start).count();
@@ -268,9 +268,9 @@ Results benchmarkRegistry(int numEntities, int numRuns)
 
 		start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numEntities; i += 7)
-			registry.addComponent<components::TestComponent>(entities[i], std::to_string(i) + "2poipnrpuipo");
+			registry.template addComponent<components::TestComponent>(entities[i], std::to_string(i) + "2poipnrpuipo");
 		for (int i = 0; i < numEntities; i += 3)
-			registry.addComponent<components::Transform>(entities[i], glm::identity<glm::mat4>());
+			registry.template addComponent<components::Transform>(entities[i], glm::identity<glm::mat4>());
 		end = chrono::high_resolution_clock::now();
 		results.tInsert += chrono::duration<float>(end - start).count();
 

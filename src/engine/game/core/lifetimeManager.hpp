@@ -53,7 +53,7 @@ namespace game {
 		void moveComponentsImpl()
 		{
 			for (auto& [ent, comp] : getContainer<Comp>())
-				m_registry.addComponent<Comp>(ent, std::move(comp));
+				m_registry.template addComponent<Comp>(ent, std::move(comp));
 			getContainer<Comp>().clear();
 
 			moveComponentsImpl<Dummy, Comps...>();
