@@ -90,8 +90,10 @@ public:
 		spawnTime += _deltaTime;
 		shootTime += _deltaTime;
 
-		if (shootTime >= SHOOT_DELAY) {
-			if (m_inputs->isKeyPressed(Actions::SHOOT)) {
+		if (shootTime >= SHOOT_DELAY) 
+		{
+			if (m_inputs->isKeyPressed(Actions::SHOOT)) 
+			{
 				shootTime = 0.f;
 				Entity ent = m_manager.create();
 				m_manager.addComponent<Model>(ent, planetMesh, planetTex, glm::identity<mat4>());
@@ -107,14 +109,14 @@ public:
 				dir = glm::normalize(dir);
 				m_manager.addComponent<Velocity>(ent, vel);
 				m_manager.addComponent<Lifetime>(ent, lifetime);
-				m_manager.addComponent<Ammonition>(ent);
+				m_manager.addComponent<Ammunition>(ent);
 
 				ent = m_manager.create();
 				m_manager.addComponent<Position>(ent, CAM_POS);
 				m_manager.addComponent<BoundingBox>(ent, vec3(-maxD,-maxD,-maxD),vec3(maxD, maxD, maxD));
 				m_manager.addComponent<Lifetime>(ent, lifetime);
 				m_manager.addComponent<Velocity>(ent, vel);
-				m_manager.addComponent<PointLight>(ent, vec3(1,1,1), intensity);
+				m_manager.addComponent<PointLight>(ent, vec3(0,0,1), intensity);
 			}
 		}
 		if (spawnTime >= 0.5f)
@@ -182,7 +184,7 @@ public:
 
 private:
 	static constexpr glm::vec3 CAM_POS = vec3(0.f,0.f,30.f);
-	using CL = ComponentList<Model, Rotation, Position, Velocity, Transform, Lifetime, BoundingBox, CanExplode,Ammonition,AngularVelocity, PointLight>;
+	using CL = ComponentList<Model, Rotation, Position, Velocity, Transform, Lifetime, BoundingBox, CanExplode,Ammunition,AngularVelocity, PointLight>;
 	Camera m_camera;
 	CL::Registry m_registry;
 	CL::LifetimeManager m_manager;

@@ -56,14 +56,10 @@ namespace game { namespace components {
 	};
 
 	struct CanExplode
-	{
-		CanExplode(){}
-	};
+	{};
 
-	struct Ammonition
-	{
-		Ammonition(){}
-	};
+	struct Ammunition
+	{};
 
 	struct Lifetime
 	{

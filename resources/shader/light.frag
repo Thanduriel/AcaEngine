@@ -6,13 +6,13 @@ layout(location = 2) in vec3 in_world_position;
 
 layout(binding = 0) uniform sampler2D tx_diffuse;
 
-#define MAX_LIGTHS 8
+#define MAX_LIGHTS 8
 #define e 0.001f
 #define SPECULAR 8
-layout(location = 3) uniform vec3 light_color[MAX_LIGTHS];
-layout(location = 3+MAX_LIGTHS) uniform vec3 light_position[MAX_LIGTHS];
-layout(location = 3+MAX_LIGTHS * 2) uniform float light_intensity[MAX_LIGTHS];
-layout(location = 3+MAX_LIGTHS * 3) uniform int n_ligths;
+layout(location = 3) uniform vec3 light_color[MAX_LIGHTS];
+layout(location = 3+MAX_LIGHTS) uniform vec3 light_position[MAX_LIGHTS];
+layout(location = 3+MAX_LIGHTS * 2) uniform float light_intensity[MAX_LIGHTS];
+layout(location = 3+MAX_LIGHTS * 3) uniform int n_ligths;
 
 layout(location = 0) out vec4 out_color;
 
@@ -29,7 +29,7 @@ void main()
 	vec3 tColor = texture(tx_diffuse, in_texCoord).rgb;
 	vec3 lColor = vec3(0);
 	vec3 viewDir = normalize(in_world_position.xyz);
-	for ( int i = 0; i < MAX_LIGTHS; ++i) {
+	for ( int i = 0; i < MAX_LIGHTS; ++i) {
 		if (i < n_ligths) {
 			float d = length(in_world_position - light_position[i]);
 			vec3 lightDir = normalize(light_position[i]);

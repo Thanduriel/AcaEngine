@@ -6,6 +6,7 @@
 #include "engine/game/components/lights.hpp"
 #include "engine/game/operations/addPointLights.hpp"
 #include <vector>
+#include <array>
 
 namespace graphics {
 
