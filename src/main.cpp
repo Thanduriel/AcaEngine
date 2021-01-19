@@ -8,6 +8,7 @@
 #include "engine/graphics/core/texture.hpp"
 #include "engine/graphics/core/sampler.hpp"
 #include "engine/game/core/registry.hpp"
+#include "engine/game/components/lights.hpp"
 #include "engine/game/operations/drawModels.hpp"
 #include "engine/game/operations/applyVelocity.hpp"
 #include "engine/game/operations/updateTransform.hpp"
@@ -98,10 +99,20 @@ public:
 				m_manager.addComponent<BoundingBox>(ent, vec3(-1,-1,-1),vec3(1,1,1));
 
 				auto dir = m_camera.toWorldSpace(m_inputs->getCursorPos()) - CAM_POS;
+				const vec3 vel = dir*30.f;
+				const float lifetime = 5.f;
+				float intensity = 10.f;
 				dir = glm::normalize(dir);
-				m_manager.addComponent<Velocity>(ent, dir*30.f);
-				m_manager.addComponent<Lifetime>(ent, 5.f);
+				m_manager.addComponent<Velocity>(ent, vel);
+				m_manager.addComponent<Lifetime>(ent, lifetime);
 				m_manager.addComponent<Ammonition>(ent);
+
+				ent = m_manager.create();
+				m_manager.addComponent<Position>(ent, CAM_POS);
+				m_manager.addComponent<BoundingBox>(ent, vec3(-maxD,-maxD,-maxD),vec3(maxD, maxD, maxD));
+				m_manager.addComponent<Lifetime>(ent, lifetime);
+				m_manager.addComponent<Velocity>(ent, vel);
+				m_manager.addComponent<PointLight>(ent, vec3(1,1,1), intensity);
 			}
 		}
 		if (spawnTime >= 0.5f)
@@ -120,6 +131,11 @@ public:
 			m_manager.addComponent<Lifetime>(ent, 30.f + dist(rng) * 5.f);
 
 			spawnTime = 0.f;
+		}
+		{
+			long max;
+			glGetInteger64v(GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB, &max);
+			spdlog::info("max storage: " + std::to_string(max)+ "\n");
 		}
 		m_manager.moveComponents();
 		utils::SparseOctree<Entity, 3, float> octree;
