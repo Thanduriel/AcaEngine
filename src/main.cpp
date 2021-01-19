@@ -9,6 +9,7 @@
 #include "engine/graphics/core/sampler.hpp"
 #include "engine/game/core/registry.hpp"
 #include "engine/game/components/lights.hpp"
+#include "engine/game/operations/addPointLights.hpp"
 #include "engine/game/operations/drawModels.hpp"
 #include "engine/game/operations/applyVelocity.hpp"
 #include "engine/game/operations/updateTransform.hpp"
@@ -98,10 +99,11 @@ public:
 				m_manager.addComponent<Transform>(ent, glm::identity<mat4>());
 				m_manager.addComponent<BoundingBox>(ent, vec3(-1,-1,-1),vec3(1,1,1));
 
-				auto dir = m_camera.toWorldSpace(m_inputs->getCursorPos()) - CAM_POS;
-				const vec3 vel = dir*30.f;
+				auto dir = glm::normalize(m_camera.toWorldSpace(m_inputs->getCursorPos()) - CAM_POS);
+				const vec3 vel = dir*15.f;
 				const float lifetime = 5.f;
-				float intensity = 10.f;
+				float intensity = 8000.f;
+				float maxD = 20.f; // For Demo
 				dir = glm::normalize(dir);
 				m_manager.addComponent<Velocity>(ent, vel);
 				m_manager.addComponent<Lifetime>(ent, lifetime);
@@ -123,7 +125,7 @@ public:
 			m_manager.addComponent<Position>(ent, vec3(0.f));
 			m_manager.addComponent<Rotation>(ent, glm::angleAxis(dist(rng)*1.8f-0.9f,
 						vec3(dist(rng)*2.f - 1.f, dist(rng)*2.f-1.f, dist(rng)*2.f - 1.f)));
-			m_manager.addComponent<AngularVelocity>(ent, glm::angleAxis(0.01f, vec3(dist(rng)*2.f - 1.f, dist(rng)*2.f-1.f, dist(rng)*2.f - 1.f)));
+			/* m_manager.addComponent<AngularVelocity>(ent, glm::angleAxis(0.01f, vec3(dist(rng)*2.f - 1.f, dist(rng)*2.f-1.f, dist(rng)*2.f - 1.f))); */
 			m_manager.addComponent<Transform>(ent, identity<mat4>());
 			m_manager.addComponent<Velocity>(ent, vec3(dist(rng) * 4.f - 2.0f, dist(rng) * 4.f - 2.0f, 0.f));
 			m_manager.addComponent<BoundingBox>(ent, vec3(-2.1,-2.1,-2.1), vec3(2.1,2.1,2.1));
@@ -131,11 +133,6 @@ public:
 			m_manager.addComponent<Lifetime>(ent, 30.f + dist(rng) * 5.f);
 
 			spawnTime = 0.f;
-		}
-		{
-			long max;
-			glGetInteger64v(GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB, &max);
-			spdlog::info("max storage: " + std::to_string(max)+ "\n");
 		}
 		m_manager.moveComponents();
 		utils::SparseOctree<Entity, 3, float> octree;
@@ -162,6 +159,10 @@ public:
 		operations::DrawModels drawModels;
 		drawModels.setCamera(m_camera);
 
+		game::operations::GrepPointLights::octree_t light_tree;
+		m_registry.execute(operations::GrepPointLights(light_tree));
+		drawModels.setLights(light_tree);
+
 	//	SpriteRenderer spriteRenderer;
 	//	Sprite sprite(0.5f, 0.5f, &texture);
 	//	spriteRenderer.draw(sprite, vec3(0.f, 0.f, -0.1f), 0.f, vec2(0.5f, 0.5f));
@@ -181,7 +182,7 @@ public:
 
 private:
 	static constexpr glm::vec3 CAM_POS = vec3(0.f,0.f,30.f);
-	using CL = ComponentList<Model, Rotation, Position, Velocity, Transform, Lifetime, BoundingBox, CanExplode,Ammonition,AngularVelocity>;
+	using CL = ComponentList<Model, Rotation, Position, Velocity, Transform, Lifetime, BoundingBox, CanExplode,Ammonition,AngularVelocity, PointLight>;
 	Camera m_camera;
 	CL::Registry m_registry;
 	CL::LifetimeManager m_manager;
