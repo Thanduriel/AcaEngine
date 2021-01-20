@@ -7,8 +7,9 @@ layout(location = 2) in vec3 in_world_position;
 layout(binding = 0) uniform sampler2D tx_diffuse;
 
 #define MAX_LIGHTS 8
-#define e 0.001f
-#define SPECULAR 15
+const float e = 0.001;
+const int SPECULAR = 15;
+
 layout(location = 3) uniform vec3 camera_pos;
 layout(location = 4) uniform vec3 light_color[MAX_LIGHTS];
 layout(location = 4+MAX_LIGHTS) uniform vec3 light_position[MAX_LIGHTS];
@@ -24,7 +25,7 @@ vec3 brdf(vec3 lightDir, vec3 viewDir, vec3 normal, vec3 lColor, float d, float 
 	if (diffF < 0) { return vec3(0,0,0);}
 	float specF = max(dot(reflectDir, viewDir), 0.f);
 	float i = 80.f / (1 + d*d);
-	return i * (diffF * vec3(0,0,1) * 0.5 + 0.5 * pow(specF, SPECULAR)*vec3(1,1,1));
+	return i * (diffF * lColor * 0.5 + 0.5 * pow(specF, SPECULAR)*vec3(1,1,1));
 }
 
 void main()

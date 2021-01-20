@@ -85,6 +85,7 @@ public:
 		static Mesh planetMesh(*utils::MeshLoader::get("../resources/models/sphere.obj"));
 		static const Texture2D& planetTex = *graphics::Texture2DManager::get("../resources/textures/planet.png", sampler);
 
+		auto getRandomColor = [&]() { return glm::rgbColor(vec3(dist(rng) * 360.f, 1.f, 1.f)); };
 
 		static float spawnTime = 0.f;
 		constexpr float SHOOT_DELAY = 0.3f;
@@ -121,7 +122,7 @@ public:
 				m_manager.addComponent<BoundingBox>(ent, vec3(-maxD,-maxD,-maxD),vec3(maxD, maxD, maxD));
 				m_manager.addComponent<Lifetime>(ent, lifetime);
 				m_manager.addComponent<Velocity>(ent, vel);
-				m_manager.addComponent<PointLight>(ent, vec3(1,1,1), intensity);
+				m_manager.addComponent<PointLight>(ent, getRandomColor(), intensity);
 			}
 		}
 		if (spawnTime >= 0.5f)
