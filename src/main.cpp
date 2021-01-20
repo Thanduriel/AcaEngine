@@ -127,8 +127,8 @@ public:
 		if (spawnTime >= 0.5f)
 		{
 			Entity ent = m_manager.create();
-			// m_manager.addComponent<Model>(ent, planetMesh, planetTex, mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1));
-			m_manager.addComponent<Model>(ent, mesh, texture, glm::identity<mat4>());
+			m_manager.addComponent<Model>(ent, planetMesh, planetTex, mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1));
+			// m_manager.addComponent<Model>(ent, mesh, texture, glm::identity<mat4>());
 			m_manager.addComponent<Position>(ent, vec3(0.f));
 			m_manager.addComponent<Rotation>(ent, glm::angleAxis(dist(rng)*1.8f-0.9f,
 						vec3(dist(rng)*2.f - 1.f, dist(rng)*2.f-1.f, dist(rng)*2.f - 1.f)));
