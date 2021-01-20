@@ -191,8 +191,7 @@ namespace game {
 		{
 			auto mainContainer = getContainerUnsafe<Comp>().template iterate<Comp>();
 			std::array< SM<Comp>*, sizeof...(Comps)> containers{ &getContainerUnsafe<Comps>()... };
-		//	std::vector<SM<Comp>*> othContainers{ &getContainer<Comps>()... };
-
+		
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{
 				Entity ent(it.key());
@@ -204,13 +203,8 @@ namespace game {
 				};
 				
 				if(hasComponents())
-		//		if ((getContainerUnsafe<Comps>().contains(ent.toIndex()) && ...))
 				{
 					executeHelper< WithEnt, 0, Comps...>(_action, ent, containers, it.value());
-				/*	if constexpr (WithEnt)
-						_action(_ent, it.value(), getContainerUnsafe<Comps>().at<Comps>(ent.toIndex())...);
-					else
-						_action(it.value(), getContainerUnsafe<Comps>().at<Comps>(ent.toIndex())...);*/
 				}
 			}
 		}

@@ -39,6 +39,10 @@ if (MSVC)
 	# set startup project
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Game)
 endif()
+if(NOT MSVC)
+	target_compile_options(Game PRIVATE "$<$<CONFIG:DEBUG>:-Wall;-pedantic>")
+	target_compile_options(Game PRIVATE "$<$<CONFIG:RELEASE>:-Wall;-pedantic;-O3;-march=native>")
+endif()
 
 #---------------------------------------------------------------------------------------
 # libraries
@@ -49,6 +53,10 @@ set_target_properties(AcaEngine PROPERTIES
 	CXX_STANDARD 20
 	CXX_STANDARD_REQUIRED YES
 )
+if(NOT MSVC)
+	target_compile_options(AcaEngine PRIVATE "$<$<CONFIG:DEBUG>:-Wall;-pedantic>")
+	target_compile_options(AcaEngine PRIVATE "$<$<CONFIG:RELEASE>:-Wall;-pedantic;-O3;-march=native>")
+endif()
 
 # OpenGL
 find_package(OpenGL REQUIRED)
