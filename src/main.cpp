@@ -28,6 +28,7 @@
 #include <glm/gtx/color_space.hpp>
 #include <glm/gtx/compatibility.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <fstream>
 #include <filesystem>
 
@@ -66,6 +67,7 @@ public:
 	{
 		m_fontRenderer = FontManager::get("../resources/fonts/Anonymous Pro.ttf");
 		m_camera.setView(lookAt(CAM_POS, vec3(0.f), vec3(0.f, 1.f, 0.f)));
+		spdlog::info("camera postion" + glm::to_string(m_camera.getView()[3]));
 		m_inputs = std::unique_ptr<input::InputInterface>(
 			new input::KeyboardInterface(utils::Config::get()["inputs"]["keyboard"], 
 				{ {"exit", input::Key::ESCAPE}, {"moveLeft", input::Key::LEFT}, {"moveRight", input::Key::RIGHT}, {"shoot", input::MouseButton::LEFT} },
@@ -95,39 +97,42 @@ public:
 			if (m_inputs->isKeyPressed(Actions::SHOOT)) 
 			{
 				shootTime = 0.f;
+
+				auto dir = glm::normalize(m_camera.toWorldSpace(m_inputs->getCursorPos()) - CAM_POS);
+				const vec3 vel = dir*5.f;
+				const float lifetime = 20.f;
+				float intensity = 10.f;
+				float maxD = 10.f; // For Demo
+				vec3 pos = CAM_POS + dir * 2.f;
+
 				Entity ent = m_manager.create();
 				m_manager.addComponent<Model>(ent, planetMesh, planetTex, glm::identity<mat4>());
-				m_manager.addComponent<Position>(ent, CAM_POS);
+				m_manager.addComponent<Position>(ent, pos);
 				m_manager.addComponent<Transform>(ent, glm::identity<mat4>());
 				m_manager.addComponent<BoundingBox>(ent, vec3(-1,-1,-1),vec3(1,1,1));
 
-				auto dir = glm::normalize(m_camera.toWorldSpace(m_inputs->getCursorPos()) - CAM_POS);
-				const vec3 vel = dir*15.f;
-				const float lifetime = 5.f;
-				float intensity = 8000.f;
-				float maxD = 20.f; // For Demo
 				dir = glm::normalize(dir);
 				m_manager.addComponent<Velocity>(ent, vel);
 				m_manager.addComponent<Lifetime>(ent, lifetime);
 				m_manager.addComponent<Ammunition>(ent);
 
 				ent = m_manager.create();
-				m_manager.addComponent<Position>(ent, CAM_POS);
+				m_manager.addComponent<Position>(ent,pos);
 				m_manager.addComponent<BoundingBox>(ent, vec3(-maxD,-maxD,-maxD),vec3(maxD, maxD, maxD));
 				m_manager.addComponent<Lifetime>(ent, lifetime);
 				m_manager.addComponent<Velocity>(ent, vel);
-				m_manager.addComponent<PointLight>(ent, vec3(0,0,1), intensity);
+				m_manager.addComponent<PointLight>(ent, vec3(1,1,1), intensity);
 			}
 		}
 		if (spawnTime >= 0.5f)
 		{
 			Entity ent = m_manager.create();
-			m_manager.addComponent<Model>(ent, mesh, texture, mat4(2,0,0,0,0,1,0,0,0,0,2,0,0,0,0,1));
-			// m_manager.addComponent<Model>(ent, mesh, texture, rotate(glm::identity<mat4>(), pi<float>() / 2.f, vec3(0.f, 0.f, 1.f)));
+			// m_manager.addComponent<Model>(ent, planetMesh, planetTex, mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1));
+			m_manager.addComponent<Model>(ent, mesh, texture, glm::identity<mat4>());
 			m_manager.addComponent<Position>(ent, vec3(0.f));
 			m_manager.addComponent<Rotation>(ent, glm::angleAxis(dist(rng)*1.8f-0.9f,
 						vec3(dist(rng)*2.f - 1.f, dist(rng)*2.f-1.f, dist(rng)*2.f - 1.f)));
-			/* m_manager.addComponent<AngularVelocity>(ent, glm::angleAxis(0.01f, vec3(dist(rng)*2.f - 1.f, dist(rng)*2.f-1.f, dist(rng)*2.f - 1.f))); */
+			m_manager.addComponent<AngularVelocity>(ent, glm::angleAxis(0.01f, vec3(dist(rng)*2.f - 1.f, dist(rng)*2.f-1.f, dist(rng)*2.f - 1.f)));
 			m_manager.addComponent<Transform>(ent, identity<mat4>());
 			m_manager.addComponent<Velocity>(ent, vec3(dist(rng) * 4.f - 2.0f, dist(rng) * 4.f - 2.0f, 0.f));
 			m_manager.addComponent<BoundingBox>(ent, vec3(-2.1,-2.1,-2.1), vec3(2.1,2.1,2.1));
@@ -140,12 +145,12 @@ public:
 		utils::SparseOctree<Entity, 3, float> octree;
 		int count = 0;
 		m_registry.execute(operations::InsertBoundsInOctree(octree));
-		m_registry.execute(operations::DestroyHits(m_manager, octree, count));
+		// m_registry.execute(operations::DestroyHits(m_manager, octree, count));
 		m_manager.cleanup();
 		m_score += count;
 
 		m_registry.execute(operations::ApplyVelocity(_deltaTime));
-		m_registry.execute(operations::ApplyAngularVelocity(_deltaTime));
+		/* m_registry.execute(operations::ApplyAngularVelocity(_deltaTime)); */
 		m_registry.execute(operations::UpdateTransformRotation());
 		m_registry.execute(operations::UpdateTransformPosition());
 		m_registry.execute(operations::ProcessLifetime(m_manager, _deltaTime));
@@ -183,7 +188,7 @@ public:
 	}
 
 private:
-	static constexpr glm::vec3 CAM_POS = vec3(0.f,0.f,30.f);
+	static constexpr glm::vec3 CAM_POS = vec3(0.f,0.f,20.f);
 	using CL = ComponentList<Model, Rotation, Position, Velocity, Transform, Lifetime, BoundingBox, CanExplode,Ammunition,AngularVelocity, PointLight>;
 	Camera m_camera;
 	CL::Registry m_registry;

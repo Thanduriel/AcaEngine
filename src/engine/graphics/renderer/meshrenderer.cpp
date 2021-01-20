@@ -4,6 +4,7 @@
 #include "../core/opengl.hpp"
 #include "../core/texture.hpp"
 #include <glm/gtx/compatibility.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 namespace graphics {
 
@@ -24,11 +25,10 @@ namespace graphics {
 		m_lights.push_back(_lights);
 	}
 
-	void MeshRenderer::present()
+	void MeshRenderer::present(const glm::vec3& _camera_position)
 	{
 		m_program.use();
 		glEnable(GL_DEPTH_TEST);
-
 		for(size_t i = 0; i < m_meshes.size(); ++i)
 		{
 			const auto& light = m_lights[i];
@@ -36,10 +36,11 @@ namespace graphics {
 			m_program.setUniform(0, m_transforms[i]);
 			m_program.setUniform(1, m_normalTransforms[i]);
 			m_program.setUniform(2, m_worldTransforms[i]);
-			m_program.setUniform(3 , light.color[0], nLights);
-			m_program.setUniform(3 + MAX_LIGHTS, light.position[0], nLights);
-			m_program.setUniform(3 + 2 * MAX_LIGHTS, light.intensity[0], nLights);
-			m_program.setUniform(3 + 3 * MAX_LIGHTS, nLights);
+			m_program.setUniform(3, _camera_position); // camera position
+			m_program.setUniform(4 , light.color[0], nLights);
+			m_program.setUniform(4 + MAX_LIGHTS, light.position[0], nLights);
+			m_program.setUniform(4 + 2 * MAX_LIGHTS, light.intensity[0], nLights);
+			m_program.setUniform(4 + 3 * MAX_LIGHTS, nLights);
 
 
 			m_textures[i]->bind(0);
