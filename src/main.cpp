@@ -383,8 +383,8 @@ int main(int argc, char* argv[])
 	std::cout << "ratios: " << t0 / t3 << " | " << t1 / t4 << " | " << t2 / t5 << std::endl;
 	*/
 
-	int numEntities = 2 << 10; // 16
-	int runs = 2; // 32
+	int numEntities = 2 << 16; // 16
+	int runs = 8; // 32
 	if (argc >= 3)
 	{
 		numEntities = std::stoi(argv[1]);
@@ -401,11 +401,11 @@ int main(int argc, char* argv[])
 		components::Position2D,
 		components::Rotation2D>;
 
-	runComparison<GameRegistry, GameRegistry, game::Registry2, sp::Registry, smk::Registry>(
+/*	runComparison<GameRegistry, GameRegistry, game::Registry2, sp::Registry, smk::Registry>(
 		numEntities, 
 		runs,
-		{"static", "type erasure", "sp", "smk"});
-	//runComparison<GameRegistry, GameRegistry, game::Registry2>(numEntities, runs, { "static", "type erasure"});
+		{"static", "type erasure", "sp", "smk"});*/
+	runComparison<GameRegistry, GameRegistry, game::Registry2>(numEntities, runs, { "static", "type erasure"});
 //	Game game;
 //	game.run(std::make_unique<MainState>());
 

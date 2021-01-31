@@ -181,60 +181,30 @@ namespace game {
 		void executeUnpack(Action& _action, utils::UnpackFunction<std::remove_cv_t<Action>, Comp, Comps...>)
 		{
 			if constexpr (std::is_convertible_v<Comp,Entity>)
-				executeImpl<true, Action, std::decay_t<Comps>...>(_action);
+				executeImpl<true, Action, std::decay_t<Comps>...>(_action, std::make_index_sequence<sizeof...(Comps)-1>{});
 			else
-				executeImpl<false, Action, std::decay_t<Comp>, std::decay_t<Comps>...>(_action);
+				executeImpl<false, Action, std::decay_t<Comp>, std::decay_t<Comps>...>(_action, std::make_index_sequence<sizeof...(Comps)>{});
 		}
 
-		template<bool WithEnt, typename Action, component_type Comp, component_type... Comps>
-		void executeImpl(Action& _action)
+		template<bool WithEnt, typename Action, component_type Comp, component_type... Comps, std::size_t... I>
+		void executeImpl(Action& _action, std::index_sequence<I...>)
 		{
 			auto mainContainer = getContainerUnsafe<Comp>().template iterate<Comp>();
-			std::array< SM<Comp>*, sizeof...(Comps)> containers{ &getContainerUnsafe<Comps>()... };
+			auto othContainers = std::tie(getContainerUnsafe<Comps>()...);
 		
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{
 				Entity ent(it.key());
-				auto hasComponents = [&]() 
-				{
-					for (SM<Comp>* comps : containers)
-						if (!comps->contains(ent.toIndex())) return false;
-					return true;
-				};
 				
-				if(hasComponents())
+				if ((std::get<I>(othContainers).contains(ent.toIndex()) && ...))
 				{
-					executeHelper< WithEnt, 0, Comps...>(_action, ent, containers, it.value());
+					if constexpr (WithEnt)
+						_action(ent, it.value(), std::get<I>(othContainers).template at<Comps>(ent.toIndex()) ...);
+					else
+						_action(it.value(), std::get<I>(othContainers).template at<Comps>(ent.toIndex()) ...);
 				}
 			}
 		}
-
-		template<bool WithEntity, int Cur, component_type Comp, component_type... Comps, typename Action, typename... Args, size_t NumComps>
-		void executeHelper(Action& _action, Entity _ent, std::array< SM<int>*, NumComps>& _containers, Args&... _args)
-		{
-			executeHelper<WithEntity, Cur+1, Comps...>(_action, _ent, _containers, _args..., _containers[Cur]->template at<Comp>(_ent.toIndex()));
-		}
-
-		template<bool WithEntity, int Cur, typename Action, typename... Args, size_t NumComps>
-		void executeHelper(Action& _action, Entity _ent, std::array< SM<int>*, NumComps>& _containers,  Args&... _args)
-		{
-			if constexpr (WithEntity)
-				_action(_ent, _args...);
-			else
-				_action(_args...);
-		}
-
-		template<typename Dummy, typename Comp, typename... Comps>
-		void removeHelper(Entity _ent)
-		{
-			auto& comps = std::get<SM<Comp>>(m_components);
-			if (comps.contains(_ent.toIndex()))
-				comps.erase(_ent.toIndex());
-			removeHelper<void, Comps...>(_ent);
-		}
-
-		template<typename Dummy>
-		void removeHelper(Entity _ent) {}
 
 		template<component_type Comp>
 		SM<Comp>& getContainer()
