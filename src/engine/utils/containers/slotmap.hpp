@@ -69,8 +69,8 @@ namespace utils {
 			bool operator==(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index == _oth.m_index; }
 			bool operator!=(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index != _oth.m_index; }
 		private:
-			std::size_t m_index;
 			SlotMap& m_target;
+			std::size_t m_index;
 		};
 		auto begin() { return Iterator(*this, 0); }
 		auto end() { return Iterator(*this, m_values.size()); }

@@ -128,8 +128,8 @@ namespace utils {
 				bool operator==(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index == _oth.m_index; }
 				bool operator!=(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index != _oth.m_index; }
 			private:
-				SizeType m_index;
 				WeakSlotMap& m_target;
+				SizeType m_index;
 			};
 
 			Iterator begin() { return Iterator(m_target, 0); }
@@ -179,9 +179,9 @@ namespace utils {
 		}
 		using Move = void(*)(void*, void*);
 
+		int m_elementSize;
 		Destructor m_destructor;
 		Move m_move;
-		int m_elementSize;
 		SizeType m_size;
 		SizeType m_capacity;
 

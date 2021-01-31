@@ -239,7 +239,7 @@ namespace game {
 		template<component_type Comp>
 		SM<Comp>& getContainer()
 		{
-			const int idx = m_typeIndex.value<Comp>();
+			const size_t idx = m_typeIndex.value<Comp>();
 			if (idx == m_components.size())
 				m_components.emplace_back(static_cast<Comp*>(nullptr));
 			return m_components[idx]; 
