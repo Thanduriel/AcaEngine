@@ -48,31 +48,6 @@ namespace game {
 			return ent;
 		}
 
-		class ComponentCreator
-		{
-		public:
-			ComponentCreator(Registry2& _registry, Entity _ent)
-				: entity(_ent), m_registry(_registry)
-			{}
-
-			template<component_type Component, typename... Args>
-			Component& add(Args&&... _args)
-			{
-				return m_registry.addComponent<Component>(entity, std::forward<Args>(_args)...);
-			}
-
-			const Entity entity;
-		private:
-			Registry2& m_registry;
-		};
-		template<typename Actor, typename... Args>
-		Entity create(Args&&... _args)
-		{
-			Entity ent = create();
-			Actor act(ComponentCreator(*this, ent), std::forward<Args>(_args)...);
-			return ent;
-		}
-
 		// Remove an entity with all its components.
 		void erase(Entity _ent)
 		{

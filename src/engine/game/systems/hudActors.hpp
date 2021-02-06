@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/registry2.hpp"
+#include "../core/lifetimeManager2.hpp"
 #include "../components/components2D.hpp"
 #include "hudComponents.hpp"
 
@@ -9,7 +10,7 @@ namespace game {
 	class FillBar
 	{
 	public:
-		FillBar(Registry2::ComponentCreator& _creator, 
+		FillBar(ComponentCreator& _creator, 
 			glm::vec2 _position,
 			float _alignX, float _alignY,
 			const graphics::Texture2D& _backgroundTex,
@@ -21,7 +22,7 @@ namespace game {
 	class Label
 	{
 	public:
-		Label(Registry2::ComponentCreator& _creator,
+		Label(ComponentCreator& _creator,
 			const std::string& _text = "",
 			float _fontSize = 10.f,
 			const glm::vec3& _pos = glm::vec3(0.f, 0.f, -0.5f),

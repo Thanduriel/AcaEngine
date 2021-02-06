@@ -154,7 +154,7 @@ namespace utils {
 		bool empty() const { return m_size == 0; }
 	protected:
 		template<typename Value>
-		Value& get(SizeType _ind) { return reinterpret_cast<Value&>(m_values[static_cast<size_t>(_ind) * m_elementSize]); }
+		Value& get(SizeType _ind) { return reinterpret_cast<Value&>(m_values[index(_ind)]); }
 		size_t index(SizeType _ind) const { return static_cast<size_t>(_ind) * m_elementSize; }
 
 		void destroyValues()

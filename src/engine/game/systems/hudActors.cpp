@@ -4,7 +4,7 @@ namespace game {
 
 	namespace comp = components;
 
-	FillBar::FillBar(Registry2::ComponentCreator& _creator, glm::vec2 _position,
+	FillBar::FillBar(ComponentCreator& _creator, glm::vec2 _position,
 		float _alignX, float _alignY,
 		const graphics::Texture2D& _backgroundTex,
 		const graphics::Texture2D& _fillTex,
@@ -20,7 +20,7 @@ namespace game {
 		_creator.add<comp::BoundingRectangle>(fillBar.backgroundSprite->size, glm::vec2(_alignX, _alignY));
 	}
 
-	Label::Label(Registry2::ComponentCreator& _creator, const std::string& _text,
+	Label::Label(ComponentCreator& _creator, const std::string& _text,
 		float _fontSize,
 		const glm::vec3& _pos,
 		const Color& _color,
