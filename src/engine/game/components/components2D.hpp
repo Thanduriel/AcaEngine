@@ -2,6 +2,7 @@
 
 #include "../../graphics/renderer/sprite.hpp"
 #include "../core/component.hpp"
+#include "../../math/glmext.hpp"
 #include <glm/glm.hpp>
 #include <string>
 
@@ -23,8 +24,9 @@ namespace game { namespace components{
 
 		Transform2D operator*(const Transform2D& oth) const
 		{
+			const glm::mat2x2 rot = math::rotation(rotation);
 			return Transform2D{
-				position + oth.position,
+				position + rot * oth.position,
 				rotation + oth.rotation,
 				scale * oth.scale };
 		}
