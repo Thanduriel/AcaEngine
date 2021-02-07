@@ -39,10 +39,6 @@ if (MSVC)
 	# set startup project
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Game)
 endif()
-if(NOT MSVC)
-	target_compile_options(Game PRIVATE "$<$<CONFIG:DEBUG>:-Wall;-pedantic>")
-	target_compile_options(Game PRIVATE "$<$<CONFIG:RELEASE>:-Wall;-pedantic;-O3;-march=native>")
-endif()
 
 #---------------------------------------------------------------------------------------
 # libraries
@@ -53,9 +49,17 @@ set_target_properties(AcaEngine PROPERTIES
 	CXX_STANDARD 20
 	CXX_STANDARD_REQUIRED YES
 )
-if(NOT MSVC)
-	target_compile_options(AcaEngine PRIVATE "$<$<CONFIG:DEBUG>:-Wall;-pedantic>")
-	target_compile_options(AcaEngine PRIVATE "$<$<CONFIG:RELEASE>:-Wall;-pedantic;-O3;-march=native>")
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result)
+if(result)
+	set_property(TARGET AcaEngine Game PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+endif()
+
+if(MSVC)
+else()
+	target_compile_options(AcaEngine PUBLIC "$<$<CONFIG:DEBUG>:-Wall;-pedantic>")
+	target_compile_options(AcaEngine PUBLIC "$<$<CONFIG:RELEASE>:-Wall;-pedantic;-O3;-march=native>")
 endif()
 
 # OpenGL
@@ -134,9 +138,7 @@ list(APPEND INCLUDE_DIR  "dependencies/json")
 
 list(APPEND INCLUDE_DIR "src")
 target_include_directories(AcaEngine PUBLIC ${INCLUDE_DIR})
-#target_include_directories(AcaEngine INTERFACE "src")
 target_link_libraries(Game AcaEngine)
-#target_include_directories(Game PRIVATE ${INCLUDE_DIR})
 
 enable_testing()
 add_subdirectory(tests)

@@ -43,6 +43,24 @@ namespace utils {
 			_oth.m_capacity = 0;
 		}
 
+		WeakSlotMap& operator=(WeakSlotMap&& _oth) noexcept
+		{
+			m_elementSize = _oth.m_elementSize;
+			m_destructor = _oth.m_destructor;
+			m_move = _oth.m_move;
+			m_size = _oth.m_size;
+			m_capacity = _oth.m_capacity;
+			m_values = std::move(_oth.m_values);
+			m_slots = std::move(_oth.m_slots);
+			m_valuesToSlots = std::move(_oth.m_valuesToSlots);
+
+			_oth.m_size = 0;
+			_oth.m_capacity = 0;
+
+			return *this;
+		}
+
+
 		~WeakSlotMap()
 		{
 			destroyValues();
