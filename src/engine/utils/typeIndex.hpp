@@ -4,13 +4,12 @@ namespace utils {
 
 	class TypeIndex
 	{
-		int m_counter = 0;
-
+		static int s_counter;
 	public:
 		template<typename T>
-		int value()
+		static int value()
 		{
-			static int id = m_counter++;
+			static int id = s_counter++;
 			return id;
 		}
 	};

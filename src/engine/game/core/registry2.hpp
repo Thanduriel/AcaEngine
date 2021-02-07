@@ -2,6 +2,7 @@
 
 #include "../../utils/containers/slotmap.hpp"
 #include "../../utils/containers/weakSlotMap.hpp"
+#include "../../utils/containers/hashmap.hpp"
 #include "../../utils/metaProgHelpers.hpp"
 #include "../../utils/typeIndex.hpp"
 #include "entity.hpp"
@@ -11,6 +12,9 @@
 #include <type_traits>
 #include <optional>
 #include <array>
+#include <unordered_map>
+#include <typeinfo>
+#include <typeindex>
 
 namespace game {
 	
@@ -54,8 +58,8 @@ namespace game {
 			ASSERT(m_generations[_ent.toIndex()].entity != INVALID_ENTITY, "Attempting to erase a non existent entity.");
 
 			for (auto& components : m_components)
-				if(components.contains(_ent.toIndex()))
-					components.erase(_ent.toIndex());
+				if(components.data().contains(_ent.toIndex()))
+					components.data().erase(_ent.toIndex());
 
 			m_unusedEntities.push_back(_ent);
 			m_generations[_ent.toIndex()].entity = INVALID_ENTITY;
@@ -184,22 +188,31 @@ namespace game {
 		template<component_type Comp>
 		SM<Comp>& getContainer()
 		{
-			const size_t idx = m_typeIndex.value<Comp>();
-			if (idx == m_components.size())
-				m_components.emplace_back(utils::TypeHolder<Comp>());
-			return m_components[idx]; 
+			auto it = m_components.find(utils::TypeIndex::value<Comp>());
+			if (it != m_components.end())
+				return it.data();
+
+			// std::type_index(typeid(Comp))
+			m_components.add(utils::TypeIndex::value<Comp>(),
+				SM<int>(utils::TypeHolder<Comp>()));
+			return getContainerUnsafe<Comp>();
 		}
 
 		template<component_type Comp>
-		SM<Comp>& getContainerUnsafe() { return m_components[m_typeIndex.value<Comp>()]; };
+		SM<Comp>& getContainerUnsafe() 
+		{ 
+			return m_components.find(utils::TypeIndex::value<Comp>()).data();
+		};
 
 		template<component_type Comp>
-		const SM<Comp>& getContainer() const { return m_components[m_typeIndex.value<Comp>()]; };
+		const SM<Comp>& getContainer() const 
+		{
+			return m_components.find(utils::TypeIndex::value<Comp>()).data();
+		};
 
 		std::vector<Entity> m_unusedEntities;
 		Entity::BaseType m_maxNumEntities = 0u;
-		std::vector<SM<int>> m_components;
+		utils::HashMap<int, SM<int>> m_components;
 		std::vector<EntityRef> m_generations;
-		utils::TypeIndex m_typeIndex;
 	};
 }

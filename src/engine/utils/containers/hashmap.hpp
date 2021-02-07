@@ -124,9 +124,10 @@ public:
 	Handle add(KeyT&& _key, DataT&& _data)
 	{
 		using namespace std;
-		uint32_t h = (uint32_t)m_hash(_key);//hash(reinterpret_cast<const uint32_t*>(&_key), sizeof(_key) / 4);
+		uint32_t h = (uint32_t)m_hash(_key);
 	restartAdd:
-		uint32_t insertIdx = ~0;		uint32_t d = 0;
+		uint32_t insertIdx = ~0;
+		uint32_t d = 0;
 		uint32_t idx = h % m_capacity;
 		while(m_keys[idx].dist != 0xffffffff) // while not empty cell
 		{
@@ -193,7 +194,7 @@ public:
 		}
 	}
 
-	Handle find(const K& _key)
+	Handle find(const K& _key) noexcept
 	{
 		uint32_t d = 0;
 		uint32_t h = (uint32_t)m_hash(_key);
@@ -207,7 +208,7 @@ public:
 		}
 		return Handle(nullptr, 0);
 	}
-	ConstHandle find(const K& _key) const
+	ConstHandle find(const K& _key) const noexcept
 	{
 		// COPY OF find() <noconst>
 		uint32_t d = 0;
@@ -224,7 +225,6 @@ public:
 	}
 
 	/// Get access to an element. If it was not in the map before it will be added with default construction.
-	/// TODO: SFINAE if T does not support default construction
 	T& operator [] (const K& _key)
 		requires std::is_default_constructible_v<T>
 	{
