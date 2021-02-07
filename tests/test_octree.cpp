@@ -36,8 +36,6 @@ int testOctree2D()
 {
 	using TreeT = utils::SparseOctree<int, 2, float>;
 
-	int testsFailed = 0;
-
 	TreeT tree(1.f);
 	std::vector<std::pair<TreeT::AABB, int>> expectedElements;
 	Processor<TreeT> proc;
@@ -93,7 +91,7 @@ int testOctree2D()
 	return testsFailed;
 }
 
-int testOctree3D()
+void testOctree3D()
 {
 	using TreeT = utils::SparseOctree<int, 2, double>;
 
@@ -124,10 +122,12 @@ int testOctree3D()
 	for (auto& el : expectedElements)
 		EXPECT(std::find(proc.found.begin(), proc.found.end(), el) != proc.found.end(), "3D tree is consistent after removal.");
 
-	return 0;
 }
 
 int main() 
 {
-	return testOctree2D() + testOctree3D();
+	testOctree2D();
+	testOctree3D();
+
+	return testsFailed;
 }

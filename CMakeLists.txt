@@ -50,6 +50,18 @@ set_target_properties(AcaEngine PROPERTIES
 	CXX_STANDARD_REQUIRED YES
 )
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result)
+if(result)
+	set_property(TARGET AcaEngine Game PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+endif()
+
+if(MSVC)
+else()
+	target_compile_options(AcaEngine PUBLIC "$<$<CONFIG:DEBUG>:-Wall;-pedantic>")
+	target_compile_options(AcaEngine PUBLIC "$<$<CONFIG:RELEASE>:-Wall;-pedantic;-O3;-march=native>")
+endif()
+
 # OpenGL
 find_package(OpenGL REQUIRED)
 target_link_libraries(AcaEngine PUBLIC ${OPENGL_LIBRARIES})
@@ -126,9 +138,7 @@ list(APPEND INCLUDE_DIR  "dependencies/json")
 
 list(APPEND INCLUDE_DIR "src")
 target_include_directories(AcaEngine PUBLIC ${INCLUDE_DIR})
-#target_include_directories(AcaEngine INTERFACE "src")
 target_link_libraries(Game AcaEngine)
-#target_include_directories(Game PRIVATE ${INCLUDE_DIR})
 
 enable_testing()
 add_subdirectory(tests)

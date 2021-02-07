@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <cstring>
 #include <functional>
+#include <concepts>
 
 namespace utils {
 
@@ -195,7 +196,7 @@ public:
 	Handle find(const K& _key)
 	{
 		uint32_t d = 0;
-		uint32_t h = (uint32_t)m_hash(_key);//hash(reinterpret_cast<const uint32_t*>(&_key), sizeof(_key) / 4);
+		uint32_t h = (uint32_t)m_hash(_key);
 		uint32_t idx = h % m_capacity;
 		while(m_keys[idx].dist != 0xffffffff && d <= m_keys[idx].dist)
 		{
@@ -210,7 +211,7 @@ public:
 	{
 		// COPY OF find() <noconst>
 		uint32_t d = 0;
-		uint32_t h = (uint32_t)m_hash(_key);//hash(reinterpret_cast<const uint32_t*>(&_key), sizeof(_key) / 4);
+		uint32_t h = (uint32_t)m_hash(_key);
 		uint32_t idx = h % m_capacity;
 		while(m_keys[idx].dist != 0xffffffff && d <= m_keys[idx].dist)
 		{
@@ -225,9 +226,10 @@ public:
 	/// Get access to an element. If it was not in the map before it will be added with default construction.
 	/// TODO: SFINAE if T does not support default construction
 	T& operator [] (const K& _key)
+		requires std::is_default_constructible_v<T>
 	{
 		uint32_t d = 0;
-		uint32_t h = (uint32_t)m_hash(_key);//hash(reinterpret_cast<const uint32_t*>(&_key), sizeof(_key) / 4);
+		uint32_t h = (uint32_t)m_hash(_key);
 		uint32_t idx = h % m_capacity;
 		while(m_keys[idx].dist != 0xffffffff && d <= m_keys[idx].dist)
 		{

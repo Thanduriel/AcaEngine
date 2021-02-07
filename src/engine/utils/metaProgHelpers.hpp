@@ -10,4 +10,10 @@ namespace utils {
 		UnpackFunction(void(T::*)(Args ...) const) {};
 		UnpackFunction(void(T::*)(Args ...)) {};
 	};
+
+	template<typename T>
+	struct TypeHolder
+	{
+		using type = T;
+	};
 }
