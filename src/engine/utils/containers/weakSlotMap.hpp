@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../utils/assert.hpp"
+#include "../../utils/metaProgHelpers.hpp"
 #include <vector>
 #include <limits>
 #include <utility>
@@ -8,22 +9,21 @@
 #include <memory>
 
 namespace utils {
-	// std::integral Key, std::movable Value
-	template<typename Key, bool TrivialDestruct = false>
+	template<std::integral Key, bool TrivialDestruct = false>
 	class WeakSlotMap
 	{
 	protected:
 		using SizeType = Key;
 		constexpr static Key INVALID_SLOT = std::numeric_limits<Key>::max();
 	public:
-		template<typename Value>
-		WeakSlotMap(Value* dummy, SizeType _initialSize = 4)
+		template<std::movable Value>
+		WeakSlotMap(utils::TypeHolder<Value>, SizeType _initialSize = 4)
 			: m_elementSize(sizeof(Value)),
 			m_destructor(destroyElement<Value>),
 			m_move(moveElement<Value>),
 			m_size(0),
 			m_capacity(_initialSize),
-			m_values(new char[static_cast<size_t>(m_capacity) * m_elementSize])
+			m_values(new char[index(m_capacity)])
 		{
 			static_assert(std::is_trivially_destructible_v<Value> || !TrivialDestruct,
 				"Managed elements require a destructor call.");
@@ -186,7 +186,6 @@ namespace utils {
 		SizeType m_capacity;
 
 		std::unique_ptr<char[]> m_values;
-
 		std::vector<Key> m_slots;
 		std::vector<Key> m_valuesToSlots;
 	};

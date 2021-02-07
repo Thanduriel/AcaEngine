@@ -9,8 +9,8 @@
 #include "engine/graphics/core/sampler.hpp"
 #include "engine/game/core/registry.hpp"
 #include "engine/game/core/registry2.hpp"
-#include "engine/game/core/oth/RegistrySP.hpp"
-#include "engine/game/core/oth/RegistrySMK.hpp"
+//#include "engine/game/core/oth/RegistrySP.hpp"
+//#include "engine/game/core/oth/RegistrySMK.hpp"
 #include "engine/game/operations/drawModels.hpp"
 #include "engine/game/operations/applyVelocity.hpp"
 #include "engine/game/operations/updateTransform.hpp"
@@ -383,7 +383,7 @@ int main(int argc, char* argv[])
 	std::cout << "ratios: " << t0 / t3 << " | " << t1 / t4 << " | " << t2 / t5 << std::endl;
 	*/
 
-	int numEntities = 2 << 16; // 16
+	int numEntities = 2 << 15; // 16
 	int runs = 8; // 32
 	if (argc >= 3)
 	{
@@ -405,7 +405,10 @@ int main(int argc, char* argv[])
 		numEntities, 
 		runs,
 		{"static", "type erasure", "sp", "smk"});*/
-	runComparison<GameRegistry, GameRegistry, game::Registry2>(numEntities, runs, { "static", "type erasure"});
+	runComparison<GameRegistry, GameRegistry, game::Registry2>(
+		numEntities, 
+		runs, 
+		{ "static", "type erasure"});
 //	Game game;
 //	game.run(std::make_unique<MainState>());
 

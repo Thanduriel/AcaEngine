@@ -89,9 +89,9 @@ namespace game {
 		// Retrieve a component associated with an entity.
 		// Does not check whether it exits.
 		template<component_type Component>
-		Component& getComponentUnsafe(Entity _ent) { return getContainer<Component>().template at<Component>(_ent.toIndex()); }
+		Component& getComponentUnsafe(Entity _ent) { return getContainerUnsafe<Component>().template at<Component>(_ent.toIndex()); }
 		template<component_type Component>
-		const Component& getComponentUnsafe(Entity _ent) const { getContainer<Component>().template at<Component>(_ent.toIndex()); }
+		const Component& getComponentUnsafe(Entity _ent) const { getContainerUnsafe<Component>().template at<Component>(_ent.toIndex()); }
 
 		// Retrieve a component associated with an entity.
 		template<component_type Component>
@@ -186,7 +186,7 @@ namespace game {
 		{
 			const size_t idx = m_typeIndex.value<Comp>();
 			if (idx == m_components.size())
-				m_components.emplace_back(static_cast<Comp*>(nullptr));
+				m_components.emplace_back(utils::TypeHolder<Comp>());
 			return m_components[idx]; 
 		}
 
@@ -197,7 +197,7 @@ namespace game {
 		const SM<Comp>& getContainer() const { return m_components[m_typeIndex.value<Comp>()]; };
 
 		std::vector<Entity> m_unusedEntities;
-		uint32_t m_maxNumEntities = 0u;
+		Entity::BaseType m_maxNumEntities = 0u;
 		std::vector<SM<int>> m_components;
 		std::vector<EntityRef> m_generations;
 		utils::TypeIndex m_typeIndex;
