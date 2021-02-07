@@ -1,6 +1,7 @@
 #pragma once
 
 #include "registry2.hpp"
+#include "../../utils/containers/hashmap.hpp"
 #include <vector>
 
 namespace game {
@@ -35,15 +36,25 @@ namespace game {
 	{
 	public:
 		template<typename Comp>
-		WeakComponentVector(Comp* comp, unsigned _initialCapacity = 4)
+		WeakComponentVector(utils::TypeHolder<Comp>, unsigned _initialCapacity = 4)
 			: m_moveToRegistry(moveComponentsToRegistry<Comp>),
+			m_clear(clear<Comp>),
 			m_components(new char[_initialCapacity * sizeof(Comp)])
 		{
 			m_entities.reserve(_initialCapacity);
 		}
 
+		WeakComponentVector(WeakComponentVector&& _oth) noexcept;
+
+		WeakComponentVector& operator=(WeakComponentVector&& _oth) noexcept;
+
+		~WeakComponentVector()
+		{
+			m_clear(*this);
+		}
+
 		template<typename Value>
-		const Value& get(size_t _pos) const { return *(reinterpret_cast<Value*>(m_components.get()) + _pos); }
+		const Value& get(size_t _pos) const { return *(reinterpret_cast<const Value*>(m_components.get()) + _pos); }
 
 		template<typename Value>
 		Value& get(size_t _pos) { return *(reinterpret_cast<Value*>(m_components.get()) + _pos); }
@@ -57,7 +68,7 @@ namespace game {
 			if (prevCapacity != capacity)
 			{
 				char* newBuf = new char[m_entities.capacity() * sizeof(Component)];
-				for (size_t i = 0; i < capacity; ++i)
+				for (size_t i = 0; i < prevCapacity; ++i)
 				{
 					new(&newBuf[i * sizeof(Component)]) Component(std::move(get<Component>(i)));
 					get<Component>(i).~Component();
@@ -65,8 +76,13 @@ namespace game {
 				m_components.reset(newBuf);
 			}
 
-			Component& comp = *new(&get<Component>(m_entities.size()-1)) Component{ std::forward<Args>(_args)... };
+			Component& comp = *new(&get<Component>(m_entities.size()-1)) Component( std::forward<Args>(_args)... );
 			return comp;
+		}
+
+		void clear()
+		{
+			m_clear(*this);
 		}
 
 		void moveToRegistry(Registry2& _registry)
@@ -88,11 +104,24 @@ namespace game {
 			_container.m_entities.clear();
 		}
 
-		std::vector<Entity> m_entities;
-		std::unique_ptr<char[]> m_components;
+		template<typename Value>
+		static void clear(WeakComponentVector& _container)
+		{
+			for (size_t i = 0; i < _container.m_entities.size(); ++i)
+			{
+				_container.get<Value>(i).~Value();
+			}
+
+			_container.m_entities.clear();
+		}
 
 		using MoveToRegistry = void(*)(Registry2&, WeakComponentVector&);
 		MoveToRegistry m_moveToRegistry;
+		using Clear = void(*)(WeakComponentVector&);
+		Clear m_clear;
+
+		std::vector<Entity> m_entities;
+		std::unique_ptr<char[]> m_components;
 	};
 
 	// Handles orderly construction and deletion of entities and components.
@@ -108,6 +137,9 @@ namespace game {
 
 			return container.emplace<Component>(_ent, std::forward<Args>(_args)...);
 		}
+
+		// override function explicitly so that it is not hidden by create<Actor>
+		Entity create() { return EntityCreator::create(); }
 
 		class ComponentCreator
 		{
@@ -128,6 +160,7 @@ namespace game {
 
 			LifetimeManager2& m_manager;
 		};
+
 		template<typename Actor, typename... Args>
 		Entity create(Args&&... _args)
 		{
@@ -137,6 +170,11 @@ namespace game {
 			return ent;
 		}
 
+		void cleanup()
+		{
+			EntityDeleter::cleanup(m_registry);
+		}
+
 		// Move newly created components into the registry.
 		void moveComponents();
 	private:
@@ -144,16 +182,16 @@ namespace game {
 		template<component_type Comp>
 		WeakComponentVector& getContainer()
 		{
-			const int idx = m_typeIndex.value<Comp>();
-			if (idx == m_newComponents.size())
-			{
-				m_newComponents.emplace_back(static_cast<Comp*>(nullptr));
-			}
-			return m_newComponents[idx];
+			auto it = m_newComponents.find(utils::TypeIndex::value<Comp>());
+			if (it != m_newComponents.end())
+				return it.data();
+
+			m_newComponents.add(utils::TypeIndex::value<Comp>(),
+				WeakComponentVector(utils::TypeHolder<Comp>()));
+			return m_newComponents.find(utils::TypeIndex::value<Comp>()).data();
 		}
 
-		std::vector<WeakComponentVector> m_newComponents;
-		utils::TypeIndex m_typeIndex;
+		utils::HashMap<int, WeakComponentVector> m_newComponents;
 	};
 
 	using ComponentCreator = LifetimeManager2::ComponentCreator;

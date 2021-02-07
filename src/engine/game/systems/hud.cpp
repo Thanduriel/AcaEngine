@@ -62,11 +62,11 @@ namespace game {
 	void Hud::processInputs()
 	{
 		glm::vec2 cursorPos = input::InputManager::getCursorPos();
-		cursorPos.y = m_registry.getComponent<BoundingRectangle>(m_this).size.y - cursorPos.y;
+		cursorPos.y = m_registry.getComponentUnsafe<BoundingRectangle>(m_this).size.y - cursorPos.y;
 
 		if (m_cursor)
 		{
-			m_registry.getComponent<Transform2D>(m_cursor).position = cursorPos;
+			m_registry.getComponentUnsafe<Transform2D>(m_cursor).position = cursorPos;
 		}
 
 		if (input::InputManager::isButtonPressed(input::MouseButton::LEFT))
@@ -77,8 +77,8 @@ namespace game {
 
 	glm::vec2 Hud::getAbsolutePosition(Entity _entity, glm::vec2 _relativePosition) const
 	{
-		const auto& pos = m_registry.getComponent<Position2D>(_entity);
-		const auto& rect = m_registry.getComponent<BoundingRectangle>(_entity);
+		const auto& pos = m_registry.getComponentUnsafe<Position2D>(_entity);
+		const auto& rect = m_registry.getComponentUnsafe<BoundingRectangle>(_entity);
 
 		const glm::vec2 min = pos.value - rect.center * rect.size;
 		return min + _relativePosition * rect.size;

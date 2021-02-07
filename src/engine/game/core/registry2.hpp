@@ -17,7 +17,7 @@
 #include <typeindex>
 
 namespace game {
-	
+
 	class Registry2
 	{
 		template<typename Val, bool MultiSlot>
@@ -57,27 +57,76 @@ namespace game {
 		{
 			ASSERT(m_generations[_ent.toIndex()].entity != INVALID_ENTITY, "Attempting to erase a non existent entity.");
 
+			// mark invalid before removing components so that Children removal is simpler
+			m_generations[_ent.toIndex()].entity = INVALID_ENTITY;
+
 			for (auto& components : m_components)
 				if(components.data().contains(_ent.toIndex()))
 					components.data().erase(_ent.toIndex());
 
 			m_unusedEntities.push_back(_ent);
-			m_generations[_ent.toIndex()].entity = INVALID_ENTITY;
 		}
 
 		// Add a new component to an existing entity. No changes are done if Component is
 		// not a MultiComponent and _ent already has a component of this type.
 		// @return A reference to the new component or the already existing component.
 		template<component_type Component, typename... Args>
+		requires !std::same_as<Component, components::Parent>
 		Component& addComponent(Entity _ent, Args&&... _args)
 		{
 			return getContainer<Component>().template emplace<Component>(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
 		template<component_type Component>
+		requires std::same_as<Component, components::Parent>
+		Component& addComponent(Entity _ent, components::Parent _parent)
+		{
+			auto& childs = addComponent<components::Children>(_parent.entity);
+			childs.entities.push_back(_ent);
+			return getContainer<components::Parent>().template emplace<Component>(_ent.toIndex(), _parent.entity);
+		}
+
+		template<component_type Component>
+		requires !std::same_as<Component, components::Parent> && !std::same_as<Component, components::Children>
 		void removeComponent(Entity _ent)
 		{
 			getContainer<Component>().erase(_ent.toIndex());
+		}
+
+		template<component_type Component>
+		requires std::same_as<Component, components::Parent>
+		void removeComponent(Entity _ent)
+		{
+			auto& comps = getContainer<Component>();
+			if (comps.contains(_ent.toIndex()))
+			{
+				// remove from parent list
+				auto& parent = comps[_ent.toIndex()];
+				if (isValid(parent.entity))
+				{
+					auto& childs = getContainer<components::Children>()[parent.entity.toIndex()].entities;
+					auto it = std::find(childs.begin(), childs.end(), _ent);
+					assert(it != childs.end());
+					*it = childs.back();
+					childs.pop_back();
+				}
+				comps.erase(_ent.toIndex());
+			}
+		}
+
+		template<component_type Component>
+		requires std::same_as<Component, components::Children>
+		void removeComponent(Entity _ent)
+		{
+			auto& comps = getContainer<Component>();
+			if (comps.contains(_ent.toIndex()))
+			{
+				auto& childs = comps[_ent.toIndex()].entities;
+				// erase all children
+				for (Entity ent : childs)
+					erase(ent);
+				comps.erase(_ent.toIndex());
+			}
 		}
 
 		// Remove all components of the specified type.
@@ -95,7 +144,7 @@ namespace game {
 		template<component_type Component>
 		Component& getComponentUnsafe(Entity _ent) { return getContainerUnsafe<Component>().template at<Component>(_ent.toIndex()); }
 		template<component_type Component>
-		const Component& getComponentUnsafe(Entity _ent) const { getContainerUnsafe<Component>().template at<Component>(_ent.toIndex()); }
+		const Component& getComponentUnsafe(Entity _ent) const { return getContainer<Component>().template at<Component>(_ent.toIndex()); }
 
 		// Retrieve a component associated with an entity.
 		template<component_type Component>
@@ -168,8 +217,8 @@ namespace game {
 		template<bool WithEnt, typename Action, component_type Comp, component_type... Comps, std::size_t... I>
 		void executeImpl(Action& _action, std::index_sequence<I...>)
 		{
-			auto mainContainer = getContainerUnsafe<Comp>().template iterate<Comp>();
-			auto othContainers = std::tie(getContainerUnsafe<Comps>()...);
+			auto mainContainer = getContainer<Comp>().template iterate<Comp>();
+			auto othContainers = std::tie(getContainer<Comps>()...);
 		
 			for (auto it = mainContainer.begin(); it != mainContainer.end(); ++it)
 			{

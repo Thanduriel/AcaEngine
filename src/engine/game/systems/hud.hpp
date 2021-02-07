@@ -1,8 +1,8 @@
 #pragma once
 
 #include "hudComponents.hpp"
-#include "../core/registry.hpp"
-#include "../core/lifetimeManager.hpp"
+#include "../core/registry2.hpp"
+#include "../core/lifetimeManager2.hpp"
 #include "../components/components2D.hpp"
 #include "../../graphics/camera.hpp"
 #include "../../graphics/renderer/spriterenderer.hpp"
@@ -27,18 +27,8 @@ namespace game {
 		// Creates an activates a custom cursor for this hud.
 		void createCursor(const graphics::Sprite& _sprite);
 
-		using HudComponentList = ComponentList<
-			components::Position2D,
-			components::Rotation2D,
-			components::Scale2D,
-			components::Transform2D,
-			components::Sprite,
-			components::Label,
-			components::FillBar,
-			components::BoundingRectangle,
-			components::Button>;
-		using HudRegistry = HudComponentList::Registry;
-		using HudManager = HudComponentList::LifetimeManager;
+		using HudRegistry = Registry2;
+		using HudManager = LifetimeManager2;
 
 		HudRegistry m_registry;
 		HudManager m_manager;

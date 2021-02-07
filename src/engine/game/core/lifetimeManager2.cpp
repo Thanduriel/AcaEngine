@@ -1,7 +1,26 @@
-#include "lifetimeManager2.hpp"
+#include "LifetimeManager2.hpp"
 
 namespace game {
 
+	WeakComponentVector::WeakComponentVector(WeakComponentVector&& _oth) noexcept
+		: m_moveToRegistry(_oth.m_moveToRegistry),
+		m_clear(_oth.m_clear),
+		m_entities(std::move(_oth.m_entities)),
+		m_components(std::move(_oth.m_components))
+	{
+	}
+
+	WeakComponentVector& WeakComponentVector::operator=(WeakComponentVector&& _oth) noexcept
+	{
+		m_moveToRegistry = _oth.m_moveToRegistry;
+		m_clear = _oth.m_clear;
+		m_entities = std::move(_oth.m_entities);
+		m_components = std::move(_oth.m_components);
+
+		return *this;
+	}
+
+	// ************************************************** //
 	EntityCreator::EntityCreator(Registry2& _registry)
 		: m_registry(_registry)
 	{
@@ -32,7 +51,7 @@ namespace game {
 	// ************************************************** //
 	void LifetimeManager2::moveComponents()
 	{
-		for (WeakComponentVector& container : m_newComponents)
-			container.moveToRegistry(m_registry);
+		for (auto& it : m_newComponents)
+			it.data().moveToRegistry(m_registry);
 	}
 }

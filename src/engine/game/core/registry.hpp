@@ -13,21 +13,6 @@
 
 namespace game {
 
-	namespace components {
-		// Currently only works correctly together with Position, Rotation, Scale components
-		struct Parent
-		{
-			Parent(Entity ent) : entity(ent) {}
-
-			Entity entity;
-		};
-
-		struct Children
-		{
-			std::vector<Entity> entities;
-		};
-	}
-
 	template<component_type... Components>
 	class Registry
 	{

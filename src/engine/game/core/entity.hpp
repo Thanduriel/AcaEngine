@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <cstdint>
+#include <vector>
 
 namespace game {
 	struct Entity
@@ -27,4 +28,19 @@ namespace game {
 	};
 
 	constexpr static Entity INVALID_ENTITY = Entity(Entity::INVALID_ID);
+
+	namespace components {
+		// Currently only works correctly together with Position, Rotation, Scale components
+		struct Parent
+		{
+			Parent(Entity ent) : entity(ent) {}
+
+			Entity entity;
+		};
+
+		struct Children
+		{
+			std::vector<Entity> entities;
+		};
+	}
 }
