@@ -1,5 +1,6 @@
 #include "hudActors.hpp"
 #include "../../game/core/lifetimeManager2.hpp"
+#include "../../game/components/simpleComponents.hpp"
 
 namespace game {
 
@@ -13,11 +14,13 @@ namespace game {
 		int _texWidth, int _texHeight)
 	{
 		_creator.add<components::Transform2D>(_position);
-		auto& fillBar = _creator.add<components::FillBar>(_alignX, _alignY, _backgroundTex, _fillTex,
+		auto& fillBar = _creator.addR<components::FillBar>(_alignX, _alignY, _backgroundTex, _fillTex,
 			_texX, _texY, _texWidth, _texHeight);
 		_creator.add<components::Sprite>(*fillBar.sprite);
-	//	_creator.add<components::Sprite>(*fillBar.backgroundSprite);
 		_creator.add<components::BoundingRectangle>(fillBar.backgroundSprite->size, glm::vec2(_alignX, _alignY));
+		_creator.child()
+			.add<components::Transform2D>(_position)
+			.add<components::Sprite>(*fillBar.backgroundSprite);
 	}
 
 	Label::Label(ComponentCreator& _creator, const std::string& _text,

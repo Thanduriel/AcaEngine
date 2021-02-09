@@ -38,7 +38,7 @@ namespace game { namespace components {
 		glm::mat4 value;
 	};
 
-	struct TransformNeedsUpdate{};
+	struct TransformNeedsUpdate {};
 
 	struct Lifetime
 	{

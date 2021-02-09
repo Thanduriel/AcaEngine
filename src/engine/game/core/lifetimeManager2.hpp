@@ -145,9 +145,23 @@ namespace game {
 		{
 		public:
 			template<component_type Component, typename... Args>
-			Component& add(Args&&... _args) const
+			Component& addR(Args&&... _args) const
 			{
 				return m_manager.addComponent<Component>(entity, std::forward<Args>(_args)...);
+			}
+
+			template<component_type Component, typename... Args>
+			const ComponentCreator& add(Args&&... _args) const
+			{
+				m_manager.addComponent<Component>(entity, std::forward<Args>(_args)...);
+				return *this;
+			}
+
+			ComponentCreator child() const
+			{
+				auto creator = ComponentCreator(m_manager, m_manager.create());
+				creator.add<components::Parent>(entity);
+				return creator;
 			}
 
 			const Entity entity;
