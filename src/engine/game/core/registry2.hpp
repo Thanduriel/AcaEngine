@@ -242,9 +242,8 @@ namespace game {
 				return it.data();
 
 			// std::type_index(typeid(Comp))
-			m_components.add(utils::TypeIndex::value<Comp>(),
-				SM<int>(utils::TypeHolder<Comp>()));
-			return getContainerUnsafe<Comp>();
+			return m_components.add(utils::TypeIndex::value<Comp>(),
+				SM<int>(utils::TypeHolder<Comp>())).data();
 		}
 
 		template<component_type Comp>
