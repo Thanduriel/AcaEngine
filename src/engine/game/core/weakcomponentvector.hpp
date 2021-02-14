@@ -1,5 +1,6 @@
+#pragma once
+
 #include "component.hpp"
-#include "entity.hpp"
 #include "../../utils/metaProgHelpers.hpp"
 #include <vector>
 #include <memory>
@@ -7,6 +8,7 @@
 namespace game {
 
 	// Type erased component vector.
+	template<std::integral Key>
 	class WeakComponentVector
 	{
 	public:
@@ -18,8 +20,21 @@ namespace game {
 			m_entities.reserve(_initialCapacity);
 		}
 
-		WeakComponentVector(WeakComponentVector&& _oth) noexcept;
-		WeakComponentVector& operator=(WeakComponentVector&& _oth) noexcept;
+		WeakComponentVector(WeakComponentVector&& _oth) noexcept
+			: m_clear(_oth.m_clear),
+			m_entities(std::move(_oth.m_entities)),
+			m_components(std::move(_oth.m_components))
+		{
+		}
+
+		WeakComponentVector& operator=(WeakComponentVector&& _oth) noexcept
+		{
+			m_clear = _oth.m_clear;
+			m_entities = std::move(_oth.m_entities);
+			m_components = std::move(_oth.m_components);
+
+			return *this;
+		}
 
 		~WeakComponentVector()
 		{
@@ -33,10 +48,10 @@ namespace game {
 		Value& get(size_t _pos) { return *(reinterpret_cast<Value*>(m_components.get()) + _pos); }
 
 		template<component_type Component, typename... Args>
-		Component& emplace(Entity _ent, Args&&... _args)
+		Component& emplace(Key _key, Args&&... _args)
 		{
 			const size_t prevCapacity = m_entities.capacity();
-			m_entities.push_back(_ent);
+			m_entities.push_back(_key);
 			const size_t capacity = m_entities.capacity();
 			if (prevCapacity != capacity)
 			{
@@ -71,14 +86,17 @@ namespace game {
 			public:
 				Iterator(WeakComponentVector& _target, size_t _ind) : m_target(_target), m_index(_ind) {}
 
-				Entity key() const { return m_target.m_entities[m_index]; }
+				Key key() const { return m_target.m_entities[m_index]; }
 				Value& value() { return m_target.get<Value>(m_index); }
 
-				std::pair<Entity, Value&> operator*() 
+				std::pair<Key, Value&> operator*() 
 				{ 
-					return std::pair<Entity, Value&>(m_target.m_entities[m_index], m_target.get<Value>(m_index)); 
+					return std::pair<Key, Value&>(m_target.m_entities[m_index], m_target.get<Value>(m_index)); 
 				}
-			//	const Value& operator*() const { return m_target.get<Value>(m_index); }
+				std::pair<Key, const Value&> operator*() const
+				{ 
+					return std::pair<Key, const Value&>(m_target.m_entities[m_index], m_target.get<Value>(m_index)); 
+				}
 
 				Iterator& operator++() { ++m_index; return *this; }
 				Iterator operator++(int) { Iterator tmp(*this);  ++m_index; return tmp; }
@@ -113,7 +131,7 @@ namespace game {
 		using Clear = void(*)(WeakComponentVector&);
 		Clear m_clear;
 
-		std::vector<Entity> m_entities;
+		std::vector<Key> m_entities;
 		std::unique_ptr<char[]> m_components;
 	};
 }

@@ -32,7 +32,7 @@ namespace game {
 		std::vector<Entity> m_deleted;
 	};
 
-	class TempComponentVector : public WeakComponentVector
+	class TempComponentVector : public WeakComponentVector<Entity::BaseType>
 	{
 	public:
 		template<component_type Component>
@@ -48,19 +48,17 @@ namespace game {
 
 	private:
 		template<typename Value>
-		static void moveComponentsToRegistry(Registry2& registry, WeakComponentVector& _container)
+		static void moveComponentsToRegistry(Registry2& registry, TempComponentVector& _container)
 		{
 			for(auto [entity, comp] : _container.iterate<Value>())
-		//	for (size_t i = 0; i < _container.m_entities.size(); ++i)
 			{
-			//	Value& comp = _container.get<Value>(i);
-				registry.addComponent<Value>(entity, std::move(comp));
+				registry.addComponent<Value>(Entity(entity), std::move(comp));
 			}
 
 			_container.clear();
 		}
 
-		using MoveToRegistry = void(*)(Registry2&, WeakComponentVector&);
+		using MoveToRegistry = void(*)(Registry2&, TempComponentVector&);
 		MoveToRegistry m_moveToRegistry;
 	};
 
@@ -75,7 +73,7 @@ namespace game {
 		{
 			TempComponentVector& container = getContainer<Component>();
 
-			return container.emplace<Component>(_ent, std::forward<Args>(_args)...);
+			return container.emplace<Component>(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
 		// override function explicitly so that it is not hidden by create<Actor>

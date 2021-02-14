@@ -1,7 +1,6 @@
 #pragma once
 
 #include "hudComponents.hpp"
-#include "../core/registry2.hpp"
 #include "../core/lifetimeManager2.hpp"
 #include "../components/components2D.hpp"
 #include "../../graphics/camera.hpp"

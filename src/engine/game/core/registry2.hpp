@@ -1,74 +1,43 @@
 #pragma once
 
-#include "../../utils/containers/slotmap.hpp"
 #include "../../utils/containers/weakSlotMap.hpp"
 #include "../../utils/containers/hashmap.hpp"
 #include "../../utils/metaProgHelpers.hpp"
 #include "../../utils/typeIndex.hpp"
 #include "entity.hpp"
 #include "component.hpp"
+#include "weakcomponentvector.hpp"
 #include <tuple>
 #include <utility>
 #include <type_traits>
-#include <optional>
-#include <array>
-#include <unordered_map>
-#include <typeinfo>
-#include <typeindex>
 
 namespace game {
 
 	class Registry2
 	{
-		template<typename Val, bool MultiSlot>
-		class SlotMapDecider {};
+		using DataStorage = utils::WeakSlotMap<Entity::BaseType>;
+		using MessageStorage = WeakComponentVector<Entity::BaseType>;
 
 		template<typename Val>
-		class SlotMapDecider<Val, false> : public utils::SlotMap<Entity::BaseType, Val> {};
+		struct StorageDecider { using type = DataStorage; };
+
+		template<message_component_type Val>
+		struct StorageDecider<Val> { using type = MessageStorage; };
 
 		template<typename Val>
-		class SlotMapDecider<Val, true> : public utils::MultiSlotMap<Entity::BaseType, Val> {};
+		using ComponentStorage = typename StorageDecider<Val>::type;
 
-		template<typename Val>
-		using SM = utils::WeakSlotMap<Entity::BaseType>;//SlotMapDecider < Val, std::is_base_of_v<MultiComponent, Val>>;
+		template<typename T>
+		using StorageMap = utils::HashMap<int, T>;
 	public:
 		// Make a new entity managed by this registry.
-		Entity create()
-		{
-			Entity ent;
-			if (!m_unusedEntities.empty())
-			{
-				ent = m_unusedEntities.back();
-				m_unusedEntities.pop_back();
-
-				m_generations[ent.toIndex()].entity = ent;
-				m_generations[ent.toIndex()].generation++;
-			}
-			else
-			{
-				ent = Entity(m_maxNumEntities++);
-				m_generations.push_back({ ent,0 });
-			}
-			return ent;
-		}
+		Entity create();
 
 		// Remove an entity with all its components.
-		void erase(Entity _ent)
-		{
-			ASSERT(m_generations[_ent.toIndex()].entity != INVALID_ENTITY, "Attempting to erase a non existent entity.");
-
-			// mark invalid before removing components so that Children removal is simpler
-			m_generations[_ent.toIndex()].entity = INVALID_ENTITY;
-
-			for (auto& components : m_components)
-				if(components.data().contains(_ent.toIndex()))
-					components.data().erase(_ent.toIndex());
-
-			m_unusedEntities.push_back(_ent);
-		}
+		void erase(Entity _ent);
 
 		// Add a new component to an existing entity. No changes are done if Component is
-		// not a MultiComponent and _ent already has a component of this type.
+		// _ent already has a component of this type.
 		// @return A reference to the new component or the already existing component.
 		template<component_type Component, typename... Args>
 		requires !std::same_as<Component, components::Parent>
@@ -130,38 +99,39 @@ namespace game {
 		}
 
 		// Remove all components of the specified type.
+		// This is mostly usefull for message and flag types.
 		template<component_type Component>
 		void clearComponent()
 		{
 			getContainer<Component>().clear();
 		}
 
-		template<component_type Component>
-		bool hasComponent(Entity _ent) const { return getContainer<Component>().contains(_ent.toIndex()); }
+		template<data_component_type Component>
+		bool hasComponent(Entity _ent) const { return getContainer<Component>()->contains(_ent.toIndex()); }
 
 		// Retrieve a component associated with an entity.
 		// Does not check whether it exits.
-		template<component_type Component>
+		template<data_component_type Component>
 		Component& getComponentUnsafe(Entity _ent) { return getContainerUnsafe<Component>().template at<Component>(_ent.toIndex()); }
-		template<component_type Component>
-		const Component& getComponentUnsafe(Entity _ent) const { return getContainer<Component>().template at<Component>(_ent.toIndex()); }
+		template<data_component_type Component>
+		const Component& getComponentUnsafe(Entity _ent) const { return getContainerUnsafe<Component>().template at<Component>(_ent.toIndex()); }
 
 		// Retrieve a component associated with an entity.
-		template<component_type Component>
+		template<data_component_type Component>
 		Component* getComponent(Entity _ent) 
 		{ 
 			auto& container = getContainer<Component>();
 			if (container.contains(_ent.toIndex()))
 				return &container.template at<Component>(_ent.toIndex());
-			else return nullptr;
+			return nullptr;
 		}
-		template<component_type Component>
+		template<data_component_type Component>
 		const Component* getComponent(Entity _ent) const 
 		{
-			auto& container = getContainer<Component>();
-			if (container.contains(_ent.toIndex()))
-				return &container.template at<Component>(_ent.toIndex());
-			else return nullptr;
+			auto container = getContainer<Component>();
+			if (container && container->contains(_ent.toIndex()))
+				return &container->template at<Component>(_ent.toIndex());
+			return nullptr;
 		}
 
 		// Execute an Action on all entities having the components
@@ -235,32 +205,45 @@ namespace game {
 		}
 
 		template<component_type Comp>
-		SM<Comp>& getContainer()
+		ComponentStorage<Comp>& getContainer()
 		{
-			auto it = m_components.find(utils::TypeIndex::value<Comp>());
-			if (it != m_components.end())
+			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
+			auto it = map.find(utils::TypeIndex::value<Comp>());
+			if (it != map.end())
 				return it.data();
 
-			// std::type_index(typeid(Comp))
-			return m_components.add(utils::TypeIndex::value<Comp>(),
-				SM<int>(utils::TypeHolder<Comp>())).data();
+			return map.add(utils::TypeIndex::value<Comp>(),
+				ComponentStorage<Comp>(utils::TypeHolder<Comp>())).data();
+		}
+
+		// returns a pointer because the container might not exist yet
+		template<component_type Comp>
+		const ComponentStorage<Comp>* getContainer() const
+		{
+			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
+			auto it = map.find(utils::TypeIndex::value<Comp>());
+			
+			return it != map.end() ? &it.data() : nullptr;
 		}
 
 		template<component_type Comp>
-		SM<Comp>& getContainerUnsafe() 
-		{ 
-			return m_components.find(utils::TypeIndex::value<Comp>()).data();
+		ComponentStorage<Comp>& getContainerUnsafe() 
+		{
+			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
+			return map.find(utils::TypeIndex::value<Comp>()).data(); 
 		};
 
 		template<component_type Comp>
-		const SM<Comp>& getContainer() const 
+		const ComponentStorage<Comp>& getContainerUnsafe() const 
 		{
-			return m_components.find(utils::TypeIndex::value<Comp>()).data();
+			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
+			return map.find(utils::TypeIndex::value<Comp>()).data(); 
 		};
 
 		std::vector<Entity> m_unusedEntities;
 		Entity::BaseType m_maxNumEntities = 0u;
-		utils::HashMap<int, SM<int>> m_components;
+		std::tuple<StorageMap<DataStorage>,
+			StorageMap<MessageStorage> > m_components;
 		std::vector<EntityRef> m_generations;
 	};
 }
