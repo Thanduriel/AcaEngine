@@ -3,17 +3,36 @@
 #include "../../graphics/renderer/sprite.hpp"
 #include "../../graphics/core/texture.hpp"
 #include "../core/entity.hpp"
+#include "../core/component.hpp"
+#include "../../math/geometrictypes.hpp"
+#include "../../utils/alignment.hpp"
 
 namespace game{ 
 namespace components{
 
+	// not implemented
+	struct Anchor
+	{
+		utils::Alignment alignment;
+	};
+
 	struct BoundingRectangle
 	{
-		BoundingRectangle(glm::vec2 _size, glm::vec2 _center) : size(_size), center(_center) {}
+		BoundingRectangle(glm::vec2 _size = {}, glm::vec2 _align = {})
+			: size(_size), alignment(_align)
+		{}
+		//	bounds(-_size * _center, _size * (glm::vec2(1.f) - _center)) {}
+
+		BoundingRectangle(const math::Rectangle& _bounds)
+			: size(_bounds.size()), 
+			alignment(_bounds.max / _bounds.size())
+		{}
 
 		glm::vec2 size;
-		glm::vec2 center;	// relative [0,1]
+		utils::Alignment alignment;
 	};
+
+	struct BoundingRectangleNeedsUpdate : public Message {};
 
 	struct FillBar
 	{
@@ -37,5 +56,10 @@ namespace components{
 		Button(Fn _fn) : onClick(_fn) {}
 
 		std::function<void()> onClick;
+	};
+
+	// positions all its childs automaticly
+	struct AutoArrange
+	{
 	};
 } }

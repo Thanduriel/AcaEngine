@@ -49,6 +49,11 @@ namespace math {
 		{
 		}
 
+		VecT size() const noexcept
+		{
+			return max - min;
+		}
+
 		// Intersection check with another Box.
 		// Matching lines are considered intersecting.
 		bool intersect(const Box& oth) const

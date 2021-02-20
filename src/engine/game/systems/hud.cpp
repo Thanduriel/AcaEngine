@@ -7,13 +7,7 @@
 
 namespace game {
 
-	struct UpdateFillBar
-	{
-		void operator()(components::Sprite& _sprite, 
-			const components::Position2D& _position, 
-			const components::Rotation2D& _rotation)
-		{}
-	};
+	using namespace components;
 
 	struct ClickButton
 	{
@@ -21,19 +15,16 @@ namespace game {
 
 		glm::vec2 cursorPos;
 
-		void operator()(const components::Button& _button,
-			const components::BoundingRectangle& _bounds,
-			const components::Position2D& _position) const
+		void operator()(const Button& _button,
+			const BoundingRectangle& _bounds,
+			const Position2D& _position) const
 		{
-			const glm::vec2 min = _position.value - _bounds.center * _bounds.size;
+			const glm::vec2 min = _position.value - _bounds.alignment * _bounds.size;
 			const glm::vec2 max = min + _bounds.size;
 			if (cursorPos.x >= min.x && cursorPos.x <= max.x && cursorPos.y >= min.y && cursorPos.y <= max.y)
 				_button.onClick();
 		}
 	};
-
-
-	using namespace components;
 
 	Hud::Hud(graphics::FontRenderer* _fontRenderer)
 		: m_manager(m_registry),
@@ -43,6 +34,48 @@ namespace game {
 	{
 		m_registry.addComponent<Position2D>(m_this, glm::vec2(0.f));
 		m_registry.addComponent<BoundingRectangle>(m_this, graphics::Device::getBufferSize(), glm::vec2(0.f));
+	}
+
+	void Hud::process()
+	{
+		using namespace glm;
+
+		if (m_fontRenderer)
+		{
+			auto updateLabels = [this](BoundingRectangleNeedsUpdate, Label& label, BoundingRectangle& box)
+			{
+				box = BoundingRectangle(m_fontRenderer->getBoundingBox(
+					vec3(0.f),
+					label.text.c_str(),
+					label.fontSize,
+					label.alignment.x,
+					label.alignment.y,
+					label.roundToPixel));
+			};
+			m_registry.execute(updateLabels);
+		}
+
+		auto updateAutoContainers = [this](BoundingRectangleNeedsUpdate,
+			AutoArrange& autoArrange, 
+			BoundingRectangle& box,
+			const Transform2D& transform,
+			Children& children)
+		{
+			vec2 currentPos = transform.position;
+			vec2 currentBounds = {};
+			for (Entity child : children.entities)
+			{
+				const BoundingRectangle& bounds = m_registry.getComponentUnsafe<BoundingRectangle>(child);
+				Transform2D& childTransform = m_registry.getComponentUnsafe<Transform2D>(child);
+				childTransform.position = currentPos + vec2(0.f, currentBounds.y) + bounds.alignment * bounds.size;
+				currentBounds.x = std::max(currentBounds.x, bounds.size.x);
+				currentBounds.y -= bounds.size.y;
+			}
+			box.size = currentBounds;
+		};
+		m_registry.execute(updateAutoContainers);
+
+		m_registry.clearComponent<BoundingRectangleNeedsUpdate>();
 	}
 
 	void Hud::draw()
@@ -80,7 +113,7 @@ namespace game {
 		const auto& pos = m_registry.getComponentUnsafe<Position2D>(_entity);
 		const auto& rect = m_registry.getComponentUnsafe<BoundingRectangle>(_entity);
 
-		const glm::vec2 min = pos.value - rect.center * rect.size;
+		const glm::vec2 min = pos.value - rect.alignment * rect.size;
 		return min + _relativePosition * rect.size;
 	}
 
@@ -90,7 +123,6 @@ namespace game {
 
 		m_cursor = m_registry.create();
 		m_registry.addComponent<Transform2D>(m_cursor, glm::vec2(0.f));
-
 		m_registry.addComponent<Sprite>(m_cursor, _sprite, glm::vec3(0.f, 0.f, 0.0f), glm::vec2(0.f, 0.f));
 	}
 }

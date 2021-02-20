@@ -6,6 +6,7 @@
 namespace game {
 
 	// Inherit from this to allow multiple components of this type attached to the same entity.
+	// depriciated! only used by Registry and still buggy
 	class MultiComponent{};
 
 	class Message {};

@@ -90,7 +90,7 @@ namespace game {
 			auto& comps = getContainer<Component>();
 			if (comps.contains(_ent.toIndex()))
 			{
-				auto& childs = comps[_ent.toIndex()].entities;
+				auto& childs = comps.at<Component>(_ent.toIndex()).entities;
 				// erase all children
 				for (Entity ent : childs)
 					erase(ent);

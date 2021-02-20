@@ -17,6 +17,7 @@ namespace game {
 	public:
 		Hud(graphics::FontRenderer* _fontRenderer = nullptr);
 
+		void process();
 		void draw();
 		void processInputs();
 	protected:
@@ -26,11 +27,8 @@ namespace game {
 		// Creates an activates a custom cursor for this hud.
 		void createCursor(const graphics::Sprite& _sprite);
 
-		using HudRegistry = Registry2;
-		using HudManager = LifetimeManager2;
-
-		HudRegistry m_registry;
-		HudManager m_manager;
+		Registry2 m_registry;
+		LifetimeManager2 m_manager;
 
 		Entity m_this; // Hud Entity to be used as parent
 		Entity m_cursor; // Cursor entity is invalid until createCursor was called

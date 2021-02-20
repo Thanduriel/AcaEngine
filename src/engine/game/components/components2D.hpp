@@ -3,12 +3,11 @@
 #include "../../graphics/renderer/sprite.hpp"
 #include "../core/component.hpp"
 #include "../../math/glmext.hpp"
-#include <glm/glm.hpp>
+#include "../../utils/alignment.hpp"
 #include <string>
 
 // todo move this to a better location and namespace
 using Color = glm::vec4;
-using Alignment = glm::vec2;
 
 namespace game { namespace components{
 
@@ -62,7 +61,7 @@ namespace game { namespace components{
 			float _fontSize = 10.f,
 			const glm::vec3& _pos = glm::vec3(0.f, 0.f, -0.5f),
 			const Color& _color = Color(1.f),
-			const Alignment& _alignment = Alignment(0.f, 0.f),
+			const utils::Alignment& _alignment = utils::Alignment(0.f, 0.f),
 			float _rotation = 0.f,
 			bool _roundToPixel = false)
 			: text(_text), fontSize(_fontSize), position(_pos), color(_color), 
@@ -75,7 +74,7 @@ namespace game { namespace components{
 		glm::vec3 position;
 		Color color;
 		float rotation;
-		Alignment alignment;
+		utils::Alignment alignment;
 		bool roundToPixel;
 	};
 

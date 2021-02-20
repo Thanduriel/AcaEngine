@@ -24,7 +24,13 @@ namespace game {
 			float _fontSize = 10.f,
 			const glm::vec3& _pos = glm::vec3(0.f, 0.f, -0.5f),
 			const Color& _color = Color(1.f),
-			const Alignment& _alignment = Alignment(0.f, 0.f),
+			const utils::Alignment& _alignment = utils::Alignment(0.f, 0.f),
 			float _rotation = 0.f);
+	};
+
+	class AutoContainer
+	{
+	public:
+		AutoContainer(ComponentCreator& _creator, glm::vec2 _position);
 	};
 }
