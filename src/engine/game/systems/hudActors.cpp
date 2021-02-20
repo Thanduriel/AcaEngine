@@ -13,14 +13,14 @@ namespace game {
 		int _texX, int _texY,
 		int _texWidth, int _texHeight)
 	{
-		_creator.add<components::Transform2D>(_position);
-		auto& fillBar = _creator.addR<components::FillBar>(_alignX, _alignY, _backgroundTex, _fillTex,
+		_creator.add<comp::Transform2D>(_position);
+		auto& fillBar = _creator.addR<comp::FillBar>(_alignX, _alignY, _backgroundTex, _fillTex,
 			_texX, _texY, _texWidth, _texHeight);
-		_creator.add<components::Sprite>(*fillBar.sprite);
-		_creator.add<components::BoundingRectangle>(fillBar.backgroundSprite->size, glm::vec2(_alignX, _alignY));
+		_creator.add<comp::Sprite>(*fillBar.sprite);
+		_creator.add<comp::BoundingRectangle>(fillBar.backgroundSprite->size, glm::vec2(_alignX, _alignY));
 		_creator.child()
-			.add<components::Transform2D>(_position)
-			.add<components::Sprite>(*fillBar.backgroundSprite);
+			.add<comp::Transform2D>(_position)
+			.add<comp::Sprite>(*fillBar.backgroundSprite);
 	}
 
 	Label::Label(ComponentCreator& _creator, const std::string& _text,
@@ -30,7 +30,7 @@ namespace game {
 		const Alignment& _alignment,
 		float _rotation)
 	{
-		_creator.add<components::Transform2D>(glm::vec2(_pos.x, _pos.y));
-		_creator.add<components::Label>(_text, _fontSize, glm::vec3(0.f, 0.f, _pos.z), _color, _alignment, _rotation);
+		_creator.add<comp::Transform2D>(glm::vec2(_pos.x, _pos.y));
+		_creator.add<comp::Label>(_text, _fontSize, glm::vec3(0.f, 0.f, _pos.z), _color, _alignment, _rotation);
 	}
 }

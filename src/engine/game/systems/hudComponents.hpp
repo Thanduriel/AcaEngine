@@ -38,9 +38,4 @@ namespace components{
 
 		std::function<void()> onClick;
 	};
-
-	struct BoxContainer
-	{
-		std::vector<Entity> childs;
-	};
 } }
