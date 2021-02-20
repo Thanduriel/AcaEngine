@@ -4,6 +4,7 @@
 #include "../../utils/containers/hashmap.hpp"
 #include "../../utils/metaProgHelpers.hpp"
 #include "../../utils/typeIndex.hpp"
+#include "../../utils/assert.hpp"
 #include "entity.hpp"
 #include "component.hpp"
 #include "weakcomponentvector.hpp"
@@ -70,12 +71,12 @@ namespace game {
 			if (comps.contains(_ent.toIndex()))
 			{
 				// remove from parent list
-				auto& parent = comps[_ent.toIndex()];
+				auto& parent = comps.at<Component>(_ent.toIndex());
 				if (isValid(parent.entity))
 				{
-					auto& childs = getContainer<components::Children>()[parent.entity.toIndex()].entities;
+					auto& childs = getContainer<components::Children>().at<components::Children>(parent.entity.toIndex()).entities;
 					auto it = std::find(childs.begin(), childs.end(), _ent);
-					assert(it != childs.end());
+					ASSERT(it != childs.end(), "Child is not known to parent.");
 					*it = childs.back();
 					childs.pop_back();
 				}

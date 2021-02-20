@@ -28,6 +28,9 @@ namespace game {
 		// mark invalid before removing components so that Children removal is simpler
 		m_generations[_ent.toIndex()].entity = INVALID_ENTITY;
 
+		removeComponent<components::Children>(_ent);
+		removeComponent<components::Parent>(_ent);
+
 		for (auto& components : std::get<StorageMap<DataStorage>>(m_components))
 			if (components.data().contains(_ent.toIndex()))
 				components.data().erase(_ent.toIndex());
