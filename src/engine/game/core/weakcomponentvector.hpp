@@ -2,6 +2,7 @@
 
 #include "component.hpp"
 #include "../../utils/metaProgHelpers.hpp"
+#include "../../utils/containers/iteratorrange.hpp"
 #include <vector>
 #include <memory>
 
@@ -12,6 +13,8 @@ namespace game {
 	class WeakComponentVector
 	{
 	public:
+		using SizeType = size_t;
+
 		template<typename Comp>
 		WeakComponentVector(utils::TypeHolder<Comp>, unsigned _initialCapacity = 4)
 			: m_clear(clear<Comp>),
@@ -76,46 +79,16 @@ namespace game {
 		}
 
 		template<typename Value>
-		class Range
+		struct Accessor
 		{
-		public:
-			Range(WeakComponentVector& _target) : m_target(_target) {}
-
-			class Iterator
-			{
-			public:
-				Iterator(WeakComponentVector& _target, size_t _ind) : m_target(_target), m_index(_ind) {}
-
-				Key key() const { return m_target.m_entities[m_index]; }
-				Value& value() { return m_target.get<Value>(m_index); }
-
-				std::pair<Key, Value&> operator*() 
-				{ 
-					return std::pair<Key, Value&>(m_target.m_entities[m_index], m_target.get<Value>(m_index)); 
-				}
-				std::pair<Key, const Value&> operator*() const
-				{ 
-					return std::pair<Key, const Value&>(m_target.m_entities[m_index], m_target.get<Value>(m_index)); 
-				}
-
-				Iterator& operator++() { ++m_index; return *this; }
-				Iterator operator++(int) { Iterator tmp(*this);  ++m_index; return tmp; }
-				bool operator==(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index == _oth.m_index; }
-				bool operator!=(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index != _oth.m_index; }
-			private:
-				WeakComponentVector& m_target;
-				size_t m_index;
-			};
-
-			Iterator begin() { return Iterator(m_target, 0); }
-			Iterator end() { return Iterator(m_target, m_target.size()); }
-
-		private:
-			WeakComponentVector& m_target;
+			static Key key(const WeakComponentVector& _this, SizeType _index) { return _this.m_entities[_index]; }
+			static Value& value(WeakComponentVector& _this, SizeType _index) { return _this.get<Value>(_index); }
+			static const Value& value(const WeakComponentVector& _this, SizeType _index) { return _this.get<Value>(_index); }
 		};
-
 		template<typename Value>
-		Range<Value> iterate() { return Range<Value>(*this); }
+		auto iterate() { return utils::IteratorRange<WeakComponentVector, Key, Value, Accessor<Value>>(*this); }
+		template<typename Value>
+		auto iterate() const { return utils::ConstIteratorRange<WeakComponentVector, Key, Value, Accessor<Value>>(*this); }
 	private:
 		template<typename Value>
 		static void clear(WeakComponentVector& _container)

@@ -16,4 +16,11 @@ namespace utils {
 	{
 		using type = T;
 	};
+
+	// determine whether a parameter pack contains a specific type
+	template<typename What, typename ... Args>
+	struct contains_type 
+	{
+		static constexpr bool value{ (std::is_same_v<What, Args> || ...) };
+	};
 }

@@ -2,6 +2,7 @@
 
 #include "../../utils/assert.hpp"
 #include "../../utils/metaProgHelpers.hpp"
+#include "iteratorrange.hpp"
 #include <vector>
 #include <limits>
 #include <utility>
@@ -13,9 +14,10 @@ namespace utils {
 	class WeakSlotMap
 	{
 	protected:
-		using SizeType = Key;
 		constexpr static Key INVALID_SLOT = std::numeric_limits<Key>::max();
 	public:
+		using SizeType = Key;
+
 		template<std::movable Value>
 		WeakSlotMap(utils::TypeHolder<Value>, SizeType _initialSize = 4)
 			: m_elementSize(sizeof(Value)),
@@ -123,42 +125,18 @@ namespace utils {
 		}
 
 		// iterators
-
 		template<typename Value>
-		class Range
+		struct Accessor
 		{
-		public:
-			Range(WeakSlotMap& _target) : m_target(_target) {}
-
-			class Iterator
-			{
-			public:
-				Iterator(WeakSlotMap& _target, SizeType _ind) : m_target(_target), m_index(_ind) {}
-
-				Key key() const { return m_target.m_valuesToSlots[m_index]; }
-				Value& value() { return m_target.get<Value>(m_index); }
-
-				Value& operator*() { return m_target.get<Value>(m_index); }
-				const Value& operator*() const { return m_target.get<Value>(m_index); }
-
-				Iterator& operator++() { ++m_index; return *this; }
-				Iterator operator++(int) { Iterator tmp(*this);  ++m_index; return tmp; }
-				bool operator==(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index == _oth.m_index; }
-				bool operator!=(const Iterator& _oth) const { ASSERT(&m_target == &_oth.m_target, "Comparing iterators of different containers."); return m_index != _oth.m_index; }
-			private:
-				WeakSlotMap& m_target;
-				SizeType m_index;
-			};
-
-			Iterator begin() { return Iterator(m_target, 0); }
-			Iterator end() { return Iterator(m_target, m_target.m_size); }
-
-		private:
-			WeakSlotMap& m_target;
+			static Key key(const WeakSlotMap& _this, SizeType _index) { return _this.m_valuesToSlots[_index]; }
+			static Value& value(WeakSlotMap& _this, SizeType _index) { return _this.get<Value>(_index); }
+			static const Value& value(const WeakSlotMap& _this, SizeType _index) { return _this.get<Value>(_index); }
 		};
 
 		template<typename Value>
-		Range<Value> iterate() { return Range<Value>(*this); }
+		auto iterate() { return IteratorRange<WeakSlotMap, Key, Value, Accessor<Value>>(*this); }
+		template<typename Value>
+		auto iterate() const { return ConstIteratorRange<WeakSlotMap, Key, Value, Accessor<Value>>(*this); }
 
 		// access operations
 		bool contains(Key _key) const { return _key < m_slots.size() && m_slots[_key] != INVALID_SLOT; }
@@ -171,8 +149,11 @@ namespace utils {
 		SizeType size() const { return m_size; }
 		bool empty() const { return m_size == 0; }
 	protected:
+		// access through internal index
 		template<typename Value>
 		Value& get(SizeType _ind) { return reinterpret_cast<Value&>(m_values[index(_ind)]); }
+		template<typename Value>
+		const Value& get(SizeType _ind) const { return reinterpret_cast<const Value&>(m_values[index(_ind)]); }
 		size_t index(SizeType _ind) const { return static_cast<size_t>(_ind) * m_elementSize; }
 
 		void destroyValues()

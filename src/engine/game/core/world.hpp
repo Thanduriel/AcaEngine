@@ -60,6 +60,16 @@ namespace game {
 			}
 		};
 
+		// Component Tuple
+		template<typename... CompAccess>
+		struct ResourceFetch <ComponentTuple<CompAccess...>>
+		{
+			static ComponentTuple<CompAccess...> get(World& world)
+			{
+				return ComponentTuple<CompAccess...>(ResourceFetch<CompAccess>::get(world)...);
+			}
+		};
+
 		float m_deltaTime;
 		Registry2 m_registry;
 	};
