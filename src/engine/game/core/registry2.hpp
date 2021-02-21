@@ -1,13 +1,12 @@
 #pragma once
 
-#include "../../utils/containers/weakSlotMap.hpp"
 #include "../../utils/containers/hashmap.hpp"
 #include "../../utils/metaProgHelpers.hpp"
 #include "../../utils/typeIndex.hpp"
 #include "../../utils/assert.hpp"
 #include "entity.hpp"
 #include "component.hpp"
-#include "weakcomponentvector.hpp"
+#include "componentaccess.hpp"
 #include <tuple>
 #include <utility>
 #include <type_traits>
@@ -16,18 +15,6 @@ namespace game {
 
 	class Registry2
 	{
-		using DataStorage = utils::WeakSlotMap<Entity::BaseType>;
-		using MessageStorage = WeakComponentVector<Entity::BaseType>;
-
-		template<typename Val>
-		struct StorageDecider { using type = DataStorage; };
-
-		template<message_component_type Val>
-		struct StorageDecider<Val> { using type = MessageStorage; };
-
-		template<typename Val>
-		using ComponentStorage = typename StorageDecider<Val>::type;
-
 		template<typename T>
 		using StorageMap = utils::HashMap<int, T>;
 	public:
@@ -56,6 +43,8 @@ namespace game {
 			return getContainer<components::Parent>().template emplace<Component>(_ent.toIndex(), _parent.entity);
 		}
 
+		// Remove a component from an entity.
+		// Expects the component to exist.
 		template<component_type Component>
 		requires !std::same_as<Component, components::Parent> && !std::same_as<Component, components::Children>
 		void removeComponent(Entity _ent)
@@ -63,6 +52,8 @@ namespace game {
 			getContainer<Component>().erase(_ent.toIndex());
 		}
 
+		// Also removes the entity from its parent list.
+		// Unlike the base remove this checks for the existance of the component first.
 		template<component_type Component>
 		requires std::same_as<Component, components::Parent>
 		void removeComponent(Entity _ent)
@@ -135,6 +126,18 @@ namespace game {
 			return nullptr;
 		}
 
+		template<component_type Comp>
+		ComponentStorage<Comp>& getContainer()
+		{
+			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
+			auto it = map.find(utils::TypeIndex::value<Comp>());
+			if (it != map.end())
+				return it.data();
+
+			return map.add(utils::TypeIndex::value<Comp>(),
+				ComponentStorage<Comp>(utils::TypeHolder<Comp>())).data();
+		}
+
 		// Execute an Action on all entities having the components
 		// expected by Action::operator(...).
 		template<typename Action>
@@ -203,18 +206,6 @@ namespace game {
 						_action(it.value(), std::get<I>(othContainers).template at<Comps>(ent.toIndex()) ...);
 				}
 			}
-		}
-
-		template<component_type Comp>
-		ComponentStorage<Comp>& getContainer()
-		{
-			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
-			auto it = map.find(utils::TypeIndex::value<Comp>());
-			if (it != map.end())
-				return it.data();
-
-			return map.add(utils::TypeIndex::value<Comp>(),
-				ComponentStorage<Comp>(utils::TypeHolder<Comp>())).data();
 		}
 
 		// returns a pointer because the container might not exist yet
