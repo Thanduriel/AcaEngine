@@ -14,19 +14,18 @@ namespace game {
 
 		Registry2& getRegistry() { return m_registry; }
 
+		// Call member function of a system providing the expected resources.
+		template<typename System, typename... Resources>
+		void call(System& _system, void(System::* _func)(Resources ...)) { (_system.*_func)(ResourceFetch<Resources>::get(*this)...); }
+		template<typename System, typename... Resources>
+		void call(const System& _system, void(System::* _func)(Resources ...) const) { (_system.*_func)(ResourceFetch<Resources>::get(*this)...); }
+
 		template<typename System>
-		void run(System& _system) { executeUnpack(_system, utils::UnpackFunction(&System::update)); }
+		void run(System& _system) { call(_system, &System::update); }
 		// This explicit version is only needed to capture rvalues.
 		template<typename System>
-		void run(const System& _system) { executeUnpack(_system, utils::UnpackFunction(&System::update)); }
-
+		void run(const System& _system) { call(_system, &System::update); }
 	private:
-		template<typename System, typename... Resources>
-		void executeUnpack(System& _system, utils::UnpackFunction<std::remove_cv_t<System>, Resources...>)
-		{
-			_system.update(ResourceFetch<Resources>::get(*this)...);
-		}
-
 		template<typename Resource>
 		struct ResourceFetch;
 
