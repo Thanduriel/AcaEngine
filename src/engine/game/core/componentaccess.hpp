@@ -22,43 +22,28 @@ namespace game {
 	using ComponentStorage = typename details::StorageDecider<Val>::type;
 
 	template<component_type T>
-	class ReadAccess
+	class Access
 	{
 	public:
-		explicit ReadAccess(const ComponentStorage<T>& _targetStorage)
+		explicit Access(ComponentStorage<T>& _targetStorage)
 			: m_targetStorage(_targetStorage)
 		{}
 
+		auto iterate() { return m_targetStorage.iterate<T>(); }
 		auto iterate() const { return m_targetStorage.iterate<T>(); }
 
 		bool has(Entity _ent) const { return m_targetStorage.contains(_ent.toIndex()); }
 
+		T& getUnsafe(Entity _ent) requires data_component_type<T> { return m_targetStorage.template at<T>(_ent.toIndex()); }
 		const T& getUnsafe(Entity _ent) const requires data_component_type<T> { return m_targetStorage.template at<T>(_ent.toIndex()); }
 
-		const T* get(Entity _ent) const requires data_component_type<T>
+		T* get(Entity _ent) requires data_component_type<T>
 		{
 			return m_targetStorage.contains(_ent.toIndex()) ?
 				&m_targetStorage.template at<T>(_ent.toIndex())
 				: nullptr;
 		}
-	private:
-		const ComponentStorage<T>& m_targetStorage;
-	};
-
-	template<component_type T>
-	class WriteAccess
-	{
-	public:
-		WriteAccess(ComponentStorage<T>& _targetStorage)
-			: m_targetStorage(_targetStorage)
-		{}
-
-		auto iterate() { return m_targetStorage.iterate<T>(); }
-		bool has(Entity _ent) const { return m_targetStorage.contains(_ent.toIndex()); }
-
-		T& getUnsafe(Entity _ent) requires data_component_type<T> { return m_targetStorage.template at<T>(_ent.toIndex()); }
-
-		T* get(Entity _ent) requires data_component_type<T>
+		const T* get(Entity _ent) const requires data_component_type<T>
 		{
 			return m_targetStorage.contains(_ent.toIndex()) ?
 				&m_targetStorage.template at<T>(_ent.toIndex())
@@ -75,6 +60,11 @@ namespace game {
 	private:
 		ComponentStorage<T>& m_targetStorage;
 	};
+
+	template<component_type T>
+	using WriteAccess = Access<T>;
+	template<component_type T>
+	using ReadAccess = const Access<T>;
 
 	template<typename... CompAccess>
 	class ComponentTuple
