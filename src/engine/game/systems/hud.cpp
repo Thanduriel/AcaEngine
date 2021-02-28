@@ -55,6 +55,18 @@ namespace game {
 			m_registry.execute(updateLabels);
 		}
 
+		auto updateTransforms = [&](TransformNeedsUpdate, 
+			const Anchor& anchor,
+			Transform2D& transform,
+			const Parent& parent) 
+		{
+			const BoundingRectangle& parentBox = m_registry.getComponentUnsafe<BoundingRectangle>(parent.entity);
+			const Transform2D& parentTransform = m_registry.getComponentUnsafe<Transform2D>(parent.entity);
+
+			const vec2 min = parentTransform.position - parentBox.alignment * parentBox.size;
+			transform.position = min + anchor.alignment * parentBox.size;
+		};
+
 		auto updateAutoContainers = [this](BoundingRectangleNeedsUpdate,
 			AutoArrange& autoArrange, 
 			BoundingRectangle& box,

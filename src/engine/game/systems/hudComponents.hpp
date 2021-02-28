@@ -10,7 +10,7 @@
 namespace game{ 
 namespace components{
 
-	// not implemented
+	// controls position relative to a Parent's BoundingRectangle
 	struct Anchor
 	{
 		utils::Alignment alignment;
@@ -21,7 +21,6 @@ namespace components{
 		BoundingRectangle(glm::vec2 _size = {}, glm::vec2 _align = {})
 			: size(_size), alignment(_align)
 		{}
-		//	bounds(-_size * _center, _size * (glm::vec2(1.f) - _center)) {}
 
 		BoundingRectangle(const math::Rectangle& _bounds)
 			: size(_bounds.size()), 

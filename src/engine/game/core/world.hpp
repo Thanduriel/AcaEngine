@@ -1,6 +1,7 @@
 #pragma once
 
 #include "registry2.hpp"
+#include "lifetimeManager2.hpp"
 
 namespace game {
 
@@ -54,6 +55,15 @@ namespace game {
 			}
 		};
 
+		template<>
+		struct ResourceFetch<EntityDeleter&>
+		{
+			static EntityDeleter& get(World& world)
+			{
+				return world.m_deleter;
+			}
+		};
+
 		// Read component
 		template<typename Comp>
 		struct ResourceFetch <ReadAccess<Comp>>
@@ -86,6 +96,7 @@ namespace game {
 
 		float m_deltaTime;
 		Registry2 m_registry;
+		EntityDeleter m_deleter;
 		std::tuple<Resources...> m_resources;
 	};
 }
