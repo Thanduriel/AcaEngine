@@ -33,6 +33,7 @@ namespace game {
 		m_camera(graphics::Device::getBufferSize(), glm::vec2(0.f))
 	{
 		m_registry.addComponent<Position2D>(m_this, glm::vec2(0.f));
+		m_registry.addComponent<Transform2D>(m_this, glm::vec2(0.f));
 		m_registry.addComponent<BoundingRectangle>(m_this, graphics::Device::getBufferSize(), glm::vec2(0.f));
 	}
 
@@ -64,8 +65,10 @@ namespace game {
 			const Transform2D& parentTransform = m_registry.getComponentUnsafe<Transform2D>(parent.entity);
 
 			const vec2 min = parentTransform.position - parentBox.alignment * parentBox.size;
-			transform.position = min + anchor.alignment * parentBox.size;
+			transform.position += min + anchor.alignment * parentBox.size;
 		};
+		m_registry.execute(updateTransforms);
+		m_registry.clearComponent<TransformNeedsUpdate>();
 
 		auto updateAutoContainers = [this](BoundingRectangleNeedsUpdate,
 			AutoArrange& autoArrange, 
@@ -73,17 +76,24 @@ namespace game {
 			const Transform2D& transform,
 			Children& children)
 		{
-			vec2 currentPos = transform.position;
 			vec2 currentBounds = {};
+			// first pass compute relative positions and bounding box size
 			for (Entity child : children.entities)
 			{
 				const BoundingRectangle& bounds = m_registry.getComponentUnsafe<BoundingRectangle>(child);
 				Transform2D& childTransform = m_registry.getComponentUnsafe<Transform2D>(child);
-				childTransform.position = currentPos + vec2(0.f, currentBounds.y) + bounds.alignment * bounds.size;
+				childTransform.position = vec2(0.f, currentBounds.y) - bounds.alignment * bounds.size;
 				currentBounds.x = std::max(currentBounds.x, bounds.size.x);
 				currentBounds.y -= bounds.size.y;
 			}
-			box.size = currentBounds;
+			box.size = glm::vec2(currentBounds.x, -currentBounds.y);
+			// use upper left corner as origin
+			const vec2 pos = transform.position - glm::vec2(box.alignment.x, 1.f-box.alignment.y) * box.size;
+			for (Entity child : children.entities)
+			{
+				Transform2D& childTransform = m_registry.getComponentUnsafe<Transform2D>(child);
+				childTransform.position += pos;
+			}
 		};
 		m_registry.execute(updateAutoContainers);
 

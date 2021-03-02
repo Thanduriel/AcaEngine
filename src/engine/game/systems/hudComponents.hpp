@@ -23,8 +23,8 @@ namespace components{
 		{}
 
 		BoundingRectangle(const math::Rectangle& _bounds)
-			: size(_bounds.size()), 
-			alignment(_bounds.max / _bounds.size())
+			: size(_bounds.size()),
+			alignment(glm::abs(_bounds.min) / size)
 		{}
 
 		glm::vec2 size;
@@ -57,7 +57,7 @@ namespace components{
 		std::function<void()> onClick;
 	};
 
-	// positions all its childs automaticly
+	// positions all its childs automatically
 	struct AutoArrange
 	{
 	};

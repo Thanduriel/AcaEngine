@@ -31,6 +31,6 @@ namespace game {
 	class AutoContainer
 	{
 	public:
-		AutoContainer(ComponentCreator& _creator, glm::vec2 _position);
+		AutoContainer(ComponentCreator& _creator, glm::vec2 _position, const utils::Alignment& _alignment);
 	};
 }

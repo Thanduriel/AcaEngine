@@ -36,10 +36,10 @@ namespace game {
 			.add<comp::BoundingRectangleNeedsUpdate>();
 	}
 
-	AutoContainer::AutoContainer(ComponentCreator& _creator, glm::vec2 _position)
+	AutoContainer::AutoContainer(ComponentCreator& _creator, glm::vec2 _position, const utils::Alignment& _alignment)
 	{
 		_creator.add<comp::Transform2D>(_position)
-			.add<comp::BoundingRectangle>()
+			.add<comp::BoundingRectangle>(glm::vec2{}, _alignment)
 			.add<comp::AutoArrange>()
 			.add<comp::BoundingRectangleNeedsUpdate>();
 	}
