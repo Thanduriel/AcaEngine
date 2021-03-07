@@ -5,6 +5,13 @@
 
 namespace game {
 
+	enum struct SystemGroup 
+	{
+		Process,
+		Draw,
+		COUNT
+	};
+
 	template<typename... Resources>
 	class World
 	{
@@ -13,15 +20,28 @@ namespace game {
 			: m_resources(std::forward<Resources>(_resources)...),
 			m_deltaTime(0.f) {}
 
-		void process(float _deltaTime)
+		void process(SystemGroup _group, float _deltaTime)
 		{
 			m_deltaTime = _deltaTime;
+			auto& systemGroup = m_systems[static_cast<size_t>(_group)];
+			for (auto& sysHolder : systemGroup)
+				sysHolder.runFn(*this, sysHolder.system.get());
 		}
 
 		// direct resource access; should not be used
 		Registry2& getRegistry() { return m_registry; }
 		template<typename Resource>
 		Resource& getResource() { return std::get<Resource>(m_resources); }
+
+		template<typename System>
+		System* addSystem(std::unique_ptr<System> _system, SystemGroup _group)
+		{
+			auto& systemGroup = m_systems[static_cast<size_t>(_group)];
+			System* system = _system.release();
+			systemGroup.emplace_back(std::unique_ptr<void, DestroySystem>(system, &destroySystem<System>),
+				&runSystem<System>);
+			return system;
+		}
 
 		// Call member function of a system providing the expected resources.
 		template<typename System, typename... ResourcesReq>
@@ -94,9 +114,32 @@ namespace game {
 			}
 		};
 
+		using RunSystem = void(*)(World&, void*);
+		template<typename System>
+		static void runSystem(World& _world, void* _sys)
+		{
+			System& sys = *reinterpret_cast<System*>(_sys);
+			_world.call(sys, &System::update);
+		}
+		using DestroySystem = void(*)(void*);
+		template<typename System>
+		static void destroySystem(void* _sys)
+		{
+			System* sys = reinterpret_cast<System*>(_sys);
+			delete sys;
+		}
+
+		struct SystemHolder
+		{
+			std::unique_ptr<void, DestroySystem> system;
+			RunSystem runFn;
+		//	std::vector<void*> dependencies;
+		};
+
 		float m_deltaTime;
 		Registry2 m_registry;
 		EntityDeleter m_deleter;
 		std::tuple<Resources...> m_resources;
+		std::array< std::vector<SystemHolder>, static_cast<size_t>(SystemGroup::COUNT)> m_systems;
 	};
 }

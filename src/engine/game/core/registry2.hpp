@@ -149,7 +149,7 @@ namespace game {
 		// Basically a weak pointer to an Entity.
 		struct EntityRef
 		{
-			EntityRef() : entity(INVALID_ENTITY), generation(0) {}
+			EntityRef() : entity(), generation(0) {}
 
 		private:
 			EntityRef(Entity _ent, unsigned _generation)

@@ -89,7 +89,7 @@ namespace game {
 				return m_manager.addComponent<Component>(entity, std::forward<Args>(_args)...);
 			}
 
-			// returns the creater to chain add expressions together
+			// returns the creator to chain add expressions together
 			template<component_type Component, typename... Args>
 			const ComponentCreator& add(Args&&... _args) const
 			{

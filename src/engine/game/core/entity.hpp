@@ -27,7 +27,8 @@ namespace game {
 		BaseType m_id;
 	};
 
-	constexpr static Entity INVALID_ENTITY = Entity(Entity::INVALID_ID);
+	/*constexpr*/ // msvc 16.9 does not like this anymore :(
+	const static Entity INVALID_ENTITY(Entity::INVALID_ID);
 
 	namespace components {
 		// Currently only works correctly together with Position, Rotation, Scale components
