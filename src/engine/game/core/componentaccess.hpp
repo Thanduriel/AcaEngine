@@ -3,6 +3,7 @@
 #include "../../utils/containers/weakSlotMap.hpp"
 #include "../../utils/metaProgHelpers.hpp"
 #include "weakcomponentvector.hpp"
+#include "entity.hpp"
 
 namespace game {
 

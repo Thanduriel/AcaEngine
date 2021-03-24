@@ -5,6 +5,9 @@
 
 namespace game {
 
+	template<typename T>
+	concept system_type = requires { &T::update; };
+
 	enum struct SystemGroup 
 	{
 		Process,
@@ -33,13 +36,15 @@ namespace game {
 		template<typename Resource>
 		Resource& getResource() { return std::get<Resource>(m_resources); }
 
-		template<typename System>
-		System* addSystem(std::unique_ptr<System> _system, SystemGroup _group)
+		template<system_type System, system_type... Dependencies>
+		System* addSystem(std::unique_ptr<System> _system, SystemGroup _group, 
+			const Dependencies*... _dependencies)
 		{
 			auto& systemGroup = m_systems[static_cast<size_t>(_group)];
 			System* system = _system.release();
 			systemGroup.emplace_back(std::unique_ptr<void, DestroySystem>(system, &destroySystem<System>),
-				&runSystem<System>);
+				&runSystem<System>,
+				std::vector<const void*>{static_cast<const void*>(_dependencies)...});
 			return system;
 		}
 
@@ -133,7 +138,7 @@ namespace game {
 		{
 			std::unique_ptr<void, DestroySystem> system;
 			RunSystem runFn;
-		//	std::vector<void*> dependencies;
+			std::vector<const void*> dependencies;
 		};
 
 		float m_deltaTime;
