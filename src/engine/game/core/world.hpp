@@ -21,7 +21,9 @@ namespace game {
 	public:
 		World(Resources&&... _resources) 
 			: m_resources(std::forward<Resources>(_resources)...),
-			m_deltaTime(0.f) {}
+			m_deltaTime(0.f),
+			m_manager(m_registry)
+		{}
 
 		void process(SystemGroup _group, float _deltaTime)
 		{
@@ -31,8 +33,17 @@ namespace game {
 				sysHolder.runFn(*this, sysHolder.system.get());
 		}
 
+		void cleanup()
+		{
+			m_manager.moveComponents();
+			m_manager.cleanup();
+			m_deleter.cleanup(m_registry);
+		}
+
 		// direct resource access; should not be used
 		Registry2& getRegistry() { return m_registry; }
+		// only for debugging
+		LifetimeManager2& getManager() { return m_manager; }
 		template<typename Resource>
 		Resource& getResource() { return std::get<Resource>(m_resources); }
 
@@ -86,6 +97,15 @@ namespace game {
 			static EntityDeleter& get(World& world)
 			{
 				return world.m_deleter;
+			}
+		};
+
+		template<>
+		struct ResourceFetch<LifetimeManager2&>
+		{
+			static LifetimeManager2& get(World& world)
+			{
+				return world.m_manager;
 			}
 		};
 
@@ -144,6 +164,7 @@ namespace game {
 		float m_deltaTime;
 		Registry2 m_registry;
 		EntityDeleter m_deleter;
+		LifetimeManager2 m_manager; // legacy all in one interface
 		std::tuple<Resources...> m_resources;
 		std::array< std::vector<SystemHolder>, static_cast<size_t>(SystemGroup::COUNT)> m_systems;
 	};

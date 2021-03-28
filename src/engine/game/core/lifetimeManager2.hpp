@@ -50,9 +50,10 @@ namespace game {
 		template<typename Value>
 		static void moveComponentsToRegistry(Registry2& registry, TempComponentVector& _container)
 		{
+			auto targetComps = WriteAccess<Value>(registry.getContainer<Value>());
 			for(auto [entity, comp] : _container.iterate<Value>())
 			{
-				registry.addComponent<Value>(Entity(entity), std::move(comp));
+				targetComps.add(Entity(entity), std::move(comp));
 			}
 
 			_container.clear();
