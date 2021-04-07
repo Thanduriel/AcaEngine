@@ -19,6 +19,7 @@
 #include "engine/input/inputmanager.hpp"
 #include "engine/utils/config.hpp"
 #include "engine/input/keyboardInterface.hpp"
+#include "engine/game/core/registry/ArcheTypeRegistry.hpp"
 #include <engine/utils/typeIndex.hpp>
 #include <engine/utils/containers/weakSlotMap.hpp>
 #include <spdlog/spdlog.h>
@@ -245,7 +246,7 @@ template<typename Registry>
 concept ManualComps = requires (Registry r) { r.template execute<int, float>([](int, float) {}); };
 
 template<typename... Comps, typename Registry, typename Action>
-requires !ManualComps<Registry>//requires (Registry& r, const Action& a) { r.template execute<Action>(a); }
+requires (!ManualComps<Registry>)//requires (Registry& r, const Action& a) { r.template execute<Action>(a); }
 void execute(Registry& registry, const Action& action)
 {
 	registry.execute(action);
@@ -262,7 +263,7 @@ template<typename Registry>
 Results benchmarkRegistry(int numEntities, int numRuns)
 {
 	namespace comps = components;
-	auto run = [&](Results& results) 
+	auto run = [numEntities](Results& results) 
 	{
 		Registry registry;
 
@@ -302,14 +303,14 @@ Results benchmarkRegistry(int numEntities, int numRuns)
 
 		std::uniform_real_distribution<float> dt(0.01f, 0.5f);
 		start = chrono::high_resolution_clock::now();
-		execute< comps::Velocity, comps::Position>(registry, operations::ApplyVelocity(dt(rng)));
-		//registry.execute(operations::ApplyVelocity(dt(rng)));
+		// execute< comps::Velocity, comps::Position>(registry, operations::ApplyVelocity(dt(rng)));
+		registry.execute(operations::ApplyVelocity(dt(rng)));
 		end = chrono::high_resolution_clock::now();
 		results.tIterateSimple += chrono::duration<float>(end - start).count();
 
 		start = chrono::high_resolution_clock::now();
-		execute<comps::TestComponent, comps::Transform, comps::Position, comps::Velocity>(registry, TestOperation());
-	//	registry.execute(TestOperation());
+		// execute<comps::TestComponent, comps::Transform, comps::Position, comps::Velocity>(registry, TestOperation());
+		registry.execute(TestOperation());
 		end = chrono::high_resolution_clock::now();
 		results.tIterateComplex += chrono::duration<float>(end - start).count();
 
@@ -405,9 +406,9 @@ int main(int argc, char* argv[])
 		numEntities, 
 		runs,
 		{"static", "type erasure", "sp"});*/
-	runComparison<GameRegistry, GameRegistry, game::Registry2>(numEntities, 
+	runComparison<GameRegistry, GameRegistry, game::Registry2, registry::ArchetypeRegistry>(numEntities, 
 		runs, 
-		{ "static", "type erasure"});
+		{ "static", "type erasure", "Archetype"});
 //	Game game;
 //	game.run(std::make_unique<MainState>());
 

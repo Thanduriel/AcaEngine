@@ -1,4 +1,4 @@
-#include "LifetimeManager2.hpp"
+#include "lifetimeManager2.hpp"
 
 namespace game {
 

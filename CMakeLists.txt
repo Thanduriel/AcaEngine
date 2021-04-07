@@ -68,9 +68,12 @@ target_link_libraries(AcaEngine PUBLIC ${OPENGL_LIBRARIES})
 list(APPEND INCLUDE_DIR ${OPENGL_INCUDE_DIRS})
 
 # glfw
-# find_package(glfw QUIET)
-if (glfw_FOUND)
-	list(APPEND INCLUDE_DIR  ${GLFW_LIBRARY_DIRS})
+find_package(PkgConfig QUIET)
+if (PkgConfig_FOUND)
+	pkg_search_module(GLFW QUIET glfw3)
+endif(PkgConfig_FOUND)
+
+if (GLFW_FOUND)
 else()
 	message("Using submodule glfw.")
 	set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -80,12 +83,12 @@ else()
 	add_subdirectory ("dependencies/glfw")
 	set(GLFW_INCLUDE_DIRS "dependencies/glfw/include")
 	set(GLFW_LIBRARIES "glfw")
-endif(glfw_FOUND)
+endif()
 list(APPEND INCLUDE_DIR  ${GLFW_INCLUDE_DIRS})
 target_link_libraries (AcaEngine PUBLIC ${GLFW_LIBRARIES})
 
 # glew
-# find_package(GLEW QUIET)
+find_package(GLEW QUIET)
 if (NOT GLEW_FOUND)
 	message("Using submodule GLEW.")
 	set(glew-cmake_BUILD_SHARED OFF CACHE BOOL "" FORCE)
@@ -107,7 +110,7 @@ endif(NOT glm_FOUND)
 list(APPEND INCLUDE_DIR  ${GLM_INCLUDE_DIRS})
 
 # spdlog
-# find_package(spdlog QUIET)
+find_package(spdlog QUIET)
 if (NOT spdlog_FOUND)
 	message("Using submodule spdlog.")
 	add_subdirectory ("dependencies/spdlog")
@@ -115,7 +118,7 @@ endif(NOT spdlog_FOUND)
 target_link_libraries (AcaEngine PUBLIC spdlog::spdlog)
 
 # freetype
-# find_package(Freetype QUIET)
+find_package(Freetype QUIET)
 if (NOT FREETYPE_FOUND)
 	message("Using submodule Freetype.")
 	set(CMAKE_DISABLE_FIND_PACKAGE_ZLIB ON CACHE BOOL "" FORCE)
@@ -137,7 +140,8 @@ list(APPEND INCLUDE_DIR  "dependencies/stb")
 list(APPEND INCLUDE_DIR  "dependencies/json")
 
 list(APPEND INCLUDE_DIR "src")
-target_include_directories(AcaEngine PUBLIC ${INCLUDE_DIR})
+target_include_directories(AcaEngine SYSTEM PUBLIC ${INCLUDE_DIR})
+#target_include_directories(AcaEngine INTERFACE "src")
 target_link_libraries(Game AcaEngine)
 
 enable_testing()

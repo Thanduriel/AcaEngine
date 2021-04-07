@@ -28,7 +28,7 @@ namespace game {
 		// _ent already has a component of this type.
 		// @return A reference to the new component or the already existing component.
 		template<component_type Component, typename... Args>
-		requires !std::same_as<Component, components::Parent>
+		requires (!std::same_as<Component, components::Parent>)
 		Component& addComponent(Entity _ent, Args&&... _args)
 		{
 			return getContainer<Component>().template emplace<Component>(_ent.toIndex(), std::forward<Args>(_args)...);
@@ -46,7 +46,7 @@ namespace game {
 		// Remove a component from an entity.
 		// Expects the component to exist.
 		template<component_type Component>
-		requires !std::same_as<Component, components::Parent> && !std::same_as<Component, components::Children>
+		requires (!std::same_as<Component, components::Parent> && !std::same_as<Component, components::Children>)
 		void removeComponent(Entity _ent)
 		{
 			getContainer<Component>().erase(_ent.toIndex());
@@ -62,7 +62,7 @@ namespace game {
 			if (comps.contains(_ent.toIndex()))
 			{
 				// remove from parent list
-				auto& parent = comps.at<Component>(_ent.toIndex());
+				auto& parent = comps.template at<Component>(_ent.toIndex());
 				if (isValid(parent.entity))
 				{
 					auto& childs = getContainer<components::Children>().at<components::Children>(parent.entity.toIndex()).entities;
@@ -82,7 +82,7 @@ namespace game {
 			auto& comps = getContainer<Component>();
 			if (comps.contains(_ent.toIndex()))
 			{
-				auto& childs = comps.at<Component>(_ent.toIndex()).entities;
+				auto& childs = comps.template at<Component>(_ent.toIndex()).entities;
 				// erase all children
 				for (Entity ent : childs)
 					erase(ent);

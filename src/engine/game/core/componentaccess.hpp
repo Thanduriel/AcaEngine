@@ -30,8 +30,8 @@ namespace game {
 			: m_targetStorage(_targetStorage)
 		{}
 
-		auto iterate() { return m_targetStorage.iterate<T>(); }
-		auto iterate() const { return m_targetStorage.iterate<T>(); }
+		auto iterate() { return m_targetStorage.template iterate<T>(); }
+		auto iterate() const { return m_targetStorage.template iterate<T>(); }
 
 		bool has(Entity _ent) const { return m_targetStorage.contains(_ent.toIndex()); }
 
@@ -83,7 +83,7 @@ namespace game {
 
 		// not a member function because that would require .template
 		template<typename Comp>
-		friend auto getComp(ComponentTuple<CompAccess...>& _tuple)
+		auto getComp(ComponentTuple<CompAccess...>& _tuple)
 		{
 			static_assert(utils::contains_type<ReadAccess<Comp>, CompAccess...>::value
 				|| utils::contains_type<WriteAccess<Comp>, CompAccess...>::value,
