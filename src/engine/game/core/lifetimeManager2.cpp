@@ -13,6 +13,16 @@ namespace game {
 		return m_registry.create();
 	}
 
+	Entity EntityCreator::get(const Registry2::EntityRef& _ref) const
+	{
+		return m_registry.getEntity(_ref);
+	}
+
+	Registry2::EntityRef EntityCreator::ref(Entity _ent) const
+	{
+		return m_registry.getRef(_ent);
+	}
+
 	// ************************************************** //
 	void EntityDeleter::destroy(Entity _ent)
 	{

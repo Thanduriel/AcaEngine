@@ -20,7 +20,7 @@ namespace game {
 	{
 	public:
 		World(Resources&&... _resources) 
-			: m_resources(std::forward<Resources>(_resources)...),
+			: m_resources(EntityCreator(m_registry), std::forward<Resources>(_resources)...),
 			m_deltaTime(0.f),
 			m_manager(m_registry)
 		{}
@@ -165,7 +165,7 @@ namespace game {
 		Registry2 m_registry;
 		EntityDeleter m_deleter;
 		LifetimeManager2 m_manager; // legacy all in one interface
-		std::tuple<Resources...> m_resources;
+		std::tuple<EntityCreator, Resources...> m_resources;
 		std::array< std::vector<SystemHolder>, static_cast<size_t>(SystemGroup::COUNT)> m_systems;
 	};
 }

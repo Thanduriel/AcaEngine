@@ -13,12 +13,15 @@ namespace game {
 		EntityCreator(Registry2& _registry);
 
 		Entity create();
-
+		// these operations access the same memory; to prevent race conditions
+		// they are thus treated as read only part of this resource
+		Entity get(const Registry2::EntityRef& _ref) const;
+		Registry2::EntityRef ref(Entity _ent) const;
 	protected:
 		Registry2& m_registry;
 	};
 
-	// Resource to savely delete entities.
+	// Resource to safely delete entities.
 	class EntityDeleter
 	{
 	public:
@@ -149,4 +152,24 @@ namespace game {
 	};
 
 	using ComponentCreator = LifetimeManager2::ComponentCreator;
+
+	// simple helper similar to the ComponentCreator but for manual accesses
+	template<typename... Comps>
+	class CreateComponents
+	{
+	public:
+		CreateComponents(ComponentTuple<Comps...>& _comps, Entity _ent)
+			: m_entity(_ent), m_comps(_comps)
+		{}
+
+		template<component_type Comp, typename... Args>
+		CreateComponents<Comps...>& add(Args&&... _args)
+		{
+			getComp<Comp>(m_comps).add(m_entity, std::forward<Args>(_args)...);
+			return *this;
+		}
+	private:
+		Entity m_entity;
+		ComponentTuple<Comps...>& m_comps;
+	};
 }

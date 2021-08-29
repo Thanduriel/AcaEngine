@@ -7,6 +7,7 @@
 
 namespace game {
 
+	// different storage types are selected based on the component type
 	using DataStorage = utils::WeakSlotMap<Entity::BaseType>;
 	using MessageStorage = WeakComponentVector<Entity::BaseType>;
 
@@ -22,10 +23,13 @@ namespace game {
 	template<typename Val>
 	using ComponentStorage = typename details::StorageDecider<Val>::type;
 
+	// general component storage access
 	template<component_type T>
 	class Access
 	{
 	public:
+		using ComponentType = T;
+
 		explicit Access(ComponentStorage<T>& _targetStorage)
 			: m_targetStorage(_targetStorage)
 		{}
@@ -67,11 +71,18 @@ namespace game {
 	template<component_type T>
 	using ReadAccess = const Access<T>;
 
+	// Holds a number of components and allows Action execution on a (sub)set of them
 	template<typename... CompAccess>
 	class ComponentTuple
 	{
 	public:
 		ComponentTuple(CompAccess... _accessors) : m_components(_accessors...) {}
+
+		// construction from other tuple
+		template<typename... ParentComps>
+		ComponentTuple(const ComponentTuple<ParentComps...>& _parentComps)
+			: m_components(getComp<typename CompAccess::ComponentType>(_parentComps)...)
+		{}
 
 		// Execute an Action on all entities having the components
 		// expected by Action::operator(...).
@@ -81,9 +92,9 @@ namespace game {
 		template<typename Action>
 		void execute(const Action& _action) { executeUnpack(_action, utils::UnpackFunction(&Action::operator())); }
 
-		// not a member function because that would require .template
+		// not a member function because that would require ".template" everywhere
 		template<typename Comp>
-		friend auto getComp(ComponentTuple<CompAccess...>& _tuple)
+		friend auto getComp(const ComponentTuple<CompAccess...>& _tuple)
 		{
 			static_assert(utils::contains_type<ReadAccess<Comp>, CompAccess...>::value
 				|| utils::contains_type<WriteAccess<Comp>, CompAccess...>::value,
