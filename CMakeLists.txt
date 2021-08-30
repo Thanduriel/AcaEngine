@@ -136,6 +136,10 @@ list(APPEND INCLUDE_DIR  "dependencies/stb")
 # json
 list(APPEND INCLUDE_DIR  "dependencies/json")
 
+# static type info
+add_subdirectory ("dependencies/statictypeinfo")
+target_link_libraries(AcaEngine PUBLIC StaticTypeInfo)
+
 list(APPEND INCLUDE_DIR "src")
 target_include_directories(AcaEngine PUBLIC ${INCLUDE_DIR})
 target_link_libraries(Game AcaEngine)

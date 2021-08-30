@@ -7,6 +7,7 @@
 #include "entity.hpp"
 #include "component.hpp"
 #include "componentaccess.hpp"
+#include <static_type_info.h>
 #include <tuple>
 #include <utility>
 #include <type_traits>
@@ -16,7 +17,7 @@ namespace game {
 	class Registry2
 	{
 		template<typename T>
-		using StorageMap = utils::HashMap<int, T>;
+		using StorageMap = utils::HashMap<std::remove_const_t<static_type_info::TypeIndex>, T>;
 	public:
 		// Make a new entity managed by this registry.
 		Entity create();
@@ -130,11 +131,12 @@ namespace game {
 		ComponentStorage<Comp>& getContainer()
 		{
 			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
-			auto it = map.find(utils::TypeIndex::value<Comp>());
+			constexpr auto typeId = static_type_info::getTypeIndex<Comp>();
+			auto it = map.find(typeId);
 			if (it != map.end())
 				return it.data();
 
-			return map.add(utils::TypeIndex::value<Comp>(),
+			return map.add(typeId,
 				ComponentStorage<Comp>(utils::TypeHolder<Comp>())).data();
 		}
 
@@ -213,7 +215,7 @@ namespace game {
 		const ComponentStorage<Comp>* getContainer() const
 		{
 			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
-			auto it = map.find(utils::TypeIndex::value<Comp>());
+			auto it = map.find(static_type_info::getTypeIndex<Comp>());
 			
 			return it != map.end() ? &it.data() : nullptr;
 		}
@@ -222,14 +224,14 @@ namespace game {
 		ComponentStorage<Comp>& getContainerUnsafe() 
 		{
 			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
-			return map.find(utils::TypeIndex::value<Comp>()).data(); 
+			return map.find(static_type_info::getTypeIndex<Comp>()).data(); 
 		};
 
 		template<component_type Comp>
 		const ComponentStorage<Comp>& getContainerUnsafe() const 
 		{
 			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
-			return map.find(utils::TypeIndex::value<Comp>()).data(); 
+			return map.find(static_type_info::getTypeIndex<Comp>()).data(); 
 		};
 
 		std::vector<Entity> m_unusedEntities;

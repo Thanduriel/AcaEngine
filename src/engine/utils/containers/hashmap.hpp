@@ -124,14 +124,17 @@ public:
 	Handle add(KeyT&& _key, DataT&& _data)
 	{
 		using namespace std;
-		uint32_t h = (uint32_t)m_hash(_key);
+
+		// in case a const key is captured we need a copy
+		K key(std::forward<KeyT>(_key));
+		uint32_t h = static_cast<uint32_t>(m_hash(key));
 	restartAdd:
 		uint32_t insertIdx = ~0;
 		uint32_t d = 0;
 		uint32_t idx = h % m_capacity;
 		while(m_keys[idx].dist != 0xffffffff) // while not empty cell
 		{
-			if(m_keyCompare(m_keys[idx].key, _key)) // overwrite if keys are identically
+			if(m_keyCompare(m_keys[idx].key, key)) // overwrite if keys are identically
 			{
 				m_data[idx] = std::forward<DataT>(_data);
 				return Handle(this, idx);
@@ -147,7 +150,7 @@ public:
 
 			if(m_keys[idx].dist < d) // Swap and then insert the element from this location instead
 			{
-				swap(_key, m_keys[idx].key);
+				swap(key, m_keys[idx].key);
 				swap(d, m_keys[idx].dist);
 				swap(_data, m_data[idx]);
 				if(insertIdx == ~0u) insertIdx = idx;
@@ -156,7 +159,7 @@ public:
 		//	idx = (idx + 1) % m_capacity;
 			if(++idx >= m_capacity) idx = 0;
 		}
-		new (&m_keys[idx].key)(K)(std::forward<KeyT>(_key));
+		new (&m_keys[idx].key)(K)(std::move(key));
 		m_keys[idx].dist = d;
 		new (&m_data[idx])(T)(std::forward<DataT>(_data));
 		++m_size;

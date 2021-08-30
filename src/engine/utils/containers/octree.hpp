@@ -70,6 +70,8 @@ namespace utils {
 				if (aabb.intersect(key)) hits.push_back(el);
 			}
 		};
+
+		const AABB& getRootAABB() const { return m_rootNode->box; }
 	
 	private:
 		constexpr static FloatT MIN_SIZE = 1.0 / (2 << 3);
