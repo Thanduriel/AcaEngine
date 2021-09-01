@@ -148,22 +148,6 @@ namespace game {
 		template<typename Action>
 		void execute(const Action& _action) { executeUnpack(_action, utils::UnpackFunction(&Action::operator())); }
 
-		// Basically a weak pointer to an Entity.
-		struct EntityRef
-		{
-			EntityRef() : entity(), generation(0) {}
-
-		private:
-			EntityRef(Entity _ent, unsigned _generation)
-				: entity(_ent), generation(_generation)
-			{}
-
-			friend class Registry2;
-
-			Entity entity;
-			unsigned generation;
-		};
-
 		EntityRef getRef(Entity _ent) const { return m_generations[_ent.toIndex()]; }
 
 		// Checks whether an entity is managed by this registry.

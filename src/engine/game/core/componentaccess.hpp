@@ -62,6 +62,15 @@ namespace game {
 		}
 
 		void clear() { m_targetStorage.clear(); }
+		void remove(Entity _ent)
+		{
+			m_targetStorage.erase(_ent.toIndex());
+		}
+		void tryRemove(Entity _ent)
+		{
+			if(m_targetStorage.contains(_ent.toIndex()))
+				m_targetStorage.erase(_ent);
+		}
 	private:
 		ComponentStorage<T>& m_targetStorage;
 	};
@@ -136,5 +145,19 @@ namespace game {
 		}
 
 		std::tuple<CompAccess...> m_components;
+	};
+
+	namespace details {
+		template<class...Ts>
+		constexpr auto flatten(Ts...ts) {
+			return ComponentTuple<Ts>(ts...);
+		}
+	}
+
+
+	template<typename... Ts>
+	struct MakeComponentTuple
+	{
+		using type = decltype(details::flatten<Ts...>(std::declval<Ts>()...));
 	};
 }

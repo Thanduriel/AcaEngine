@@ -29,6 +29,22 @@ namespace game {
 
 	constexpr static Entity INVALID_ENTITY(Entity::INVALID_ID);
 
+	// Basically a weak pointer to an Entity.
+	struct EntityRef
+	{
+		EntityRef() noexcept : entity(), generation(0) {}
+
+	private:
+		EntityRef(Entity _ent, unsigned _generation)
+			: entity(_ent), generation(_generation)
+		{}
+
+		friend class Registry2;
+
+		Entity entity;
+		unsigned generation;
+	};
+
 	namespace components {
 		// Currently only works correctly together with Position, Rotation, Scale components
 		struct Parent

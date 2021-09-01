@@ -15,8 +15,8 @@ namespace game {
 		Entity create();
 		// these operations access the same memory; to prevent race conditions
 		// they are thus treated as read only part of this resource
-		Entity get(const Registry2::EntityRef& _ref) const;
-		Registry2::EntityRef ref(Entity _ent) const;
+		Entity get(const EntityRef& _ref) const;
+		EntityRef ref(Entity _ent) const;
 	protected:
 		Registry2& m_registry;
 	};
@@ -154,7 +154,7 @@ namespace game {
 	using ComponentCreator = LifetimeManager2::ComponentCreator;
 
 	// simple helper similar to the ComponentCreator but for manual accesses
-	template<typename... Comps>
+/*	template<typename... Comps>
 	class CreateComponents
 	{
 	public:
@@ -171,5 +171,5 @@ namespace game {
 	private:
 		Entity m_entity;
 		ComponentTuple<Comps...>& m_comps;
-	};
+	};*/
 }
