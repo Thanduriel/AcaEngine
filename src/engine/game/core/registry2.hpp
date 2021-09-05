@@ -137,7 +137,7 @@ namespace game {
 				return it.data();
 
 			return map.add(typeId,
-				ComponentStorage<Comp>(utils::TypeHolder<Comp>())).data();
+				ComponentStorage<Comp>(utils::TypeHolder<Comp>{})).data();
 		}
 
 		// Execute an Action on all entities having the components
@@ -221,7 +221,8 @@ namespace game {
 		std::vector<Entity> m_unusedEntities;
 		Entity::BaseType m_maxNumEntities = 0u;
 		std::tuple<StorageMap<DataStorage>,
-			StorageMap<MessageStorage> > m_components;
+			StorageMap<MessageStorage>,
+			StorageMap<FlagStorage>> m_components;
 		std::vector<EntityRef> m_generations;
 	};
 }

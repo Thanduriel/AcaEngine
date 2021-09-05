@@ -4,6 +4,16 @@
 
 namespace utils {
 
+	// View on a generic (type erased) container that permits iteration.
+	// The Accessor defines the required operations with the interface:
+	/*	template<typename Value>
+		struct Accessor
+		{
+			static Key key(const Container& _this, SizeType _index);
+			static Value& value(Container& _this, SizeType _index);
+			static const Value& value(const Container& _this, SizeType _index);
+		};
+	* */
 	template<typename Container, typename Key, typename Value, typename Accessor>
 	class IteratorRange
 	{

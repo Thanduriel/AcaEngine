@@ -31,12 +31,13 @@ struct Dummy
 
 int main()
 {
-	utils::WeakSlotMap<int> slotMap(static_cast<Dummy*>(nullptr));
+	utils::WeakSlotMap<int, false> slotMap(utils::TypeHolder<Dummy>{});
 	std::unordered_set<std::string> contents;
+	
 
 	auto insert = [&](int key, const std::string& _str)
 	{
-		slotMap.emplace<Dummy>(key, _str);
+		slotMap.template emplace<Dummy>(key, _str);
 		contents.insert(_str);
 	};
 
@@ -56,7 +57,7 @@ int main()
 		EXPECT(slotMap.at<Dummy>(indicies[i]).s == std::to_string(i) + "aabbccddeeffgg", "Retrieve multiple elements.");
 	}
 
-	for (const Dummy& dummy : slotMap.iterate<Dummy>())
+	for (const auto& [ind, dummy] : slotMap.template iterate<Dummy>())
 	{
 		EXPECT(contents.contains(dummy.s), "Iterate over elements.");
 		contents.erase(dummy.s);

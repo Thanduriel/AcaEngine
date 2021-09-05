@@ -16,7 +16,7 @@ namespace game {
 		using SizeType = size_t;
 
 		template<typename Comp>
-		WeakComponentVector(utils::TypeHolder<Comp>, unsigned _initialCapacity = 4)
+		WeakComponentVector(utils::TypeHolder<Comp>, size_t _initialCapacity = 4)
 			: m_clear(clear<Comp>),
 			m_components(new char[_initialCapacity * sizeof(Comp)])
 		{

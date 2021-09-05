@@ -22,11 +22,11 @@ namespace utils {
 		WeakSlotMap(utils::TypeHolder<Value>, SizeType _initialSize = 4)
 			: m_elementSize(sizeof(Value)),
 			m_destructor(destroyElement<Value>),
-			m_move(moveElement<Value>),
-			m_size(0),
-			m_capacity(_initialSize),
-			m_values(new char[index(m_capacity)])
+			m_move(moveElement<Value>)
 		{
+			m_valuesToSlots.reserve(_initialSize);
+			m_values.reset(new char[index(m_valuesToSlots.capacity())]);
+
 			static_assert(std::is_trivially_destructible_v<Value> || !TrivialDestruct,
 				"Managed elements require a destructor call.");
 		}
@@ -35,14 +35,10 @@ namespace utils {
 			: m_elementSize(_oth.m_elementSize),
 			m_destructor(_oth.m_destructor),
 			m_move(_oth.m_move),
-			m_size(_oth.m_size),
-			m_capacity(_oth.m_capacity),
 			m_values(std::move(_oth.m_values)),
 			m_slots(std::move(_oth.m_slots)),
 			m_valuesToSlots(std::move(_oth.m_valuesToSlots))
 		{
-			_oth.m_size = 0;
-			_oth.m_capacity = 0;
 		}
 
 		WeakSlotMap& operator=(WeakSlotMap&& _oth) noexcept
@@ -50,14 +46,9 @@ namespace utils {
 			m_elementSize = _oth.m_elementSize;
 			m_destructor = _oth.m_destructor;
 			m_move = _oth.m_move;
-			m_size = _oth.m_size;
-			m_capacity = _oth.m_capacity;
 			m_values = std::move(_oth.m_values);
 			m_slots = std::move(_oth.m_slots);
 			m_valuesToSlots = std::move(_oth.m_valuesToSlots);
-
-			_oth.m_size = 0;
-			_oth.m_capacity = 0;
 
 			return *this;
 		}
@@ -68,7 +59,7 @@ namespace utils {
 			destroyValues();
 		}
 
-		template<typename Value, typename... Args>
+		template<std::movable Value, typename... Args>
 		Value& emplace(Key _key, Args&&... _args)
 		{
 			// increase slots if necessary
@@ -77,23 +68,23 @@ namespace utils {
 			else if(m_slots[_key] != INVALID_SLOT) // already exists
 				return at<Value>(_key);
 
-			m_slots[_key] = m_size;
-
+			const size_t oldCapacity = m_valuesToSlots.size();
+			m_slots[_key] = size();
 			m_valuesToSlots.emplace_back(_key);
-			if(m_capacity == m_size)
+
+			if (oldCapacity != m_valuesToSlots.capacity())
 			{
-				m_capacity = static_cast<SizeType>(1.5 * m_capacity);
-				char* newBuf = new char[index(m_capacity)];
-				for (SizeType i = 0; i < m_size; ++i)
+				char* newBuf = new char[index(m_valuesToSlots.capacity())];
+				for (SizeType i = 0; i < oldCapacity; ++i)
 				{
-					new(&newBuf[i*m_elementSize]) Value(std::move(get<Value>(i)));
+					new(&newBuf[index(i)]) Value(std::move(get<Value>(i)));
 					get<Value>(i).~Value();
 				}
 
 				m_values.reset(newBuf);
 			}
 			
-			return *new (&get<Value>(m_size++)) Value (std::forward<Args>(_args)...);
+			return *new (&get<Value>(oldCapacity)) Value (std::forward<Args>(_args)...);
 		}
 
 		void erase(Key _key)
@@ -102,26 +93,25 @@ namespace utils {
 
 			const Key ind = m_slots[_key];
 			m_slots[_key] = INVALID_SLOT;
-			char* back = &m_values[index(m_size - 1)];
+			// effectively get() but without knowing the type
+			char* back = &m_values[index(size() - 1)];
 
-			if (ind+1 < m_size)
+			if (ind+1 < size())
 			{
 				m_move(&m_values[index(ind)], back);
 				m_slots[m_valuesToSlots.back()] = ind;
 				m_valuesToSlots[ind] = m_valuesToSlots.back();
 			}
 
-			--m_size;
 			if constexpr (!TrivialDestruct) m_destructor(back);
 			m_valuesToSlots.pop_back();
 		}
 
 		void clear()
 		{
+			destroyValues();
 			m_slots.clear();
 			m_valuesToSlots.clear();
-			destroyValues();
-			m_size = 0;
 		}
 
 		// iterators
@@ -142,13 +132,21 @@ namespace utils {
 		bool contains(Key _key) const { return _key < m_slots.size() && m_slots[_key] != INVALID_SLOT; }
 		
 		template<typename Value>
-		Value& at(Key _key) { return reinterpret_cast<Value&>(m_values[index(m_slots[_key])]); }
+		Value& at(Key _key) 
+		{
+			ASSERT(contains(_key), "Trying to access a non existing element.");
+			return reinterpret_cast<Value&>(m_values[index(m_slots[_key])]); 
+		}
 		template<typename Value>
-		const Value& at(Key _key) const { return reinterpret_cast<const Value&>(m_values[index(m_slots[_key])]); }
+		const Value& at(Key _key) const 
+		{
+			ASSERT(contains(_key), "Trying to access a non existing element.");
+			return reinterpret_cast<const Value&>(m_values[index(m_slots[_key])]); 
+		}
 
-		SizeType size() const { return m_size; }
-		bool empty() const { return m_size == 0; }
-	protected:
+		SizeType size() const { return m_valuesToSlots.size(); }
+		bool empty() const { return m_valuesToSlots.empty(); }
+	private:
 		// access through internal index
 		template<typename Value>
 		Value& get(SizeType _ind) { return reinterpret_cast<Value&>(m_values[index(_ind)]); }
@@ -160,7 +158,7 @@ namespace utils {
 		{
 			if constexpr (TrivialDestruct) return;
 
-			for (SizeType i = 0; i < m_size; ++i)
+			for (SizeType i = 0; i < size(); ++i)
 				m_destructor(&m_values[index(i)]);
 		}
 
@@ -181,8 +179,6 @@ namespace utils {
 		int m_elementSize;
 		Destructor m_destructor;
 		Move m_move;
-		SizeType m_size;
-		SizeType m_capacity;
 
 		std::unique_ptr<char[]> m_values;
 		std::vector<Key> m_slots;

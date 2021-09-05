@@ -11,7 +11,6 @@ namespace utils {
 
 	// Sparse Octree for axis aligned bounding boxes.
 	template<typename T, int Dim, typename FloatT>
-	//requires requires(VecT v) { {v[0] }->std::convertable_to<FloatT> }
 	class SparseOctree
 	{
 	public:
