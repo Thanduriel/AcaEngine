@@ -154,7 +154,7 @@ namespace game {
 	using ComponentCreator = LifetimeManager2::ComponentCreator;
 
 	// simple helper similar to the ComponentCreator but for manual accesses
-/*	template<typename... Comps>
+	template<typename... Comps>
 	class CreateComponents
 	{
 	public:
@@ -171,5 +171,5 @@ namespace game {
 	private:
 		Entity m_entity;
 		ComponentTuple<Comps...>& m_comps;
-	};*/
+	};
 }

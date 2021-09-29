@@ -9,7 +9,7 @@
 
 namespace utils {
 
-	// Sparse Octree for axis aligned bounding boxes.
+	// Sparse octree for axis aligned bounding boxes.
 	template<typename T, int Dim, typename FloatT>
 	class SparseOctree
 	{

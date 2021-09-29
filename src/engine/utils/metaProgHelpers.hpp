@@ -11,6 +11,7 @@ namespace utils {
 		UnpackFunction(void(T::*)(Args ...)) {};
 	};
 
+	// Helper for type deduction that does not impose any conditions on T.
 	template<typename T>
 	struct TypeHolder
 	{
@@ -23,4 +24,7 @@ namespace utils {
 	{
 		static constexpr bool value{ (std::is_same_v<What, Args> || ...) };
 	};
+
+	template<typename What, typename ... Args>
+	constexpr bool contains_type_v = contains_type<What, Args...>::value;
 }
