@@ -119,6 +119,9 @@ public:
 		free(m_data);
 	}
 
+	// Add an element to the map.
+	// Overwrites the current value if the key already exists.
+	// KeyT is a template parameter to capture a forwarding reference.
 	template<class KeyT, class DataT>
 		requires (std::is_same_v<std::remove_cvref_t<KeyT>, K>)
 	Handle add(KeyT&& _key, DataT&& _data)

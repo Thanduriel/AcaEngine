@@ -2,6 +2,7 @@
 
 #include "registry2.hpp"
 #include "lifetimeManager2.hpp"
+#include <static_type_info.h>
 
 namespace game {
 
@@ -44,8 +45,22 @@ namespace game {
 		Registry2& getRegistry() { return m_registry; }
 		// only for debugging
 		LifetimeManager2& getManager() { return m_manager; }
+		// currently only for static resources
 		template<typename Resource>
 		Resource& getResource() { return std::get<Resource>(m_resources); }
+
+		// Create a dynamic resource explicitly.
+		// If a resource is default constructible it will also be initialized
+		// automatically when a system requesting it is registered.
+		// @param _args Arguments forwarded to the constructor of Resource.
+		template<typename Resource, typename... Args>
+		Resource& addResource(Args&&... _args)
+		{
+			Resource* r = new Resource(std::forward<Args>(_args)...);
+			m_dynamicResources.add(static_type_info::getTypeIndex<Resource>(),
+				UniquePtr(r,&destroyObject<Resource>));
+			return *r;
+		}
 
 		template<system_type System, system_type... Dependencies>
 		System* addSystem(std::unique_ptr<System> _system, SystemGroup _group, 
@@ -53,9 +68,10 @@ namespace game {
 		{
 			auto& systemGroup = m_systems[static_cast<size_t>(_group)];
 			System* system = _system.release();
-			systemGroup.emplace_back(std::unique_ptr<void, DestroySystem>(system, &destroySystem<System>),
+			systemGroup.emplace_back(UniquePtr(system, &destroyObject<System>),
 				&runSystem<System>,
 				std::vector<const void*>{static_cast<const void*>(_dependencies)...});
+			scanRequirements(*system, utils::UnpackFunction(&System::update));
 			return system;
 		}
 
@@ -71,13 +87,47 @@ namespace game {
 		template<typename System>
 		void run(const System& _system) { call(_system, &System::update); }
 	private:
-		// generic lookup in the resource tuple
+		// Default construct a required resource if it does not exist yet.
+		template<typename Res>
+		void ensureResource()
+		{
+			using ResourceT = std::remove_cvref_t<Res>;
+			// check that it is a dynamic resource that can be default constructed
+			if constexpr (!std::is_default_constructible_v<ResourceFetch<Res>>
+				&& !utils::contains_type_v<ResourceT, decltype(m_resources)>
+				&& std::is_default_constructible_v<ResourceT>)
+			{
+				constexpr auto typeId = static_type_info::getTypeIndex<ResourceT>();
+				auto it = m_dynamicResources.find(typeId);
+				if (it == m_dynamicResources.end())
+					addResource<ResourceT>();
+			}
+		}
+
+		template<typename System, typename... ResourcesReq>
+		void scanRequirements(System& _system, utils::UnpackFunction<System,ResourcesReq...>)
+		{
+			(ensureResource<ResourcesReq>(), ...);
+		}
+
+		// Generic lookup in the resource tuple.
+		// Handles both const and mutable reference types 
+		// since the unqualified reference is returned.
 		template<typename Resource>
 		struct ResourceFetch
 		{
+			ResourceFetch() = delete; // mark for ensureResource
+
 			static Resource& get(World& world)
 			{
-				return std::get<std::remove_cvref_t<Resource>>(world.m_resources);
+				using ResourceType = std::remove_cvref_t<Resource>;
+				if constexpr(utils::contains_type_v<ResourceType, decltype(world.m_resources)>)
+					return std::get<ResourceType>(world.m_resources);
+				else
+				{
+					void* ptr = world.m_dynamicResources.find(static_type_info::getTypeIndex<ResourceType>()).data().get();
+					return *reinterpret_cast<ResourceType*>(ptr);
+				}
 			}
 		};
 
@@ -146,26 +196,32 @@ namespace game {
 			System& sys = *reinterpret_cast<System*>(_sys);
 			_world.call(sys, &System::update);
 		}
-		using DestroySystem = void(*)(void*);
-		template<typename System>
-		static void destroySystem(void* _sys)
-		{
-			System* sys = reinterpret_cast<System*>(_sys);
-			delete sys;
-		}
 
-		struct SystemHolder
+		using DestroyObject = void(*)(void*);
+		template<typename T>
+		static void destroyObject(void* _obj)
 		{
-			std::unique_ptr<void, DestroySystem> system;
-			RunSystem runFn;
-			std::vector<const void*> dependencies;
-		};
+			T* obj = reinterpret_cast<T*>(_obj);
+			delete obj;
+		}
 
 		float m_deltaTime;
 		Registry2 m_registry;
 		EntityDeleter m_deleter;
 		LifetimeManager2 m_manager; // legacy all in one interface
+
 		std::tuple<EntityCreator, Resources...> m_resources;
+		using TypeIndex = std::remove_const_t<static_type_info::TypeIndex>;
+		using UniquePtr = std::unique_ptr<void, DestroyObject>;
+		utils::HashMap<TypeIndex, UniquePtr> m_dynamicResources;
+		
+		struct SystemHolder
+		{
+			UniquePtr system;
+			RunSystem runFn;
+			std::vector<const void*> dependencies;
+		};
+
 		std::array< std::vector<SystemHolder>, static_cast<size_t>(SystemGroup::COUNT)> m_systems;
 	};
 }
