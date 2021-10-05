@@ -16,8 +16,9 @@ namespace game {
 
 	class Registry2
 	{
+		using TypeIndex = std::remove_const_t<static_type_info::TypeIndex>;
 		template<typename T>
-		using StorageMap = utils::HashMap<std::remove_const_t<static_type_info::TypeIndex>, T>;
+		using StorageMap = utils::HashMap<TypeIndex, T>;
 	public:
 		// Make a new entity managed by this registry.
 		Entity create();
@@ -92,7 +93,7 @@ namespace game {
 		}
 
 		// Remove all components of the specified type.
-		// This is mostly usefull for message and flag types.
+		// This is mostly useful for message and flag types.
 		template<component_type Component>
 		void clearComponent()
 		{
@@ -121,7 +122,7 @@ namespace game {
 		template<data_component_type Component>
 		const Component* getComponent(Entity _ent) const 
 		{
-			auto container = getContainer<Component>();
+			auto& container = getContainer<Component>();
 			if (container && container->contains(_ent.toIndex()))
 				return &container->template at<Component>(_ent.toIndex());
 			return nullptr;
@@ -133,11 +134,9 @@ namespace game {
 			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
 			constexpr auto typeId = static_type_info::getTypeIndex<Comp>();
 			auto it = map.find(typeId);
-			if (it != map.end())
-				return it.data();
-
-			return map.add(typeId,
-				ComponentStorage<Comp>(utils::TypeHolder<Comp>{})).data();
+			
+			return it != map.end() ? it.data() 
+				: map.add(typeId, ComponentStorage<Comp>(utils::TypeHolder<Comp>{})).data();
 		}
 
 		// Execute an Action on all entities having the components
@@ -209,14 +208,14 @@ namespace game {
 		{
 			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
 			return map.find(static_type_info::getTypeIndex<Comp>()).data(); 
-		};
+		}
 
 		template<component_type Comp>
 		const ComponentStorage<Comp>& getContainerUnsafe() const 
 		{
 			auto& map = std::get<StorageMap<ComponentStorage<Comp>>>(m_components);
 			return map.find(static_type_info::getTypeIndex<Comp>()).data(); 
-		};
+		}
 
 		std::vector<Entity> m_unusedEntities;
 		Entity::BaseType m_maxNumEntities = 0u;

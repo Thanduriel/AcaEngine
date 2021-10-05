@@ -128,7 +128,7 @@ public:
 	{
 		using namespace std;
 
-		// in case a const key is captured we need a copy
+		// in case a const key is captured at KeyT we need a copy
 		K key(std::forward<KeyT>(_key));
 		uint32_t h = static_cast<uint32_t>(m_hash(key));
 	restartAdd:

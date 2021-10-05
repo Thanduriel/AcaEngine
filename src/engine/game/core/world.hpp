@@ -52,7 +52,7 @@ namespace game {
 		// Create a dynamic resource explicitly.
 		// If a resource is default constructible it will also be initialized
 		// automatically when a system requesting it is registered.
-		// @param _args Arguments forwarded to the constructor of Resource.
+		// @param _args Arguments forwarded to the constructor of a Resource.
 		template<typename Resource, typename... Args>
 		Resource& addResource(Args&&... _args)
 		{

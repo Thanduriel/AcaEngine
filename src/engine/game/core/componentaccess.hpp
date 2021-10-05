@@ -10,6 +10,7 @@ namespace game {
 	// different storage types are selected based on the component type
 	using DataStorage = utils::WeakSlotMap<Entity::BaseType>;
 	using MessageStorage = WeakComponentVector<Entity::BaseType>;
+	using FlagStorage = utils::WeakSlotMap<Entity::BaseType, true>;
 
 	namespace details {
 
@@ -18,10 +19,20 @@ namespace game {
 
 		template<message_component_type Val>
 		struct StorageDecider<Val> { using type = MessageStorage; };
+
+		template<flag_component_type Val>
+		struct StorageDecider<Val> { using type = FlagStorage; };
 	}
 
 	template<typename Val>
 	using ComponentStorage = typename details::StorageDecider<Val>::type;
+
+	template<class T>
+	concept is_accessable_by_entity = requires
+	{
+		std::declval<ComponentStorage<T>>()
+			.template at<T>(std::declval<Entity>().toIndex());
+	};
 
 	// general component storage access
 	template<component_type T>
@@ -30,7 +41,7 @@ namespace game {
 	public:
 		using ComponentType = T;
 
-		explicit Access(ComponentStorage<T>& _targetStorage)
+		explicit Access(ComponentStorage<T>& _targetStorage) noexcept
 			: m_targetStorage(_targetStorage)
 		{}
 
@@ -39,16 +50,16 @@ namespace game {
 
 		bool has(Entity _ent) const { return m_targetStorage.contains(_ent.toIndex()); }
 
-		T& getUnsafe(Entity _ent) requires data_component_type<T> { return m_targetStorage.template at<T>(_ent.toIndex()); }
-		const T& getUnsafe(Entity _ent) const requires data_component_type<T> { return m_targetStorage.template at<T>(_ent.toIndex()); }
+		T& getUnsafe(Entity _ent) requires is_accessable_by_entity<T> { return m_targetStorage.template at<T>(_ent.toIndex()); }
+		const T& getUnsafe(Entity _ent) const requires is_accessable_by_entity<T> { return m_targetStorage.template at<T>(_ent.toIndex()); }
 
-		T* get(Entity _ent) requires data_component_type<T>
+		T* get(Entity _ent) requires is_accessable_by_entity<T>
 		{
 			return m_targetStorage.contains(_ent.toIndex()) ?
 				&m_targetStorage.template at<T>(_ent.toIndex())
 				: nullptr;
 		}
-		const T* get(Entity _ent) const requires data_component_type<T>
+		const T* get(Entity _ent) const requires is_accessable_by_entity<T>
 		{
 			return m_targetStorage.contains(_ent.toIndex()) ?
 				&m_targetStorage.template at<T>(_ent.toIndex())
@@ -105,11 +116,11 @@ namespace game {
 		template<typename Comp>
 		friend auto getComp(const ComponentTuple<CompAccess...>& _tuple)
 		{
-			static_assert(utils::contains_type<ReadAccess<Comp>, CompAccess...>::value
-				|| utils::contains_type<WriteAccess<Comp>, CompAccess...>::value,
+			static_assert(utils::contains_type_v<ReadAccess<Comp>, CompAccess...>
+				|| utils::contains_type_v<WriteAccess<Comp>, CompAccess...>,
 				"Tuple does not contain the required component.");
 
-			if constexpr (utils::contains_type<ReadAccess<Comp>, CompAccess...>::value)
+			if constexpr (utils::contains_type_v<ReadAccess<Comp>, CompAccess...>)
 				return std::get<ReadAccess<Comp>>(_tuple.m_components);
 			else
 				return std::get<WriteAccess<Comp>>(_tuple.m_components);
