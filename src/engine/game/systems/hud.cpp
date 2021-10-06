@@ -51,18 +51,22 @@ namespace game {
 					label.fontSize,
 					label.alignment.x,
 					label.alignment.y,
-					label.roundToPixel));
+					label.roundToPixel)
+				);
 			};
 			m_registry.execute(updateLabels);
 		}
+
+		WriteAccess<Transform2D> transforms(m_registry.getContainer<Transform2D>());
+		WriteAccess<BoundingRectangle> boundingRectangles(m_registry.getContainer<BoundingRectangle>());
 
 		auto updateTransforms = [&](TransformNeedsUpdate, 
 			const Anchor& anchor,
 			Transform2D& transform,
 			const Parent& parent) 
 		{
-			const BoundingRectangle& parentBox = m_registry.getComponentUnsafe<BoundingRectangle>(parent.entity);
-			const Transform2D& parentTransform = m_registry.getComponentUnsafe<Transform2D>(parent.entity);
+			const BoundingRectangle& parentBox = boundingRectangles.getUnsafe(parent.entity);
+			const Transform2D& parentTransform = transforms.getUnsafe(parent.entity);
 
 			const vec2 min = parentTransform.position - parentBox.alignment * parentBox.size;
 			transform.position += min + anchor.alignment * parentBox.size;
@@ -70,8 +74,8 @@ namespace game {
 		m_registry.execute(updateTransforms);
 		m_registry.clearComponent<TransformNeedsUpdate>();
 
-		auto updateAutoContainers = [this](BoundingRectangleNeedsUpdate,
-			AutoArrange& autoArrange, 
+		auto updateAutoContainers = [&,this](BoundingRectangleNeedsUpdate,
+			const AutoArrange& autoArrange, 
 			BoundingRectangle& box,
 			const Transform2D& transform,
 			Children& children)
@@ -80,18 +84,18 @@ namespace game {
 			// first pass compute relative positions and bounding box size
 			for (Entity child : children.entities)
 			{
-				const BoundingRectangle& bounds = m_registry.getComponentUnsafe<BoundingRectangle>(child);
-				Transform2D& childTransform = m_registry.getComponentUnsafe<Transform2D>(child);
+				const BoundingRectangle& bounds = boundingRectangles.getUnsafe(child);
+				Transform2D& childTransform = transforms.getUnsafe(child);
 				childTransform.position = vec2(0.f, currentBounds.y) - bounds.alignment * bounds.size;
 				currentBounds.x = std::max(currentBounds.x, bounds.size.x);
 				currentBounds.y -= bounds.size.y;
 			}
 			box.size = glm::vec2(currentBounds.x, -currentBounds.y);
 			// use upper left corner as origin
-			const vec2 pos = transform.position - glm::vec2(box.alignment.x, 1.f-box.alignment.y) * box.size;
+			const vec2 pos = transform.position - glm::vec2(box.alignment.x, 1.f - box.alignment.y) * box.size;
 			for (Entity child : children.entities)
 			{
-				Transform2D& childTransform = m_registry.getComponentUnsafe<Transform2D>(child);
+				Transform2D& childTransform = transforms.getUnsafe(child);
 				childTransform.position += pos;
 			}
 		};

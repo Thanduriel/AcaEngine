@@ -31,7 +31,7 @@ namespace components{
 		utils::Alignment alignment;
 	};
 
-	struct BoundingRectangleNeedsUpdate : public Message {};
+	struct BoundingRectangleNeedsUpdate {};
 
 	struct FillBar
 	{

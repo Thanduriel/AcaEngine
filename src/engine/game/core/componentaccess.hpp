@@ -77,6 +77,8 @@ namespace game {
 		{
 			m_targetStorage.erase(_ent.toIndex());
 		}
+
+		// Removes a component if it exists.
 		void tryRemove(Entity _ent)
 		{
 			if(m_targetStorage.contains(_ent.toIndex()))

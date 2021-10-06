@@ -21,7 +21,7 @@ namespace game {
 	{
 	public:
 		World(Resources&&... _resources) 
-			: m_resources(EntityCreator(m_registry), std::forward<Resources>(_resources)...),
+			: m_resources(EntityCreator(m_registry), EntityDeleter(), std::forward<Resources>(_resources)...),
 			m_deltaTime(0.f),
 			m_manager(m_registry)
 		{}
@@ -38,7 +38,7 @@ namespace game {
 		{
 			m_manager.moveComponents();
 			m_manager.cleanup();
-			m_deleter.cleanup(m_registry);
+			std::get<EntityDeleter>(m_resources).cleanup(m_registry);
 		}
 
 		// direct resource access; should not be used
@@ -68,10 +68,11 @@ namespace game {
 		{
 			auto& systemGroup = m_systems[static_cast<size_t>(_group)];
 			System* system = _system.release();
+
 			systemGroup.emplace_back(UniquePtr(system, &destroyObject<System>),
 				&runSystem<System>,
-				std::vector<const void*>{static_cast<const void*>(_dependencies)...});
-			scanRequirements(*system, utils::UnpackFunction(&System::update));
+				std::vector<const void*>{static_cast<const void*>(_dependencies)...},
+				scanRequirements(*system, utils::UnpackFunction(&System::update)));
 			return system;
 		}
 
@@ -87,17 +88,21 @@ namespace game {
 		template<typename System>
 		void run(const System& _system) { call(_system, &System::update); }
 	private:
+		using TypeIndex = std::remove_const_t<static_type_info::TypeIndex>;
+		enum struct AccessReq : char { Read, Write };
+		using RequirementsInfo = utils::HashMap<TypeIndex, AccessReq>;
+
 		// Default construct a required resource if it does not exist yet.
 		template<typename Res>
 		void ensureResource()
 		{
 			using ResourceT = std::remove_cvref_t<Res>;
-			// check that it is a dynamic resource that can be default constructed
+			// check that it is a dynamic resource which can be default constructed
 			if constexpr (!std::is_default_constructible_v<ResourceFetch<Res>>
 				&& !utils::contains_type_v<ResourceT, decltype(m_resources)>
 				&& std::is_default_constructible_v<ResourceT>)
 			{
-				constexpr auto typeId = static_type_info::getTypeIndex<ResourceT>();
+				constexpr TypeIndex typeId = static_type_info::getTypeIndex<ResourceT>();
 				auto it = m_dynamicResources.find(typeId);
 				if (it == m_dynamicResources.end())
 					addResource<ResourceT>();
@@ -105,9 +110,13 @@ namespace game {
 		}
 
 		template<typename System, typename... ResourcesReq>
-		void scanRequirements(System& _system, utils::UnpackFunction<System,ResourcesReq...>)
+		RequirementsInfo scanRequirements(System& _system, utils::UnpackFunction<System,ResourcesReq...>)
 		{
 			(ensureResource<ResourcesReq>(), ...);
+
+			RequirementsInfo requirements;
+			(ResourceFetch<ResourcesReq>::registerRequirements(requirements), ...);
+			return requirements;
 		}
 
 		// Generic lookup in the resource tuple.
@@ -118,9 +127,10 @@ namespace game {
 		{
 			ResourceFetch() = delete; // mark for ensureResource
 
-			static Resource& get(World& world)
+			using ResourceType = std::remove_cvref_t<Resource>;
+
+			static ResourceType& get(World& world)
 			{
-				using ResourceType = std::remove_cvref_t<Resource>;
 				if constexpr(utils::contains_type_v<ResourceType, decltype(world.m_resources)>)
 					return std::get<ResourceType>(world.m_resources);
 				else
@@ -128,6 +138,12 @@ namespace game {
 					void* ptr = world.m_dynamicResources.find(static_type_info::getTypeIndex<ResourceType>()).data().get();
 					return *reinterpret_cast<ResourceType*>(ptr);
 				}
+			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<ResourceType>();
+				reqs.add(typeIndex, std::is_const_v<Resource> ? AccessReq::Read : AccessReq::Write);
 			}
 		};
 
@@ -139,14 +155,10 @@ namespace game {
 			{
 				return world.m_deltaTime;
 			}
-		};
-
-		template<>
-		struct ResourceFetch<EntityDeleter&>
-		{
-			static EntityDeleter& get(World& world)
+			static void registerRequirements(RequirementsInfo& reqs)
 			{
-				return world.m_deleter;
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<float>();
+				reqs.add(typeIndex, AccessReq::Read);
 			}
 		};
 
@@ -156,6 +168,12 @@ namespace game {
 			static LifetimeManager2& get(World& world)
 			{
 				return world.m_manager;
+			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<LifetimeManager2>();
+				reqs.add(typeIndex, AccessReq::Write);
 			}
 		};
 
@@ -167,6 +185,12 @@ namespace game {
 			{
 				return ReadAccess<Comp>(world.m_registry.getContainer<Comp>());
 			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<Comp>();
+				reqs.add(typeIndex, AccessReq::Read);
+			}
 		};
 
 		// Write component
@@ -177,6 +201,12 @@ namespace game {
 			{
 				return WriteAccess<Comp>(world.m_registry.getContainer<Comp>());
 			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<Comp>();
+				reqs.add(typeIndex, AccessReq::Write);
+			}
 		};
 
 		// Component Tuple
@@ -186,6 +216,11 @@ namespace game {
 			static ComponentTuple<CompAccess...> get(World& world)
 			{
 				return ComponentTuple<CompAccess...>(ResourceFetch<CompAccess>::get(world)...);
+			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				(ResourceFetch<CompAccess>::registerRequirements(reqs), ...);
 			}
 		};
 
@@ -207,11 +242,9 @@ namespace game {
 
 		float m_deltaTime;
 		Registry2 m_registry;
-		EntityDeleter m_deleter;
 		LifetimeManager2 m_manager; // legacy all in one interface
 
-		std::tuple<EntityCreator, Resources...> m_resources;
-		using TypeIndex = std::remove_const_t<static_type_info::TypeIndex>;
+		std::tuple<EntityCreator, EntityDeleter, Resources...> m_resources;
 		using UniquePtr = std::unique_ptr<void, DestroyObject>;
 		utils::HashMap<TypeIndex, UniquePtr> m_dynamicResources;
 		
@@ -220,6 +253,21 @@ namespace game {
 			UniquePtr system;
 			RunSystem runFn;
 			std::vector<const void*> dependencies;
+			RequirementsInfo requirements;
+
+			// Determines whether two systems can be run in parallel without race conditions.
+			bool isCompatible(const SystemHolder& _other) const
+			{
+				for (auto& [typeIndex, req] : requirements)
+				{
+					auto it = _other.requirements.find(typeIndex);
+					if (it != _other.requirements.end()
+						&& (req == AccessReq::Write || it.data() == AccessReq::Write))
+						return false;
+				}
+
+				return true;
+			}
 		};
 
 		std::array< std::vector<SystemHolder>, static_cast<size_t>(SystemGroup::COUNT)> m_systems;
