@@ -23,13 +23,17 @@ namespace graphics {
 		glCall(glDeleteFramebuffers, 1, & m_fboID);
 	}
 
-	FrameBuffer::FrameBuffer(FrameBuffer && _other) noexcept:
-		m_fboID(_other.m_fboID)
+	FrameBuffer::FrameBuffer(FrameBuffer&& _other) noexcept:
+		m_fboID(_other.m_fboID),
+		m_drawBuffers(_other.m_drawBuffers),
+		m_maxUsedIndex(_other.m_maxUsedIndex),
+		m_depthTexture(_other.m_depthTexture),
+		m_colorTextures(_other.m_colorTextures)
 	{
 		_other.m_fboID = 0;
 	}
 
-	FrameBuffer & FrameBuffer::operator=(FrameBuffer && _rhs) noexcept
+	FrameBuffer& FrameBuffer::operator=(FrameBuffer&& _rhs) noexcept
 	{
 		this->~FrameBuffer();
 		new (this) FrameBuffer (std::move(_rhs));
@@ -58,7 +62,7 @@ namespace graphics {
 			_texture.getID(), _mipLevel);
 		m_drawBuffers[_colorAttachmentIdx] = GL_COLOR_ATTACHMENT0 + _colorAttachmentIdx;
 		m_maxUsedIndex = glm::max(m_maxUsedIndex, _colorAttachmentIdx);
-		glNamedFramebufferDrawBuffers(m_fboID, m_maxUsedIndex + 1, m_drawBuffers);
+		glCall(glNamedFramebufferDrawBuffers, m_fboID, m_maxUsedIndex + 1, m_drawBuffers.data());
 		m_colorTextures[_colorAttachmentIdx] = _texture.getID();
 	}
 
@@ -93,8 +97,8 @@ namespace graphics {
 		}
 
 		if(_attachment == GL_DEPTH_ATTACHMENT)
-			glBindTextureUnit(0, m_depthTexture);
-		else glBindTextureUnit(0, m_colorTextures[_attachment]); // GL_COLOR_ATTACHMENT0
+			glCall(glBindTextureUnit, 0, m_depthTexture);
+		else glCall(glBindTextureUnit, 0, m_colorTextures[_attachment]); // GL_COLOR_ATTACHMENT0
 		s_shader.use();
 		Device::setZFunc(ComparisonFunc::ALWAYS);
 		Device::setZWrite(false);
@@ -105,7 +109,7 @@ namespace graphics {
 	void FrameBuffer::clear()
 	{
 		Device::setZWrite(true);
-		glClearColor(0.f, 0.f, 0.f, 0.f);
+	//	glClearColor(0.f, 0.f, 0.f, 0.f);
 		if(m_depthTexture)
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		else

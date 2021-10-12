@@ -186,12 +186,11 @@ namespace graphics {
 		{
 			if ( !GLEW_ARB_bindless_texture ) 
 			{
-				spdlog::warn("bindless Texture is not supported from this GPU");
+				spdlog::warn("Bindless texture is not supported by this GPU.");
 			}
 			else
 			{
-				m_bindlessHandle 
-					= glCall(glGetTextureSamplerHandleARB, m_textureID, m_sampler->getID());
+				m_bindlessHandle = glCall(glGetTextureSamplerHandleARB, m_textureID, m_sampler->getID());
 				glCall(glMakeTextureHandleResidentARB, m_bindlessHandle);
 			}
 		}

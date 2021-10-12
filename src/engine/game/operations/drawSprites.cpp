@@ -15,7 +15,7 @@ namespace game { namespace operations {
 	{
 		const components::Transform2D transform = _transform * _sprite.transform;
 
-		// ordering of sprites should be depended on x due to the isometric perspective
+		// ordering of sprites should be depended on y due to the isometric perspective
 		constexpr float DEPTH_SCALE = 1.f / 1000000.f;
 		const float depth = std::clamp(_sprite.depth - transform.position.y * DEPTH_SCALE, -1.f, 0.f);
 

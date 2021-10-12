@@ -9,7 +9,7 @@
 // todo move this to a better location and namespace
 using Color = glm::vec4;
 
-namespace game { namespace components{
+namespace game { namespace components {
 
 	struct Transform2D
 	{
