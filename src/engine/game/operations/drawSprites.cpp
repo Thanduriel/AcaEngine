@@ -1,6 +1,8 @@
 #include "drawSprites.hpp"
 #include "../../graphics/renderer/spriterenderer.hpp"
 
+#include <algorithm>
+
 namespace game { namespace operations {
 
 	void DrawSprites::operator()(const components::Sprite& _sprite, const components::Position& _position) const

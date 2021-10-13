@@ -12,13 +12,16 @@ namespace game{
 
 	Game::Game()
 	{
-		if (!graphics::Device::initialize(1366, 768, false)) throw 42;
+		if (!graphics::Device::initialize(1366, 768, false))
+		{
+			spdlog::error("Could not initialize the device. Shutting down.");
+			abort();
+		}
 		input::InputManager::initialize(graphics::Device::getWindow());
 	}
 
 	Game::~Game()
 	{
-		graphics::FontManager::clear();
 		graphics::Device::close();
 		utils::MeshLoader::clear();
 		utils::Config::save();

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../utils/resourcemanager.hpp"
 #include <glm/glm.hpp>
 
 namespace graphics {
@@ -37,8 +36,6 @@ namespace graphics {
 		unsigned m_shaderID;	///< OpenGL shader ID.
 		friend class Program;
 	};
-	
-	typedef utils::ResourceManager<Shader> ShaderManager;
 	
 	/// Linked usable program with different shaders.
 	class Program

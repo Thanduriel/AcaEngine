@@ -15,10 +15,10 @@ namespace graphics {
 
 		FrameBuffer();
 		~FrameBuffer();
-		FrameBuffer(const FrameBuffer &) = delete;
-		FrameBuffer(FrameBuffer &&) noexcept;
-		FrameBuffer & operator = (const FrameBuffer &) = delete;
-		FrameBuffer & operator = (FrameBuffer &&) noexcept;
+		FrameBuffer(const FrameBuffer&) = delete;
+		FrameBuffer(FrameBuffer&&) noexcept;
+		FrameBuffer& operator = (const FrameBuffer &) = delete;
+		FrameBuffer& operator = (FrameBuffer &&) noexcept;
 
 		/// Binding a framebuffer to draw into its textures.
 		void bind();

@@ -3,6 +3,7 @@
 #include "texture.hpp"
 #include "shader.hpp"
 #include "device.hpp"
+#include "../resources.hpp"
 
 namespace graphics {
 
@@ -50,13 +51,13 @@ namespace graphics {
 		glCall(glBindFramebuffer, GL_FRAMEBUFFER, 0);
 	}
 
-	void FrameBuffer::attachDepth(Texture & _texture, int _mipLevel)
+	void FrameBuffer::attachDepth(Texture& _texture, int _mipLevel)
 	{
 		glCall(glNamedFramebufferTexture, m_fboID, GL_DEPTH_ATTACHMENT, _texture.getID(), _mipLevel);
 		m_depthTexture = _texture.getID();
 	}
 
-	void FrameBuffer::attach(int _colorAttachmentIdx, Texture & _texture, int _mipLevel)
+	void FrameBuffer::attach(int _colorAttachmentIdx, Texture& _texture, int _mipLevel)
 	{
 		glCall(glNamedFramebufferTexture, m_fboID, GL_COLOR_ATTACHMENT0 + _colorAttachmentIdx,
 			_texture.getID(), _mipLevel);
@@ -111,8 +112,8 @@ namespace graphics {
 		Device::setZWrite(true);
 	//	glClearColor(0.f, 0.f, 0.f, 0.f);
 		if(m_depthTexture)
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glCall(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		else
-			glClear(GL_COLOR_BUFFER_BIT);
+			glCall(glClear, GL_COLOR_BUFFER_BIT);
 	}
 }

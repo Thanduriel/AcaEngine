@@ -2,6 +2,7 @@
 #include "mesh.hpp"
 #include "../core/opengl.hpp"
 #include "../core/texture.hpp"
+#include "../resources.hpp"
 #include <glm/gtx/compatibility.hpp>
 
 namespace graphics {

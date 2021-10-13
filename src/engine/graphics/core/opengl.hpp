@@ -14,7 +14,8 @@ namespace graphics {
 
 	/// OpenGL call with additional checks.
 	template<typename FunctionType, typename... Args>
-	auto _glCall(const char* _functionName, FunctionType _function, Args... _args) -> typename std::enable_if<!std::is_same<decltype(_function(_args...)), void>::value, decltype(_function(_args...))>::type
+	auto _glCall(const char* _functionName, FunctionType _function, Args... _args) 
+		-> typename std::enable_if<!std::is_same<decltype(_function(_args...)), void>::value, decltype(_function(_args...))>::type
 	{
 		if(!_function) { spdlog::error("Function '{}' not loaded!", _functionName); return 0; }
 		auto ret = _function(_args...);
@@ -26,7 +27,8 @@ namespace graphics {
 
 	/// No return overload of OpenGL call with additional checks.
 	template<typename FunctionType, typename... Args>
-	auto _glCall(const char* _functionName, FunctionType _function, Args... _args) -> typename std::enable_if<std::is_same<decltype(_function(_args...)), void>::value, decltype(_function(_args...))>::type
+	auto _glCall(const char* _functionName, FunctionType _function, Args... _args) 
+		-> typename std::enable_if<std::is_same<decltype(_function(_args...)), void>::value, decltype(_function(_args...))>::type
 	{
 		if(!_function) { spdlog::error("Function '{}' not loaded!", _functionName); return; }
 		_function(_args...);

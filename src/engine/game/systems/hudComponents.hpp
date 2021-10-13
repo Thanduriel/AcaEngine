@@ -7,6 +7,9 @@
 #include "../../math/geometrictypes.hpp"
 #include "../../utils/alignment.hpp"
 
+#include <memory>
+#include <functional>
+
 namespace game{ 
 namespace components{
 

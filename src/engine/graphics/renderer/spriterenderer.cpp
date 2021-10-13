@@ -1,6 +1,7 @@
 #include "spriterenderer.hpp"
 #include "../core/opengl.hpp"
 #include "../core/vertexformat.hpp"
+#include "../resources.hpp"
 #include <spdlog/spdlog.h>
 
 using namespace glm;
