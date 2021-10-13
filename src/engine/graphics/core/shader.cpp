@@ -39,17 +39,21 @@ namespace graphics {
 		if(!_source) {
 			spdlog::info("Creating shader from file: {}", _name);
 			FILE* file = fopen(_name, "rb");
-			if(!file) spdlog::error(("Cannot open shader file: " + std::string(_name)).c_str());
-			// Get file size and allocate memory
-			fseek(file, 0, SEEK_END);
-			unsigned fileLength = ftell(file);
-			std::unique_ptr<char[]> source(new char[fileLength + 1]);
-			fseek(file, 0, SEEK_SET);
-			// Read in whole file and make 0 terminated.
-			fread(source.get(), 1, fileLength, file);
-			source[fileLength] = 0;
-			fclose(file);
-			return new Shader(source.get(), _type);
+			if (!file)
+				spdlog::error(("Cannot open shader file: " + std::string(_name)).c_str());
+			else 
+			{	
+				// Get file size and allocate memory
+				fseek(file, 0, SEEK_END);
+				unsigned fileLength = ftell(file);
+				std::unique_ptr<char[]> source(new char[fileLength + 1]);
+				fseek(file, 0, SEEK_SET);
+				// Read in whole file and make 0 terminated.
+				fread(source.get(), 1, fileLength, file);
+				source[fileLength] = 0;
+				fclose(file);
+				return new Shader(source.get(), _type);
+			}
 		}
 		return new Shader(_source, _type);
 	}

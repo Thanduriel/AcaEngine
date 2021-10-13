@@ -32,6 +32,11 @@ namespace graphics {
 		///
 		/// This is private to allow only load() to be used
 		Shader(const char* _source, ShaderType _type);
+		Shader(const Shader&) = delete;
+		Shader& operator=(const Shader&) = delete;
+		// Move semantics are possible but the default generated ones would be wrong.
+		Shader(Shader&&) = delete;
+		Shader& operator=(Shader&&) = delete;
 
 		unsigned m_shaderID;	///< OpenGL shader ID.
 		friend class Program;
@@ -43,7 +48,11 @@ namespace graphics {
 	public:
 		/// Create empty program.
 		Program();
-		
+		// Move semantics are possible but the default generated ones would be wrong.
+		Program(const Shader&) = delete;
+		Program(Shader&&) = delete;
+		Program& operator=(const Shader&) = delete;
+		Program& operator=(Shader&&) = delete;
 		~Program();
 		
 		/// Attach one more shader. Not all combinations are valid.
@@ -75,7 +84,7 @@ namespace graphics {
 		void setUniform(int _location, const glm::uvec3& _value);
 		void setUniform(int _location, const glm::uvec4& _value);
 
-		/// Get OpenGL handle
+		/// Get OpenGL handle.
 		unsigned getID() const { return m_programID; }
 	private:
 		const Shader* m_shaders[5]; 	///< List of attached shaders
