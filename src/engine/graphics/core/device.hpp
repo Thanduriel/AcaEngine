@@ -117,6 +117,7 @@ namespace graphics {
 		static glm::vec4 s_blendColor;
 		static bool s_blendEnable;
 		static bool s_alphaToCoverageEnable;
+		static bool s_cullEnable;
 		static CullMode s_cullMode;
 		static FillMode s_fillMode;
 		static int s_stencilRef;

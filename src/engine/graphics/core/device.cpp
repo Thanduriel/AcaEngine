@@ -14,6 +14,7 @@ namespace graphics {
 	glm::vec4 Device::s_blendColor				= { 0.f, 0.f, 0.f, 0.f };
 	bool Device::s_blendEnable					= false;
 	bool Device::s_alphaToCoverageEnable		= false;
+	bool Device::s_cullEnable					= false;
 	CullMode Device::s_cullMode 				= CullMode::BACK;
 	FillMode Device::s_fillMode 				= FillMode::SOLID;
 	int Device::s_stencilRef					= 0;
@@ -28,9 +29,9 @@ namespace graphics {
 	ComparisonFunc Device::s_stencilFuncBack	= ComparisonFunc::ALWAYS;
 	bool Device::s_stencilEnable				= false;
 	ComparisonFunc Device::s_zFunc				= ComparisonFunc::ALWAYS;
-	bool Device::s_zEnable						= true;
+	bool Device::s_zEnable						= false;
 	bool Device::s_zWriteEnable					= true;
-	bool Device::s_scissorEnable				= true;
+	bool Device::s_scissorEnable				= false;
 	GLFWwindow* Device::s_window				= nullptr;
 	float Device::s_aspectRatio					= 1.f;
 	std::vector<std::function<void()>> Device::s_resourceDeleters = {};
@@ -179,12 +180,16 @@ namespace graphics {
 
 	void Device::setCullMode(CullMode _mode)
 	{
+		if (!s_cullEnable && _mode != CullMode::NONE)
+		{
+			glCall(glEnable, GL_CULL_FACE);
+			s_cullEnable = true;
+		}
 		if(s_cullMode != _mode)
 		{
 			if(_mode == CullMode::NONE)
 				glCall(glDisable, GL_CULL_FACE);
 			else {
-				glCall(glEnable, GL_CULL_FACE);
 				glCall(glCullFace, int(_mode));
 			}
 			s_cullMode = _mode;

@@ -19,7 +19,9 @@ namespace utils {
 		
 		/// @brief Construct a sparse octree with a single node.
 		/// @param _rootSize The initial size of the outer bounding box.
-		SparseOctree(FloatT _rootSize = 1.f) : m_size(_rootSize) { initRoot(_rootSize); }
+		/// @param _minLevel Maximal number of subdivisions from _rootSize 
+		/// before a box is stored even if it is smaller.
+		SparseOctree(FloatT _rootSize = 1.f, int _minLevel = 8, int _maxLevel = 8);
 
 		/// @brief Insert a new element into the tree. Does not check for duplicates.
 		/// @details If the box lies outside the current tree the root is expanded first.
@@ -52,13 +54,16 @@ namespace utils {
 		{
 			m_rootNode->traverse(proc);
 		}
-		/// @brief Processor which retrieves all elements which overlap with the given AABB.
-		struct AABBQuery
+
+		/// @brief Processor which invokes Op on all elements which overlap 
+		//		   with the given AABB.
+		template<typename Op>
+		struct IntersectQuery
 		{
-			AABBQuery(const AABB& _aabb) : aabb(_aabb) {}
+			IntersectQuery(const AABB& _aabb, Op _op) : aabb(_aabb), operation(_op) {}
 
 			AABB aabb;
-			std::vector<T> hits;
+			Op operation;
 
 			bool descend(const AABB& currentBox) const
 			{
@@ -66,7 +71,8 @@ namespace utils {
 			}
 			void process(const AABB& key, const T& el)
 			{
-				if (aabb.intersect(key)) hits.push_back(el);
+				if (aabb.intersect(key))
+					operation(key, el);
 			}
 		};
 
@@ -91,10 +97,9 @@ namespace utils {
 				: box{_box}, childs{}
 			{}
 
-			template<typename Alloc>
-			void insert(const AABB& _boundingBox, const T& el, Alloc& _allocator)
+			void insert(const AABB& _boundingBox, const T& el, SparseOctree& _tree)
 			{
-				if (box.max[0] - box.min[0] <= MIN_SIZE)
+				if (box.max[0] - box.min[0] <= _tree.m_minSize)
 				{
 					elements.emplace_back(_boundingBox, el);
 					return;
@@ -124,14 +129,14 @@ namespace utils {
 					}
 				}
 
-				if (!childs[index]) childs[index] = _allocator.create(newBox);
-				childs[index]->insert(_boundingBox, el, _allocator);
+				if (!childs[index]) childs[index] = _tree.m_allocator.create(newBox);
+				childs[index]->insert(_boundingBox, el, _tree);
 			}
 
 			// Search in the tree rooted at this node and remove the element if found.
-			bool remove(const AABB& _boundingBox, const T& el)
+			bool remove(const AABB& _boundingBox, const T& el, SparseOctree& _tree)
 			{
-				if (box.max[0] - box.min[0] <= MIN_SIZE)
+				if (box.max[0] - box.min[0] <= _tree.m_minSize)
 				{
 					return remove(el);
 				}
@@ -153,7 +158,7 @@ namespace utils {
 				}
 
 				if (childs[index]) 
-					return childs[index]->remove(_boundingBox, el);
+					return childs[index]->remove(_boundingBox, el, _tree);
 
 				return false;
 			}
@@ -201,6 +206,8 @@ namespace utils {
 		BlockAllocator<Node, 128> m_allocator;
 		Node* m_rootNode;
 		FloatT m_size; // initial root size
+		FloatT m_minSize;
+		FloatT m_maxSize;
 	};
 
 
@@ -209,11 +216,21 @@ namespace utils {
 	// ********************************************************************* //
 
 	template<typename T, int Dim, typename FloatT>
+	SparseOctree<T, Dim, FloatT>::SparseOctree(FloatT _rootSize, int _minLevel, int _maxLevel)
+		: m_size(_rootSize)
+		, m_minSize(_rootSize / (2 << _minLevel))
+		, m_maxSize(_rootSize * (2 << _maxLevel))
+	{ 
+		initRoot(_rootSize); 
+	}
+
+	template<typename T, int Dim, typename FloatT>
 	void SparseOctree<T,Dim,FloatT>::insert(const AABB& _boundingBox, const T& el)
 	{
 		// enlarge top
 		AABB curBox = m_rootNode->box;
-		while (!isIn(_boundingBox, m_rootNode->box))
+		while (!isIn(_boundingBox, m_rootNode->box) 
+			&& curBox.max[0] - curBox.min[0] < m_maxSize)
 		{
 			int index = 0;
 			const VecT dif = curBox.max - curBox.min;
@@ -231,13 +248,13 @@ namespace utils {
 			newRoot->childs[index] = m_rootNode;
 			m_rootNode = newRoot;
 		}
-		m_rootNode->insert(_boundingBox, el, m_allocator);
+		m_rootNode->insert(_boundingBox, el, *this);
 	}
 
 	template<typename T, int Dim, typename FloatT>
 	bool SparseOctree<T, Dim, FloatT>::remove(const AABB& _boundingBox, const T& el)
 	{
-		return m_rootNode->remove(_boundingBox, el);
+		return m_rootNode->remove(_boundingBox, el, *this);
 	}
 
 

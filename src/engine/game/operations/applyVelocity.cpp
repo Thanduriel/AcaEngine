@@ -7,4 +7,11 @@ namespace operations {
 	{
 		_position.value += m_deltaTime * _velocity.value;
 	}
+
+	void ApplyAngularVelocity::operator()(const components::AngularVelocity& _velocity
+		, components::Rotation& _rotation) const
+	{
+		_rotation.value = glm::angleAxis(_velocity.speed * m_deltaTime, _velocity.axis) 
+			* _rotation.value;
+	}
 }}

@@ -50,13 +50,13 @@ namespace game {
 		Resource& getResource() { return std::get<Resource>(m_resources); }
 
 		// Create a dynamic resource explicitly.
-		// If a resource is default constructible it will also be initialized
+		// If a resource is default constructible it will also be initialized 
 		// automatically when a system requesting it is registered.
 		// @param _args Arguments forwarded to the constructor of a Resource.
 		template<typename Resource, typename... Args>
 		Resource& addResource(Args&&... _args)
 		{
-			Resource* r = new Resource(std::forward<Args>(_args)...);
+			Resource* r = new Resource{ std::forward<Args>(_args)... };
 			m_dynamicResources.add(static_type_info::getTypeIndex<Resource>(),
 				UniquePtr(r,&destroyObject<Resource>));
 			return *r;

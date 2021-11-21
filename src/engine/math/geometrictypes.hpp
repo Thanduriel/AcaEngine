@@ -54,6 +54,11 @@ namespace math {
 			return max - min;
 		}
 
+		VecT center() const noexcept
+		{
+			return min + static_cast<FloatT>(0.5) * size();
+		}
+
 		// Intersection check with another Box.
 		// Matching lines are considered intersecting.
 		bool intersect(const Box& oth) const
@@ -86,6 +91,7 @@ namespace math {
 	template<unsigned Dim, typename FloatT = float>
 	using AABB = Box<Dim, FloatT>;
 	using AABB2D = AABB<2>;
+	using AABB3D = AABB<3>;
 
 	template<unsigned Dim, typename FloatT>
 	struct HyperSphere
@@ -110,6 +116,7 @@ namespace math {
 	};
 
 	using Circle = HyperSphere<2, float>;
+	using Sphere = HyperSphere<3, float>;
 
 	template<unsigned Dim, typename FloatT>
 	struct Ray
@@ -124,4 +131,5 @@ namespace math {
 	};
 
 	using Ray2D = Ray<2, float>;
+	using Ray3D = Ray<3, float>;
 }

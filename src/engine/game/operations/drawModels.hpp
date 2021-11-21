@@ -14,14 +14,9 @@ namespace operations {
 	public:
 		void operator()(const components::Model& _mesh, const components::Transform& _transform);
 
-		void present();
+		void present(const graphics::Camera& _camera);
 
-		void setCamera(const graphics::Camera& _camera) 
-		{ 
-			m_camera = &_camera;
-		}
 	private:
-		const graphics::Camera* m_camera;
 		graphics::MeshRenderer m_renderer;
 	};
 }}

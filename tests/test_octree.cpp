@@ -35,6 +35,7 @@ struct Processor
 int testOctree2D()
 {
 	using TreeT = utils::SparseOctree<int, 2, float>;
+	using AABB = typename TreeT::AABB;
 
 	TreeT tree(1.f);
 	std::vector<std::pair<TreeT::AABB, int>> expectedElements;
@@ -68,11 +69,14 @@ int testOctree2D()
 
 	for (int i = 0; i < 16; ++i)
 		tree.insert({ vec2(static_cast<float>(i) + 0.1f), vec2(static_cast<float>(i) + 1.51f) }, counter++);
-	TreeT::AABBQuery query({ vec2(0.f, 4.f), vec2(42000.f, 5.f) });
+	
+	std::vector<int> hits;
+	auto collectHits = [&](const AABB&, int v) { hits.push_back(v); };
+	TreeT::IntersectQuery<decltype(collectHits)> query(AABB{ vec2(0.f, 4.f), vec2(42000.f, 5.f) }, collectHits);
 	tree.traverse(query);
-	EXPECT(query.hits.size() == 2, "AABB query.");
-	EXPECT(std::find(query.hits.begin(), query.hits.end(), 6) != query.hits.end(), "AABB query.");
-	EXPECT(std::find(query.hits.begin(), query.hits.end(), 7) != query.hits.end(), "AABB query.");
+	EXPECT(hits.size() == 2, "AABB query.");
+	EXPECT(std::find(hits.begin(), hits.end(), 6) != hits.end(), "AABB query.");
+	EXPECT(std::find(hits.begin(), hits.end(), 7) != hits.end(), "AABB query.");
 
 	proc.reset();
 	EXPECT(tree.remove({ vec2(0.0f), vec2(0.49f) }, 2), "Remove existing element.");

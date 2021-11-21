@@ -87,6 +87,7 @@ namespace graphics {
 	Texture2D::Texture2D(const char* _textureFileName, const Sampler& _sampler, bool _srgb) :
 		m_width(0),
 		m_height(0),
+		m_format(static_cast<TexFormat>(0)),
 		m_sampler(&_sampler),
 		m_bindlessHandle(0)
 	{

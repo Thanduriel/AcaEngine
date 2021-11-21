@@ -12,6 +12,7 @@ namespace math {
 			sinA, cosA);
 	}
 
+	// todo: check whether the internally used mat3->mat4 in quat::tomat4 is better
 	inline glm::mat4 extendTransform(const glm::mat3& _transform)
 	{
 		glm::mat4 mat{};

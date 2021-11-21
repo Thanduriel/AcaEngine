@@ -12,7 +12,7 @@
 	url = https://github.com/Perlmint/glew-cmake.git
 [submodule "dependencies/freetype"]
 	path = dependencies/freetype
-	url = https://git.sv.nongnu.org/r/freetype/freetype2.git
+	url = https://git.savannah.nongnu.org/r/freetype/freetype2.git/
 [submodule "dependencies/statictypeinfo"]
 	path = dependencies/statictypeinfo
 	url = https://github.com/TheLartians/StaticTypeInfo.git
