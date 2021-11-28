@@ -1,5 +1,6 @@
 #pragma once
 
+#include "xoshiro.hpp"
 #include <glm/gtc/quaternion.hpp>
 #include <random>
 #include <numbers>
@@ -7,35 +8,37 @@
 namespace math {
 namespace random {
 
-	// todo: replace with a fast random engine
-	using DefaultRandomEngine = std::default_random_engine;
+	using DefaultRandomEngine = xoshiro128ss;
 	extern thread_local DefaultRandomEngine g_random;
 
-	template <class Engine = DefaultRandomEngine>
-	glm::quat rotation(Engine& _engine = g_random)
+	template <typename T = float,
+		class Engine = DefaultRandomEngine>
+	glm::qua<T> rotation(Engine& _engine = g_random)
 	{
-		std::uniform_real_distribution<float> uniform;
+		std::uniform_real_distribution<T> uniform;
 		
-		float s = uniform(_engine);
-		float o1 = sqrt(1.f - s);
-		float o2 = sqrt(s);
-		float t1 = 2.f * std::numbers::pi_v<float> * uniform(_engine);
-		float t2 = 2.f * std::numbers::pi_v<float> * uniform(_engine);
-		float w = cos(t2) * o2;
-		float x = sin(t1) * o1;
-		float y = cos(t1) * o1;
-		float z = sin(t2) * o2;
-		return glm::quat(x, y, z, w);
+		const T s = uniform(_engine);
+		const T o1 = sqrt(1.f - s);
+		const T o2 = sqrt(s);
+		const T t1 = 2.f * std::numbers::pi_v<T> * uniform(_engine);
+		const T t2 = 2.f * std::numbers::pi_v<T> * uniform(_engine);
+		const T w = cos(t2) * o2;
+		const T x = sin(t1) * o1;
+		const T y = cos(t1) * o1;
+		const T z = sin(t2) * o2;
+		return glm::qua<T>(x, y, z, w);
 	}
 
-	template <class Engine = DefaultRandomEngine>
-	glm::vec3 direction(Engine& _engine = g_random)
+	// Generates a uniformly distributed random points on the unit sphere.
+	template <typename T = float, 
+		class Engine = DefaultRandomEngine>
+	glm::vec<3,T> direction(Engine& _engine = g_random)
 	{
-		std::uniform_real_distribution<float> uniform;
+		std::uniform_real_distribution<T> uniform;
 
-		float phi = 2 * std::numbers::pi_v<float> * uniform(_engine);
-		float cosTheta = 2.0f * uniform(_engine) - 1.0f;
-		float sinTheta = sqrt((1.0f - cosTheta) * (1.0f + cosTheta));
-		return glm::vec3(sinTheta * sin(phi), sinTheta * cos(phi), cosTheta);
+		const T phi = 2 * std::numbers::pi_v<T> * uniform(_engine);
+		const T cosTheta = 2.0f * uniform(_engine) - 1.0f;
+		const T sinTheta = sqrt((1.0f - cosTheta) * (1.0f + cosTheta));
+		return glm::vec<3,T>(sinTheta * sin(phi), sinTheta * cos(phi), cosTheta);
 	}
 }}
