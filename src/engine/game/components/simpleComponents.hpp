@@ -24,8 +24,8 @@ namespace game { namespace components {
 
 	struct Rotation 
 	{
+		Rotation() : value(glm::identity<glm::quat>()) {}
 		Rotation(const glm::quat& q) : value{q}{}
-		Rotation(glm::quat&& q) : value{q}{}
 
 		glm::quat value;
 	};
