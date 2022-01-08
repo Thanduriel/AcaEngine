@@ -188,6 +188,59 @@ std::tuple<float,float,float> benchmarkSlotMap(Constructor constructor)
 	return { tInsert, tIterate, tRemove };
 }
 
+namespace tests {
+
+	using game::Entity;
+	using game::EntityRef;
+
+	template<typename Component>
+	class ComponentAccess : public game::Access<Component>
+	{
+	public:
+		using game::Access<Component>::Access;
+
+		// Retrieve a component of _ent.
+		// @return A pointer to the associated component or nullptr if it does not exist.
+		Component* at(Entity _ent) { return this->get(_ent); }
+		const Component* at(Entity _ent) const { return this->get(_ent); }
+	};
+
+
+	class Registry
+	{
+	public:
+		Entity create() { return m_registry.create(); }
+		void erase(Entity _ent) { return m_registry.erase(_ent); }
+		EntityRef getRef(Entity _ent) const { return m_registry.getRef(_ent); }
+		std::optional<Entity> getEntity(EntityRef _ent) const
+		{
+			Entity ent = m_registry.getEntity(_ent);
+			if (ent != game::INVALID_ENTITY)
+				return ent;
+			return std::nullopt;
+		}
+
+		// Retrieve the component container for the specified type.
+		template<typename Component>
+		ComponentAccess<Component> getComponents() { return ComponentAccess<Component>(m_registry.getContainer<Component>()); }
+		template<typename Component>
+		const ComponentAccess<Component> getComponents() const { return ComponentAccess<Component>(m_registry.getContainer<Component>()); }
+
+		// Execute an Action on all entities having the components
+		// expected by Action::operator(component_type&...).
+		// In addition, the entity itself is provided if 
+		// the first parameter is of type Entity.
+		template<typename Action>
+		void execute(const Action& _action)
+		{
+			m_registry.execute(_action);
+		}
+
+	private:
+		game::Registry2 m_registry;
+	};
+}
+
 namespace game { namespace components {
 	struct TestComponent
 	{
@@ -211,6 +264,21 @@ namespace game { namespace components {
 		utils::Alignment alignment;
 		bool roundToPixel;
 	};
+
+
+	struct PositionAlt
+	{
+		PositionAlt(const glm::vec3& v) : value{ v } {}
+
+		glm::vec3 value;
+	};
+
+	struct VelocityAlt
+	{
+		VelocityAlt(const glm::vec3& v) : value{ v } {}
+
+		glm::vec3 value;
+	};
 }}
 
 class TestOperation
@@ -228,7 +296,7 @@ public:
 	}
 };
 
-struct Results
+/*struct Results
 {
 	union{
 		struct {
@@ -239,7 +307,9 @@ struct Results
 		};
 		std::array<float, 4> values = {};
 	};
-};
+};*/
+
+using Results = std::unordered_map<std::string, float>;
 
 template<typename Registry>
 concept ManualComps = requires (Registry r) { r.template execute<int, float>([](int, float) {}); };
@@ -273,53 +343,92 @@ Results benchmarkRegistry(int numEntities, int numRuns)
 		for (int i = 0; i < numEntities; ++i)
 			entities.push_back(registry.create());
 
-		registry.template addComponent<comps::Position2D>(entities.front(), glm::vec2(0.2f));
-		registry.template addComponent<comps::Rotation2D>(entities.front(), 42.f);
+		// prefetch all containers once so that the Access iterators remain valid
+		registry.template getComponents<comps::Position2D>();
+		registry.template getComponents<comps::Rotation2D>();
+		registry.template getComponents<comps::Position>();
+		registry.template getComponents<comps::Velocity>();
+		registry.template getComponents<comps::PositionAlt>();
+		registry.template getComponents<comps::VelocityAlt>();
+		registry.template getComponents<comps::TestComponent>();
+		registry.template getComponents<comps::Transform>();
+
+		auto pos2Comps = registry.template getComponents<comps::Position2D>();
+		auto rotComps = registry.template getComponents<comps::Rotation2D>();
+
+		pos2Comps.insert(entities.front(), glm::vec2(0.2f));
+		rotComps.insert(entities.front(), 42.f);
+
+		auto posComps = registry.template getComponents<comps::Position>();
+		auto velComps = registry.template getComponents<comps::Velocity>();
 
 		auto start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numEntities; ++i)
 		{
-			registry.template addComponent<comps::Position>(entities[i], glm::vec3(static_cast<float>(i)));
-			registry.template addComponent<comps::Velocity>(entities[i], glm::vec3(1.f, 0.f, static_cast<float>(i)));
+			posComps.insert(entities[i], glm::vec3(static_cast<float>(i)));
+			velComps.insert(entities[i], glm::vec3(1.f, 0.f, static_cast<float>(i)));
 		}
 		auto end = chrono::high_resolution_clock::now();
-		results.tInsert += chrono::duration<float>(end - start).count();
+		results["insert"] += chrono::duration<float>(end - start).count();
+
+		start = chrono::high_resolution_clock::now();
+		for (int i = 0; i < numEntities; ++i)
+		{
+			auto posAltComps = registry.template getComponents<comps::PositionAlt>();
+			auto velAltComps = registry.template getComponents<comps::VelocityAlt>();
+			posAltComps.insert(entities[i], glm::vec3(static_cast<float>(i)));
+			velAltComps.insert(entities[i], glm::vec3(1.f, 0.f, static_cast<float>(i)));
+		}
+		end = chrono::high_resolution_clock::now();
+		results["insert_con"] += chrono::duration<float>(end - start).count();
 
 		std::default_random_engine rng(13567);
 		std::shuffle(entities.begin(), entities.end(), rng);
 
+		auto testComps = registry.template getComponents<comps::TestComponent>();
+		auto transformComps = registry.template getComponents<comps::Transform>();
+
 		start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numEntities; i += 7)
-			registry.template addComponent<comps::TestComponent>(entities[i], std::to_string(i) + "2poipnrpuipo");
+			testComps.insert(entities[i], std::to_string(i) + "2poipnrpuipo");
 		for (int i = 0; i < numEntities; i += 3)
-			registry.template addComponent<comps::Transform>(entities[i], glm::identity<glm::mat4>());
+			transformComps.insert(entities[i], glm::identity<glm::mat4>());
 		for (int i = 0; i < numEntities; i += 6)
-			registry.template addComponent<comps::Rotation2D>(entities[i], 1.f / i);
+			rotComps.insert(entities[i], 1.f / i);
 		for (int i = 0; i < numEntities; i += 11)
-			registry.template addComponent<comps::Position2D>(entities[i], glm::vec2(2.f / i, i / 2.f));
+			pos2Comps.insert(entities[i], glm::vec2(2.f / i, i / 2.f));
 		end = chrono::high_resolution_clock::now();
-		results.tInsert += chrono::duration<float>(end - start).count();
+		results["insert_big"] += chrono::duration<float>(end - start).count();
 
 		std::uniform_real_distribution<float> dt(0.01f, 0.5f);
 		start = chrono::high_resolution_clock::now();
 		execute< comps::Velocity, comps::Position>(registry, operations::ApplyVelocity(dt(rng)));
-		//registry.execute(operations::ApplyVelocity(dt(rng)));
 		end = chrono::high_resolution_clock::now();
-		results.tIterateSimple += chrono::duration<float>(end - start).count();
+		results["simple_op"] += chrono::duration<float>(end - start).count();
 
 		start = chrono::high_resolution_clock::now();
 		execute<comps::TestComponent, comps::Transform, comps::Position, comps::Velocity>(registry, TestOperation());
-	//	registry.execute(TestOperation());
 		end = chrono::high_resolution_clock::now();
-		results.tIterateComplex += chrono::duration<float>(end - start).count();
+		results["complex_op"] += chrono::duration<float>(end - start).count();
 
 		std::shuffle(entities.begin(), entities.end(), rng);
+
+		auto posAltComps = registry.template getComponents<comps::PositionAlt>();
+		auto velAltComps = registry.template getComponents<comps::VelocityAlt>();
+		start = chrono::high_resolution_clock::now();
+		for (int i = 0; i < numEntities; ++i)
+		{
+			posAltComps.erase(entities[i]);
+			velAltComps.erase(entities[i]);
+		}
+		end = chrono::high_resolution_clock::now();
+		results["erase comp"] += chrono::duration<float>(end - start).count();
 
 		start = chrono::high_resolution_clock::now();
 		for (int i = 0; i < numEntities; ++i)
 			registry.erase(entities[i]);
 		end = chrono::high_resolution_clock::now();
-		results.tRemove += chrono::duration<float>(end - start).count();
+		results["remove ent"] += chrono::duration<float>(end - start).count();
 	};
 
 	Results tempResults;
@@ -332,7 +441,7 @@ Results benchmarkRegistry(int numEntities, int numRuns)
 		run(results);
 	}
 
-	for (float& f : results.values)
+	for (auto& [_,f] : results)
 		f /= numRuns;
 
 	return results;
@@ -346,22 +455,25 @@ void runComparison(int numEntities, int runs, const std::array<std::string, size
 	std::vector<Results> results;
 	(results.push_back(benchmarkRegistry<RegistryTypes>(numEntities, runs)), ...);
 
-	for (const float& f : results.front().values)
-		std::cout << f << "\n";
+	for (const auto& [name, f] : results.front())
+		fmt::print("{:<10}: {}\n", name, f);
 
 	size_t maxLen = 0;
 	for(const auto& name : _names)
 		if (name.length() > maxLen)
 			maxLen = name.length();
 
-	fmt::print("\n{:<{}} {:<10} {:<10} {:<10} {:<10}\n", "registry", maxLen, "insert", "simple_op", "complex_op", "remove");
+	fmt::print("\n{:<{}}", "registry", maxLen); 
+	for (const auto& [name, f] : results.front())
+		fmt::print(" {:<10}", name);
+	fmt::print("\n");
 	for (size_t i = 0; i < _names.size(); ++i)
 	{
 		fmt::print("{:<{}} ", _names[i], maxLen);
 		const auto& result = results[i];
-		for (size_t i = 0; i < result.values.size(); ++i)
+		for (auto& [name, f] : results[i])
 		{
-			fmt::print("{:<11.3f}", result.values[i] / results.front().values[i]);
+			fmt::print("{:<11.3f}", f / results.front()[name]);
 		}
 		fmt::print("\n");
 	}
@@ -376,7 +488,8 @@ int main(int argc, char* argv[])
 //	_CrtSetBreakAlloc(2760);
 #endif
 #endif
-
+	static_assert(static_type_info::getTypeIndex<components::Position2D>() 
+		!= static_type_info::getTypeIndex<components::Rotation2D>(), "There is a bug in the compiler or the library.");
 	
 /*	auto [t3, t4, t5] = benchmarkSlotMap<true>([]() { return utils::WeakSlotMap<int>(static_cast<components::Position*>(nullptr)); });
 	auto [t0, t1, t2] = benchmarkSlotMap<false>([]() { return utils::SlotMap<int, components::Position>(); });
@@ -405,9 +518,9 @@ int main(int argc, char* argv[])
 		numEntities, 
 		runs,
 		{"static", "type erasure", "sp"});*/
-	runComparison<GameRegistry, GameRegistry, game::Registry2>(numEntities, 
+	runComparison<tests::Registry, tests::Registry, tests::Registry>(numEntities,
 		runs, 
-		{ "static", "type erasure"});
+		{ "reference", "type erasure"});
 //	Game game;
 //	game.run(std::make_unique<MainState>());
 
