@@ -53,6 +53,9 @@ namespace utils {
 			return *this;
 		}
 
+		WeakSlotMap(const WeakSlotMap& _oth) = delete;
+		WeakSlotMap& operator=(const WeakSlotMap&) = delete;
+
 
 		~WeakSlotMap()
 		{
@@ -68,15 +71,16 @@ namespace utils {
 			else if(m_slots[_key] != INVALID_SLOT) // already exists
 				return at<Value>(_key);
 
-			const SizeType oldCapacity = static_cast<SizeType>(m_valuesToSlots.size());
-			m_slots[_key] = size();
+			const SizeType oldCapacity = static_cast<SizeType>(m_valuesToSlots.capacity());
+			const SizeType slot = size();
+			m_slots[_key] = slot;
 			m_valuesToSlots.emplace_back(_key);
-			const SizeType newCapacity = static_cast<SizeType>(m_valuesToSlots.size());
+			const SizeType newCapacity = static_cast<SizeType>(m_valuesToSlots.capacity());
 
 			if (oldCapacity != newCapacity)
 			{
 				char* newBuf = new char[index(newCapacity)];
-				for (SizeType i = 0; i < oldCapacity; ++i)
+				for (SizeType i = 0; i < slot; ++i)
 				{
 					new(&newBuf[index(i)]) Value(std::move(get<Value>(i)));
 					get<Value>(i).~Value();
@@ -85,7 +89,7 @@ namespace utils {
 				m_values.reset(newBuf);
 			}
 			
-			return *new (&get<Value>(oldCapacity)) Value (std::forward<Args>(_args)...);
+			return *new (&get<Value>(slot)) Value (std::forward<Args>(_args)...);
 		}
 
 		void erase(Key _key)
