@@ -67,19 +67,16 @@ namespace game {
 		}
 
 		template< typename... Args>
-		T& add(Entity _ent, Args&&... _args)
+		T& insert(Entity _ent, Args&&... _args)
 		{
 			return m_targetStorage.template emplace<T>(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
 		void clear() { m_targetStorage.clear(); }
-		void remove(Entity _ent)
-		{
-			m_targetStorage.erase(_ent.toIndex());
-		}
+		void erase(Entity _ent) { m_targetStorage.erase(_ent.toIndex()); }
 
 		// Removes a component if it exists.
-		void tryRemove(Entity _ent)
+		void tryErase(Entity _ent)
 		{
 			if(m_targetStorage.contains(_ent.toIndex()))
 				m_targetStorage.erase(_ent);

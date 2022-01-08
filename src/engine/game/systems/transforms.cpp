@@ -12,7 +12,7 @@ namespace systems {
 		_comps.execute([&](const comps::Children& _childs, const comps::TransformNeedsUpdate&)
 			{
 				for (Entity e : _childs.entities)
-					getComp<comps::TransformNeedsUpdate>(_comps).add(e);
+					getComp<comps::TransformNeedsUpdate>(_comps).insert(e);
 			});
 
 		_comps.execute([&](Entity _ent, const comps::TransformNeedsUpdate&, comps::Transform& _transform, const comps::Position& _position)

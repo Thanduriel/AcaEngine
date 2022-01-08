@@ -55,7 +55,7 @@ namespace game {
 		}
 
 		// Also removes the entity from its parent list.
-		// Unlike the base remove this checks for the existance of the component first.
+		// Unlike the base remove this checks for the existence of the component first.
 		template<component_type Component>
 		requires std::same_as<Component, components::Parent>
 		void removeComponent(Entity _ent)

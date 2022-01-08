@@ -56,7 +56,7 @@ namespace game {
 			auto targetComps = WriteAccess<Value>(registry.getContainer<Value>());
 			for(auto [entity, comp] : _container.iterate<Value>())
 			{
-				targetComps.add(Entity(entity), std::move(comp));
+				targetComps.insert(Entity(entity), std::move(comp));
 			}
 
 			_container.clear();
@@ -165,7 +165,7 @@ namespace game {
 		template<component_type Comp, typename... Args>
 		CreateComponents<Comps...>& add(Args&&... _args)
 		{
-			getComp<Comp>(m_comps).add(m_entity, std::forward<Args>(_args)...);
+			getComp<Comp>(m_comps).insert(m_entity, std::forward<Args>(_args)...);
 			return *this;
 		}
 	private:
