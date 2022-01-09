@@ -114,6 +114,10 @@ namespace game {
 		{
 			(ensureResource<ResourcesReq>(), ...);
 
+			// fetch once to ensure that the containers exist
+			// todo: improve component container prefetching
+			(ResourceFetch<ResourcesReq>::get(*this), ...);
+
 			RequirementsInfo requirements;
 			(ResourceFetch<ResourcesReq>::registerRequirements(requirements), ...);
 			return requirements;
