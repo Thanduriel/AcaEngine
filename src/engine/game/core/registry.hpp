@@ -157,6 +157,12 @@ namespace game {
 		template<component_type Component>
 		const Component& getComponent(Entity _ent) const { return getContainer<Component>()[_ent.toIndex()]; }
 
+		template<component_type Comp>
+		SM<Comp>& getContainer() { return std::get<SM<Comp>>(m_components); }
+
+		template<component_type Comp>
+		const SM<Comp>& getContainer() const { return std::get<SM<Comp>>(m_components); }
+
 		// Execute an Action on all entities having the components
 		// expected by Action::operator(...).
 		template<typename Action>
@@ -233,12 +239,6 @@ namespace game {
 			else
 				_action(_args...);
 		}
-
-		template<component_type Comp>
-		SM<Comp>& getContainer() { return std::get<SM<Comp>>(m_components); }
-
-		template<component_type Comp>
-		const SM<Comp>& getContainer() const { return std::get<SM<Comp>>(m_components); }
 
 		std::vector<Entity> m_unusedEntities;
 		uint32_t m_maxNumEntities = 0u;

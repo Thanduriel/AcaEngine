@@ -9,7 +9,7 @@
 #include "engine/graphics/core/sampler.hpp"
 #include "engine/game/core/registry.hpp"
 #include "engine/game/core/registry2.hpp"
-//#include "engine/game/core/oth/RegistrySP.hpp"
+#include "engine/game/core/oth/smkregistry.hpp"
 //#include "engine/game/core/oth/RegistrySMK.hpp"
 #include "engine/game/operations/drawModels.hpp"
 #include "engine/game/operations/applyVelocity.hpp"
@@ -205,8 +205,33 @@ namespace tests {
 		const Component* at(Entity _ent) const { return this->get(_ent); }
 	};
 
+	template<typename Component>
+	class StaticAccess
+	{
+	public:
+		explicit StaticAccess(utils::SlotMap<Entity::BaseType, Component>& _storage) noexcept
+			: m_targetStorage(_storage)
+		{}
 
-	class Registry
+		// Retrieve a component of _ent.
+		// @return A pointer to the associated component or nullptr if it does not exist.
+		Component* at(Entity _ent) { return m_targetStorage.contains(_ent) ? &m_targetStorage[_ent] : nullptr; }
+		const Component* at(Entity _ent) const { return m_targetStorage.contains(_ent) ? &m_targetStorage[_ent] : nullptr; }
+
+		template<typename... Args>
+		Component& insert(Entity _ent, Args&&... _args)
+		{
+			return m_targetStorage.emplace(_ent.toIndex(), std::forward<Args>(_args)...);
+		}
+
+		void erase(Entity _ent) { m_targetStorage.erase(_ent.toIndex()); }
+	private:
+		utils::SlotMap<Entity::BaseType, Component>& m_targetStorage;
+	};
+
+
+	template<typename BaseRegistry, template<class> class CompAccess>
+	class RegistryWrapper
 	{
 	public:
 		Entity create() { return m_registry.create(); }
@@ -222,9 +247,9 @@ namespace tests {
 
 		// Retrieve the component container for the specified type.
 		template<typename Component>
-		ComponentAccess<Component> getComponents() { return ComponentAccess<Component>(m_registry.getContainer<Component>()); }
+		CompAccess<Component> getComponents() { return CompAccess<Component>(m_registry.getContainer<Component>()); }
 		template<typename Component>
-		const ComponentAccess<Component> getComponents() const { return ComponentAccess<Component>(m_registry.getContainer<Component>()); }
+		const CompAccess<Component> getComponents() const { return CompAccess<Component>(m_registry.getContainer<Component>()); }
 
 		// Execute an Action on all entities having the components
 		// expected by Action::operator(component_type&...).
@@ -237,7 +262,7 @@ namespace tests {
 		}
 
 	private:
-		game::Registry2 m_registry;
+		BaseRegistry m_registry;
 	};
 }
 
@@ -382,7 +407,7 @@ Results benchmarkRegistry(int numEntities, int numRuns)
 		end = chrono::high_resolution_clock::now();
 		results["insert_con"] += chrono::duration<float>(end - start).count();
 
-		std::default_random_engine rng(13567);
+		std::default_random_engine rng(13567u);
 		std::shuffle(entities.begin(), entities.end(), rng);
 
 		auto testComps = registry.template getComponents<comps::TestComponent>();
@@ -505,20 +530,25 @@ int main(int argc, char* argv[])
 	}
 	std::cout << "num entities: " << numEntities << "; num runs: " << runs << "\n";
 
-	using GameRegistry = game::Registry <
+	using GameRegistry = tests::RegistryWrapper<game::Registry <
 		components::Position,
 		components::Velocity,
 		components::Transform,
 		components::Label,
 		components::TestComponent,
 		components::Position2D,
-		components::Rotation2D>;
+		components::Rotation2D,
+		components::PositionAlt,
+		components::VelocityAlt>,
+		tests::StaticAccess>;
+
+	using Registry2 = tests::RegistryWrapper<game::Registry2, tests::ComponentAccess>;
 
 /*	runComparison<GameRegistry, GameRegistry, game::Registry2, sp::Registry2, smk::Registry>(
 		numEntities, 
 		runs,
 		{"static", "type erasure", "sp"});*/
-	runComparison<tests::Registry, tests::Registry, tests::Registry>(numEntities,
+	runComparison<GameRegistry, GameRegistry, Registry2, smk::Registry>(numEntities,
 		runs, 
 		{ "reference", "type erasure"});
 //	Game game;
