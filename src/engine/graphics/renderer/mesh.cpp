@@ -47,7 +47,7 @@ namespace graphics {
 			}
 		}
 
-		m_geomtryBuffer.setData(&vertices.front(), sizeof(Vertex) * vertices.size());
+		m_geomtryBuffer.setData(vertices.data(), sizeof(Vertex) * vertices.size());
 	//	m_geomtryBuffer.setIndexData(&indicies.front(), sizeof(uint32_t) * indicies.size());
 	}
 }

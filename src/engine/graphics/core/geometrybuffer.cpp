@@ -40,6 +40,7 @@ namespace graphics {
 		m_vertexSize(0),
 		m_instanceVertexSize(0),
 		m_indexSize(_indexed),
+		m_indexFormat(PrimitiveFormat::UINT32),
 		m_vertexCount(0),
 		m_indexCount(0),
 		m_instanceCount(0)
@@ -95,6 +96,15 @@ namespace graphics {
 			glCall(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, m_ibo);
 			// Reserve the capacity
 			glCall(glBufferData, GL_ELEMENT_ARRAY_BUFFER, m_indexCapacity, nullptr, GL_STATIC_DRAW);
+
+			switch (m_indexSize)
+			{
+			case 1: m_indexFormat = PrimitiveFormat::UINT8; break;
+			case 2: m_indexFormat = PrimitiveFormat::UINT16; break;
+			case 4: m_indexFormat = PrimitiveFormat::UINT32; break;
+			default:
+				spdlog::error("GeomtryBuffer index size has to be one of 1,2 or 4.");
+			}
 		}
 	}
 
@@ -172,10 +182,16 @@ namespace graphics {
 	{
 		bind();
 
-		if(m_ibo)
-			glCall(glDrawElementsInstanced, unsigned(m_glType), m_indexCount, GL_UNSIGNED_INT, nullptr, glm::max(1u, m_instanceCount));
+		if (m_ibo)
+		{
+			glCall(glDrawElementsInstanced, unsigned(m_glType), m_indexCount,
+				static_cast<GLenum>(m_indexFormat), nullptr, glm::max(1u, m_instanceCount));
+		}
 		else
-			glCall(glDrawArraysInstanced, unsigned(m_glType), 0, m_vertexCount, glm::max(1u, m_instanceCount));
+		{
+			glCall(glDrawArraysInstanced, unsigned(m_glType), 0, m_vertexCount, 
+				glm::max(1u, m_instanceCount));
+		}
 	}
 
 }

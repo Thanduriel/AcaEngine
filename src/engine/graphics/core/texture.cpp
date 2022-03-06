@@ -68,6 +68,31 @@ namespace graphics {
 		return 0;
 	}
 
+	Texture::Texture()
+	{
+		glCall(glGenTextures, 1, &m_textureID);
+	}
+
+	Texture::~Texture()
+	{
+		glCall(glDeleteTextures, 1, &m_textureID);
+	}
+
+	Texture::Texture(Texture&& _oth) noexcept
+		: m_textureID(_oth.m_textureID)
+	{
+		_oth.m_textureID = 0;
+	}
+
+	Texture& Texture::operator=(Texture&& _oth) noexcept
+	{
+		glCall(glDeleteTextures, 1, &m_textureID);
+		m_textureID = _oth.m_textureID;
+		_oth.m_textureID = 0;
+
+		return *this;
+	}
+
 	Texture2D::Texture2D(int _width, int _height, TexFormat _format, const Sampler& _sampler) :
 		m_width(_width),
 		m_height(_height),
@@ -76,7 +101,6 @@ namespace graphics {
 		m_bindlessHandle(0)
 	{
 		// Create openGL - resource
-		glCall(glGenTextures, 1, &m_textureID);
 		glCall(glBindTexture, GL_TEXTURE_2D, m_textureID);
 		const int numLevels = int(floor(log2(glm::max(_width, _height)))) + 1;
 		glCall(glTexStorage2D, GL_TEXTURE_2D, numLevels, GLenum(_format), _width, _height);
@@ -115,7 +139,6 @@ namespace graphics {
 		}
 
 		// Create openGL - resource
-		glCall(glGenTextures,1, &m_textureID);
 		glCall(glBindTexture, GL_TEXTURE_2D, m_textureID);
 		m_format = TexFormat((_srgb && numComponents >= 3) ? NUM_COMPS_TO_INTERNAL_FORMAT_SRGB[numComponents-3] : NUM_COMPS_TO_INTERNAL_FORMAT[numComponents-1]);
 		glCall(glTexImage2D, GL_TEXTURE_2D, 0, unsigned(m_format), m_width, m_height, 0, NUM_COMPS_TO_PIXEL_FORMAT[numComponents-1], GL_UNSIGNED_BYTE, textureData);
@@ -140,7 +163,6 @@ namespace graphics {
 			glCall(glMakeTextureHandleNonResidentARB, m_bindlessHandle);
 		}
 		glCall(glBindTexture, GL_TEXTURE_2D, 0);
-		glCall(glDeleteTextures, 1, &m_textureID);
 		spdlog::info("[graphics] Deleted texture {} .", m_textureID);
 	}
 
@@ -161,7 +183,7 @@ namespace graphics {
 		return new Texture2D(_width, _height, TexFormat(NUM_COMPS_TO_INTERNAL_FORMAT[_numComponents - 1]), _sampler);
 	}
 
-	Texture2D * Texture2D::create(int _width, int _height, TexFormat _format, const Sampler & _sampler)
+	Texture2D* Texture2D::create(int _width, int _height, TexFormat _format, const Sampler & _sampler)
 	{
 		return new Texture2D(_width, _height, _format, _sampler);
 	}
@@ -201,6 +223,40 @@ namespace graphics {
 		glCall(glActiveTexture, GL_TEXTURE0 + _slot);
 		glCall(glBindTexture, GL_TEXTURE_2D, m_textureID);
 		m_sampler->bind(_slot);
+	}
+
+	// ******************************************************** //
+	Texture3D::Texture3D(int _width, int _height, int _depth, TexFormat _format, int _numLevels)
+		: m_width(_width),
+		m_height(_height),
+		m_depth(_depth),
+		m_format(_format),
+		m_sampler(nullptr)
+	{
+		glCall(glBindTexture, GL_TEXTURE_3D, m_textureID);
+		const int numLevels = _numLevels ? _numLevels
+			: int(floor(log2(glm::max(glm::max(_width, _height), _depth)))) + 1;
+		glCall(glTexStorage3D, GL_TEXTURE_3D, numLevels, GLenum(_format), _width, _height, _depth);
+	}
+
+	void Texture3D::fillMipMap(int _level, const uint8_t* _data)
+	{
+		glCall(glBindTexture, GL_TEXTURE_3D, m_textureID);
+		const int divider = 1 << _level;
+		const int levelWidth = glm::max(1, m_width / divider);
+		const int levelHeight = glm::max(1, m_height / divider);
+		const int levelDepth = glm::max(1, m_depth / divider);
+		glCall(glTexSubImage3D, GL_TEXTURE_3D, _level, 0, 0, 0, 
+			levelWidth, levelHeight, levelDepth, 
+			formatToDataFormat(m_format), GL_UNSIGNED_BYTE, _data);
+	}
+
+	void Texture3D::bind(unsigned _slot) const
+	{
+		// TODO: check binding to avoid rebinds
+		glCall(glActiveTexture, GL_TEXTURE0 + _slot);
+		glCall(glBindTexture, GL_TEXTURE_3D, m_textureID);
+	//	m_sampler->bind(_slot);
 	}
 
 	/*TextureAtlas::TextureAtlas(int _maxWidth, int _maxHeight) :

@@ -58,11 +58,19 @@ namespace graphics {
 	class Texture
 	{
 	public:
+		Texture();
+		~Texture();
+
+		Texture(const Texture&) = delete;
+		Texture(Texture&& _oth) noexcept;
+		Texture& operator=(const Texture&) = delete;
+		Texture& operator=(Texture&&) noexcept;
+
+		/// Get the OpenGL handle.
 		unsigned getID() const { return m_textureID; }
 
-		Texture() : m_textureID(0) {}
-
 	protected:
+
 		unsigned m_textureID;
 	};
 
@@ -97,9 +105,6 @@ namespace graphics {
 		/// Get the bindless texture handle.
 		uint64_t getGPUHandle() const { return m_bindlessHandle; }
 
-		/// Get the OpenGL handle.
-		unsigned getID() const { return m_textureID; }
-
 		/// Change the sampler. Not implemented!
 		void setSampler(const Sampler& _sampler);
 	private:
@@ -121,6 +126,28 @@ namespace graphics {
 		TexFormat m_format; ///< R, G, B, A?
 		const Sampler* m_sampler;
 		uint64_t m_bindlessHandle;
+	};
+
+	class Texture3D : public Texture
+	{
+	public:
+		/// Create a 3D texture without data.
+		/// \param [in] _numLevels Number of mip-map levels. If 0 it is computed automatically.
+		Texture3D(int _width, int _height, int _depth, TexFormat _format, int _numLevels = 1);
+
+		void fillMipMap(int _level, const uint8_t* _data);
+
+		void bind(unsigned _slot) const;
+
+		int getWidth() const { return m_width; }
+		int getHeight() const { return m_height; }
+		int getDepth() const { return m_depth; }
+	private:
+		int m_width;
+		int m_height;
+		int m_depth;
+		TexFormat m_format;
+		const Sampler* m_sampler;
 	};
 
 	/// Class to manage multiple 2D textures.

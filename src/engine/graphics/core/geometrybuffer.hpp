@@ -40,6 +40,7 @@ namespace graphics {
 		unsigned m_vertexSize;
 		unsigned m_instanceVertexSize;
 		unsigned m_indexSize;
+		PrimitiveFormat m_indexFormat;
 
 		unsigned m_vertexCount;		///< Current number of vertices (from last set call)
 		unsigned m_indexCount;		///< Current number of indices (from last set call)

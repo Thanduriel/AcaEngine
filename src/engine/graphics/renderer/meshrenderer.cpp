@@ -24,7 +24,7 @@ namespace graphics {
 	void MeshRenderer::present(const graphics::Camera& _camera)
 	{
 		Device::setZFunc(ComparisonFunc::LESS);
-		Device::setCullMode(CullMode::NONE);
+		Device::setCullMode(CullMode::BACK);
 		Device::enableBlending(false);
 
 		m_program.use();
