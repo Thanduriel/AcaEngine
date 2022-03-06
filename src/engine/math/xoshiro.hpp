@@ -7,8 +7,8 @@
 namespace math {
 namespace random {
 
-	// Familiy of xoshiro generators.
-	// Based on the C version [1] by David Blackman and Sebastiano Vigna.
+	// Family of xoshiro generators.
+	// Based on the C version by David Blackman and Sebastiano Vigna [1].
 	// [1] https://prng.di.unimi.it/
 
 	template<std::unsigned_integral T, T Shift, T Rot, T Sub>
@@ -21,13 +21,13 @@ namespace random {
 
 		constexpr explicit xoshiro_starstar_engine(T seed)
 		{
-			static_assert(sizeof(s) % sizeof(uint64_t) == 0, 
+			static_assert(sizeof(m_state) % sizeof(uint64_t) == 0, 
 				"Initialization is not implemented for this state size.");
-			constexpr size_t numInit = sizeof(s) / sizeof(uint64_t);
+			constexpr size_t numInit = sizeof(m_state) / sizeof(uint64_t);
 
 			uint64_t x = seed;
 			for (size_t i = 0; i < numInit; ++i)
-				*(reinterpret_cast<uint64_t*>(s.data()) + i) = splitmix64(x);
+				*(reinterpret_cast<uint64_t*>(m_state.data()) + i) = splitmix64(x);
 		}
 
 		static constexpr T min() { return std::numeric_limits<T>::min(); }
@@ -35,19 +35,20 @@ namespace random {
 
 		constexpr T operator()()
 		{
-			const T result = rotl(s[1] * 5, 7) * 9;
-			const T t = s[1] << Shift;
-			s[2] ^= s[0];
-			s[3] ^= s[1];
-			s[1] ^= s[2];
-			s[0] ^= s[3];
-			s[2] ^= t;
-			s[3] = rotl(s[3], Rot);
+			const T result = rotl<7>(m_state[1] * 5) * 9;
+			const T t = m_state[1] << Shift;
+			m_state[2] ^= m_state[0];
+			m_state[3] ^= m_state[1];
+			m_state[1] ^= m_state[2];
+			m_state[0] ^= m_state[3];
+			m_state[2] ^= t;
+			m_state[3] = rotl<Rot>(m_state[3]);
 			return result;
 		}
 	private:
-		std::array<T,4> s;
+		std::array<T,4> m_state;
 
+		// a different random generator used to construct a better seed sequence
 		static constexpr uint64_t splitmix64(uint64_t& x)
 		{
 			uint64_t z = (x += 0x9e3779b97f4a7c15uLL);
@@ -56,9 +57,10 @@ namespace random {
 			return z ^ (z >> 31);
 		}
 
-		static constexpr T rotl(T x, int k)
+		template<T K>
+		static constexpr T rotl(T x)
 		{
-			return (x << k) | (x >> (Sub - k));
+			return (x << K) | (x >> (Sub - K));
 		}
 	};
 
