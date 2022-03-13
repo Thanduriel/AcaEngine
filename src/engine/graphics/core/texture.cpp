@@ -188,13 +188,14 @@ namespace graphics {
 		return new Texture2D(_width, _height, _format, _sampler);
 	}
 
-	void Texture2D::fillMipMap(int _level, const uint8_t* _data, bool _srgb)
+	void Texture2D::fillMipMap(int _level, const uint8_t* _data, bool _srgb, PixelDataType _pixelType)
 	{
 		glCall(glBindTexture, GL_TEXTURE_2D, m_textureID);
 		int divider = 1 << _level;
 		int levelWidth = glm::max(1, m_width / divider);
 		int levelHeight = glm::max(1, m_height / divider);
-		glCall(glTexSubImage2D, GL_TEXTURE_2D, _level, 0, 0, levelWidth, levelHeight, formatToDataFormat(m_format), GL_UNSIGNED_BYTE, _data);
+		glCall(glTexSubImage2D, GL_TEXTURE_2D, _level, 0, 0, levelWidth, levelHeight, 
+			formatToDataFormat(m_format), GLenum(_pixelType), _data);
 	}
 
 	Texture2D::Handle Texture2D::finalize(bool _createMipMaps, bool _makeResident)
@@ -239,7 +240,7 @@ namespace graphics {
 		glCall(glTexStorage3D, GL_TEXTURE_3D, numLevels, GLenum(_format), _width, _height, _depth);
 	}
 
-	void Texture3D::fillMipMap(int _level, const uint8_t* _data)
+	void Texture3D::fillMipMap(int _level, const void* _data, PixelDataType _pixelType)
 	{
 		glCall(glBindTexture, GL_TEXTURE_3D, m_textureID);
 		const int divider = 1 << _level;
@@ -248,7 +249,7 @@ namespace graphics {
 		const int levelDepth = glm::max(1, m_depth / divider);
 		glCall(glTexSubImage3D, GL_TEXTURE_3D, _level, 0, 0, 0, 
 			levelWidth, levelHeight, levelDepth, 
-			formatToDataFormat(m_format), GL_UNSIGNED_BYTE, _data);
+			formatToDataFormat(m_format), GLenum(_pixelType), _data);
 	}
 
 	void Texture3D::bind(unsigned _slot) const
