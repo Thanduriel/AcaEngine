@@ -68,7 +68,7 @@ namespace graphics {
 		/// TODO: reflection and uniform stuff.
 
 		/// Find the location of a uniform variable
-		int getUniformLoc(const char* _uniformName);
+		int getUniformLoc(const char* _uniformName) const;
 		
 		void setUniform(int _location, float _value);
 		void setUniform(int _location, const glm::vec2& _value);

@@ -122,7 +122,7 @@ namespace graphics {
 		}
 	}
 
-	int Program::getUniformLoc(const char* _uniformName)
+	int Program::getUniformLoc(const char* _uniformName) const
 	{
 		return glCall(glGetUniformLocation, m_programID, _uniformName);
 	}
