@@ -71,6 +71,23 @@ namespace graphics {
 		INVERT = 0x150A,		///< GL_INVERT
 	};
 
+	enum MemoryBarrierBit : uint32_t
+	{
+		VERTEX_ATTRIB_ARRAY_BARRIER = 0x00000001,
+		GL_ELEMENT_ARRAY_BARRIER = 0x00000002,
+		UNIFORM_BARRIER = 0x00000004,
+		TEXTURE_FETCH_BARRIER = 0x00000008,
+		SHADER_IMAGE_ACCESS_BARRIER = 0x00000020,
+		COMMAND_BARRIER_BIT = 0x00000040,
+		PIXEL_BUFFER_BARRIER_BIT = 0x00000080,
+		TEXTURE_UPDATE_BARRIER_BIT = 0x00000100,
+		BUFFER_UPDATE_BARRIER_BIT = 0x00000200,
+		FRAMEBUFFER_BARRIER_BIT = 0x00000400,
+		TRANSFORM_FEEDBACK_BARRIER_BIT = 0x00000800,
+		ATOMIC_COUNTER_BARRIER_BIT = 0x00001000,
+		ALL_BARRIER_BITS = 0xFFFFFFFF
+	};
+
 	// OpenGL state machine.
 	class Device
 	{
@@ -111,6 +128,10 @@ namespace graphics {
 		static void scissorTest(int _x, int _y, int _width, int _height);
 		static void disableScissorTest();
 		
+		/// Defines a barrier ordering the memory transactions issued prior to 
+		/// the command relative to those issued after the barrier.
+		static void memoryBarrier(uint32_t _barrierBits);
+		static void memoryBarrierByRegion(uint32_t _barrierBits);
 	private:
 		static BlendOp s_blendOp[8];
 		static BlendFactor s_srcFactor[8], s_dstFactor[8];

@@ -65,8 +65,7 @@ namespace graphics {
 		delete const_cast<Shader*>(_shader);
 	}
 
-
-	
+	// *********************************************************** //
 	Program::Program() :
 		m_numShaders(0),
 		m_programID(0)

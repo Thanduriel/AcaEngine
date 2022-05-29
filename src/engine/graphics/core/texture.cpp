@@ -260,6 +260,14 @@ namespace graphics {
 	//	m_sampler->bind(_slot);
 	}
 
+	void Texture3D::bindAsImage(unsigned _slot, AccessType _access, PixelDataType _pixelType,
+		int _level, bool _layered, int _layer) const
+	{
+		
+		glCall(glBindImageTexture, _slot, m_textureID, _level, _layered, _layer, 
+			GLenum(_access), GLenum(m_format));
+	}
+
 	/*TextureAtlas::TextureAtlas(int _maxWidth, int _maxHeight) :
 		m_width(_maxWidth),
 		m_height(_maxHeight),

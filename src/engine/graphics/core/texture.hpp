@@ -80,6 +80,13 @@ namespace graphics {
 		UNSIGNED_INT_2_10_10_10_REV = 0x8368
 	};
 
+	enum class AccessType
+	{
+		READ_ONLY = 0x88B8,
+		WRITE_ONLY = 0x88B9, 
+		READ_WRITE = 0x88BA
+	};
+
 	/// Base class for different (2D, 3D, cube) textures.
 	class Texture
 	{
@@ -164,6 +171,8 @@ namespace graphics {
 		void fillMipMap(int _level, const void* _data, PixelDataType _pixelType = PixelDataType::UNSIGNED_BYTE);
 
 		void bind(unsigned _slot) const;
+		void bindAsImage(unsigned _slot, AccessType _access, PixelDataType _pixelType, 
+			int _level = 0, bool _layered = false, int _layer = 0) const;
 
 		int getWidth() const { return m_width; }
 		int getHeight() const { return m_height; }

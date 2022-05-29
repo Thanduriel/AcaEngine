@@ -299,4 +299,15 @@ namespace graphics {
 		}
 	}
 
+	// *********************************************************************** //
+	void Device::memoryBarrier(unsigned _barrierBits)
+	{
+		glCall(glMemoryBarrier, _barrierBits);
+	}
+
+	void Device::memoryBarrierByRegion(unsigned _barrierBits)
+	{
+		glCall(glMemoryBarrierByRegion, _barrierBits);
+	}
+
 } // namespace graphics
