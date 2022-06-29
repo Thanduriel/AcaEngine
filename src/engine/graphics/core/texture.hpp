@@ -113,6 +113,8 @@ namespace graphics {
 	public:
 		typedef const Texture2D* Handle;
 
+		~Texture2D();
+
 		static Handle load(const char* _fileName, const Sampler& _sampler, bool _srgb = false);
 		static void unload(Handle _texture);
 
@@ -122,7 +124,7 @@ namespace graphics {
 		/// More advanced creation function with arbitrary formats
 		static Texture2D* create(int _width, int _height, TexFormat _format, const Sampler& _sampler);
 		/// Upload information for a single texture layer
-		/// \param [in] _level Mip-map level starting with 0 for the higest resolution.
+		/// \param [in] _level Mip-map level starting with 0 for the highest resolution.
 		/// \param [in] _data Pixel data with 8-bit per component and N components per pixel.
 		void fillMipMap(int _level, const uint8_t* _data, bool _srgb = false, PixelDataType _pixelType = PixelDataType::UNSIGNED_BYTE);
 		/// Makes the texture resident and may compute mip-maps.
@@ -151,8 +153,6 @@ namespace graphics {
 		/// \param [in] _textureFileName The file to load.
 		/// \param [in] _sampler A sampler which will be used with this texture.
 		Texture2D(const char* _textureFileName, const Sampler& _sampler, bool _srgb);
-
-		~Texture2D();
 
 		int m_width;
 		int m_height;

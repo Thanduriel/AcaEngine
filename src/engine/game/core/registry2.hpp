@@ -158,6 +158,8 @@ namespace game {
 		// @return The entity or an INVALID_ENTITY if the ref is not valid.
 		Entity getEntity(EntityRef _ent) const
 		{
+			if (_ent.entity.toIndex() > static_cast<Entity::BaseType>(m_generations.size()))
+				return INVALID_ENTITY;
 			const EntityRef& ref = m_generations[_ent.entity.toIndex()];
 			if (ref.entity == _ent.entity && _ent.generation == ref.generation)
 				return _ent.entity;

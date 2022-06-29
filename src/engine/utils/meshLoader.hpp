@@ -14,7 +14,7 @@ namespace utils {
 	/** 
 	 * @brief Collection of raw mesh data.
 	 */
-	struct MeshData 
+	struct MeshData
 	{
 		/**
 		 * @brief Collection of vertices describing one face. 

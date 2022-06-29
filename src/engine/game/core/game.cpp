@@ -34,10 +34,8 @@ namespace game{
 
 		m_gameStates.emplace_back(std::move(_initialState));
 
-
 		GLFWwindow* window = graphics::Device::getWindow();
 		auto start = high_resolution_clock::now();
-		glClearColor(0.0f, 0.3f, 0.6f, 1.f);
 
 		while (!m_gameStates.empty())
 		{
@@ -59,20 +57,30 @@ namespace game{
 			bool changedState = false;
 			std::unique_ptr<GameState> newState = current.fetchNewState();
 			// check older states to prevent another frame of them being rendered
-			while (m_gameStates.size() && m_gameStates.back()->isFinished()) {
-				m_gameStates.pop_back(); changedState = true;
+			while (m_gameStates.size() && m_gameStates.back()->isFinished()) 
+			{
+				m_gameStates.pop_back(); 
+				changedState = true;
 			}
-			if (newState) {
-				m_gameStates.emplace_back(std::move(newState)); changedState = true;
+			if (newState) 
+			{
+				m_gameStates.emplace_back(std::move(newState)); 
+				changedState = true;
 			}
 			if (changedState && !m_gameStates.empty()) m_gameStates.back()->onActivate();
 
 			// input handling
-			input::InputManager::updateKeyStates();
+		//	input::InputManager::updateKeyStates();
 			glfwPollEvents();
 			if (glfwWindowShouldClose(window)) m_gameStates.clear();
 
-			std::this_thread::sleep_for(3ms);
+			// frame rate control
+			// todo: make part of config
+			constexpr auto targetFrameTime = duration_cast < duration<float>>(1.666666667e+7ns);
+			const auto rest = targetFrameTime - d - 0.5ms;
+			if (rest.count() > 0.f)
+				std::this_thread::sleep_for(rest);
+			while ((high_resolution_clock::now() - start) < targetFrameTime) {}
 		}
 	}
 }

@@ -82,6 +82,8 @@ namespace graphics {
 			}
 		}
 
+		setClearColor(glm::vec4(0.0f, 0.3f, 0.6f, 1.f));
+
 		return true;
 	}
 
@@ -114,6 +116,11 @@ namespace graphics {
 		int w, h;
 		glfwGetFramebufferSize(s_window, &w, &h);
 		return static_cast<float>(w) / h;
+	}
+
+	void Device::setClearColor(const glm::vec4& _color)
+	{
+		glCall(glClearColor, _color.r, _color.g, _color.b, _color.a);
 	}
 
 	// TODO: glCall(glEnable, GL_BLEND);

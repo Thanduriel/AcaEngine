@@ -102,6 +102,7 @@ namespace graphics {
 		static glm::ivec2 getBufferSize();
 		static float getAspectRatio();
 		
+		static void setClearColor(const glm::vec4& _color);
 		// Optimized state changes (only calls gl.. if necessary)
 		/// \param _operation A valid blend operation. The default is ADD for all targets
 		/// \param _target The render target when MRT are used.

@@ -6,6 +6,8 @@ namespace input {
 	GLFWwindow* InputManager::s_window = nullptr;
 	std::array<ActionState, static_cast<size_t>(Key::Count)> InputManager::m_keyStates{};
 	std::array<ActionState, static_cast<size_t>(Key::Count)> InputManager::m_buttonStates{};
+	double InputManager::s_totalScrollX = 0.0;
+	double InputManager::s_totalScrollY = 0.0;
 
 	void InputManager::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
@@ -25,11 +27,18 @@ namespace input {
 		}
 	}
 
+	void InputManager::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+	{
+		s_totalScrollX += xoffset;
+		s_totalScrollY += yoffset;
+	}
+
 	void InputManager::initialize(GLFWwindow* _window)
 	{
 		s_window = _window;
 		glfwSetKeyCallback(_window, keyCallback);
 		glfwSetMouseButtonCallback(_window, buttonCallback);
+		glfwSetScrollCallback(_window, scrollCallback);
 	}
 
 	bool InputManager::isKeyPressed(Key _key)
@@ -63,7 +72,7 @@ namespace input {
 
 	ActionState InputManager::getButtonState(MouseButton _button)
 	{
-		return m_keyStates[static_cast<int>(_button)];
+		return m_buttonStates[static_cast<int>(_button)];
 	}
 
 	void InputManager::setCursorMode(CursorMode _mode)
@@ -79,10 +88,17 @@ namespace input {
 		glfwSetInputMode(s_window, GLFW_CURSOR, mode);
 	}
 
+	glm::vec2 InputManager::getScroll()
+	{
+		return glm::vec2(static_cast<float>(s_totalScrollX, s_totalScrollY));
+	}
+
 	constexpr static ActionState UPDATE_MASK[] = { ActionState::UP, ActionState::DOWN, ActionState::UP, ActionState::DOWN };
 
 	void InputManager::updateKeyStates()
 	{
+		s_totalScrollX = 0.0;
+		s_totalScrollY = 0.0;
 		for (ActionState& as : m_keyStates)
 			as = UPDATE_MASK[static_cast<char>(as)];
 		for (ActionState& as : m_buttonStates)

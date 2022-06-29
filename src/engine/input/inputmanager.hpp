@@ -35,15 +35,19 @@ namespace input
 			DISABLED
 		};
 		static void setCursorMode(CursorMode _mode);
+		static glm::vec2 getScroll();
 
 		static void updateKeyStates();
 	private:
 		static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 		static void buttonCallback(GLFWwindow* window, int button, int action, int mods);
+		static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 		static GLFWwindow* s_window;
 		static std::array<ActionState, static_cast<size_t>(Key::Count)> m_keyStates;
 		static std::array<ActionState, static_cast<size_t>(Key::Count)> m_buttonStates;
+		static double s_totalScrollX;
+		static double s_totalScrollY;
 	};
 
 	// Interface to map game actions to keys.
