@@ -101,6 +101,7 @@ namespace graphics {
 		static GLFWwindow* getWindow() { return s_window; }
 		static glm::ivec2 getBufferSize();
 		static float getAspectRatio();
+		static void setVSync(bool _enable);
 		
 		static void setClearColor(const glm::vec4& _color);
 		// Optimized state changes (only calls gl.. if necessary)

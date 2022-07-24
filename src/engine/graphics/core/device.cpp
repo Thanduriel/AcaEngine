@@ -118,6 +118,11 @@ namespace graphics {
 		return static_cast<float>(w) / h;
 	}
 
+	void Device::setVSync(bool _enable)
+	{
+		glfwSwapInterval(_enable ? 1 : 0);
+	}
+
 	void Device::setClearColor(const glm::vec4& _color)
 	{
 		glCall(glClearColor, _color.r, _color.g, _color.b, _color.a);

@@ -11,13 +11,25 @@
 namespace game{
 
 	Game::Game()
+		: m_targetFrameTime(0.f)
 	{
-		if (!graphics::Device::initialize(1366, 768, false))
+		auto& videoConfig = utils::Config::get()["video"];
+		const int width = utils::Config::getValue(videoConfig, "resolutionX", 1366);
+		const int height = utils::Config::getValue(videoConfig, "resolutionY", 768);
+		const bool fullScreen = utils::Config::getValue(videoConfig, "fullScreen", false);
+		if (!graphics::Device::initialize(width, height, fullScreen))
 		{
 			spdlog::error("Could not initialize the device. Shutting down.");
 			abort();
 		}
+
+		const bool vsync = utils::Config::getValue(videoConfig, "vsync", false);
+		graphics::Device::setVSync(vsync);
+
 		input::InputManager::initialize(graphics::Device::getWindow());
+
+		const int targetFPS = utils::Config::getValue(videoConfig, "targetFPS", 60);
+		m_targetFrameTime = 1.f / targetFPS;
 	}
 
 	Game::~Game()
@@ -75,11 +87,20 @@ namespace game{
 			if (glfwWindowShouldClose(window)) m_gameStates.clear();
 
 			// frame rate control
-			// todo: make part of config
-			constexpr auto targetFrameTime = duration_cast < duration<float>>(1.666666667e+7ns);
-			const auto rest = targetFrameTime - d - 0.5ms;
-			if (rest.count() > 0.f)
-				std::this_thread::sleep_for(rest);
+			const auto currentD = duration_cast<duration<float>>(high_resolution_clock::now() - start);
+			const std::chrono::duration<float> targetFrameTime(m_targetFrameTime);
+			const auto remaining = targetFrameTime - currentD - 0.5ms;
+			if (remaining.count() > 0.f)
+			{
+#ifdef WIN32
+				// in windows threads yield at least for the remainder of time-slice
+				// which takes ~16ms
+				if (targetFrameTime > 16ms && currentD < 15.5ms)
+					std::this_thread::sleep_for(1ms);
+#else
+				std::this_thread::sleep_for(remaining);
+#endif
+			}
 			while ((high_resolution_clock::now() - start) < targetFrameTime) {}
 		}
 	}

@@ -16,6 +16,7 @@ namespace game {
 		void run(std::unique_ptr<GameState> _initialState);
 
 	private:
+		float m_targetFrameTime;
 		std::vector<std::unique_ptr<GameState>> m_gameStates;
 	};
 }
