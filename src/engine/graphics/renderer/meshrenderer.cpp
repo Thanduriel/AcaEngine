@@ -25,10 +25,11 @@ namespace graphics {
 	{
 		Device::setZFunc(ComparisonFunc::LESS);
 		Device::setCullMode(CullMode::BACK);
+		Device::setZWrite(true);
 		Device::enableBlending(false);
 
 		m_program.use();
-		m_program.setUniform(3, glm::normalize(glm::vec3(1.f, 1.f, 1.f)));
+	//	m_program.setUniform(3, glm::normalize(glm::vec3(1.f, 1.f, 1.f)));
 
 		for(size_t i = 0; i < m_meshes.size(); ++i)
 		{

@@ -61,6 +61,7 @@ namespace game{
 
 			// draw step
 			// todo: move this into the device ?
+			graphics::Device::setZWrite(true);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			current.draw(dt);
 			glfwSwapBuffers(window);
@@ -82,7 +83,7 @@ namespace game{
 			if (changedState && !m_gameStates.empty()) m_gameStates.back()->onActivate();
 
 			// input handling
-		//	input::InputManager::updateKeyStates();
+			input::InputManager::updateKeyStates();
 			glfwPollEvents();
 			if (glfwWindowShouldClose(window)) m_gameStates.clear();
 

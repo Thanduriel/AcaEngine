@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../math/geometrictypes.hpp"
 #include <glm/glm.hpp>
 
 namespace graphics {
@@ -20,7 +21,9 @@ namespace graphics {
 		void setView(const glm::mat4& _view) { m_view = _view; updateMatrices(); }
 
 		glm::vec3 toWorldSpace(const glm::vec2& _sceenSpace) const;
+		math::Ray3D getRay(const glm::vec2& _screenSpace) const;
 	private:
+		glm::vec3 toWorldSpace(const glm::vec2& _sceenSpace, float _z) const;
 		void updateMatrices();
 
 		glm::mat4 m_projection;
