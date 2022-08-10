@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vertexformat.hpp"
+#include <span>
 
 namespace graphics {
 
@@ -13,14 +14,17 @@ namespace graphics {
 		/// \param [in] _indexed Use an index buffer for indexed geometry if set greater 0.
 		///		If greater 0 it must be 1, 2, or 4 defining the size of an index.
 		/// \param [in] _initialSize Initial size of the buffer in bytes.
-		GeometryBuffer(GLPrimitiveType _type, const VertexAttribute* _attributes, int _numAttributes, int _indexed, unsigned _initialSize = 1024);
+		GeometryBuffer(GLPrimitiveType _type, const VertexAttribute* _attributes, int _numAttributes, int _indexed,
+			unsigned _initialSize = 1024, GLUsageHint _usageHint = GLUsageHint::STATIC_DRAW);
+		GeometryBuffer(GLPrimitiveType _type, std::span<const VertexAttribute> _attributes, int _indexed,
+			unsigned _initialSize = 0, GLUsageHint _usageHint = GLUsageHint::STATIC_DRAW);
 		~GeometryBuffer();
 
 		/// Replace current block of data.
 		/// This might cause an glBufferData. Sub-data-updates are used if possible.
-		void setData(const void* _data, unsigned _size);
-		void setIndexData(const void* _data, unsigned _size);
-		void setInstanceData(const void* _data, unsigned _size);
+		void setData(const void* _data, unsigned _size, GLUsageHint _usageHint = GLUsageHint::STATIC_DRAW);
+		void setIndexData(const void* _data, unsigned _size, GLUsageHint _usageHint = GLUsageHint::STATIC_DRAW);
+		void setInstanceData(const void* _data, unsigned _size, GLUsageHint _usageHint = GLUsageHint::STATIC_DRAW);
 
 		/// Bind for draw calls. Do not change its content!
 		void bind() const;
