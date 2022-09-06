@@ -8,18 +8,18 @@ project (AcaEngine)
 # find all source and header files
 file(GLOB_RECURSE SOURCE_FILES "src/engine/*.cpp" "src/engine/*.hpp" "src/engine/*.inl")
 
-# organize the files according to the organisation in the file system
+# organize the files according to the organization in the file system
 # from: http:#cmake.3232098.n2.nabble.com/Keep-folder-structure-in-Visual-Studio-Project-generated-with-CMake-td7586044.html
 macro(GroupSources curdir)
-   file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
-   foreach(child ${children})
-          if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-                  GroupSources(${curdir}/${child})
-          else()
-                  string(REPLACE "/" "\\" groupname ${curdir})
-            source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
-          endif()
-   endforeach()
+	file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
+	foreach(child ${children})
+		if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+			GroupSources(${curdir}/${child})
+		else()
+			string(REPLACE "/" "\\" groupname ${curdir})
+			source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+		endif()
+	endforeach()
 endmacro()
 
 # execute tha macro

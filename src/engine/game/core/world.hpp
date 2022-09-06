@@ -139,8 +139,9 @@ namespace game {
 					return std::get<ResourceType>(world.m_resources);
 				else
 				{
-					void* ptr = world.m_dynamicResources.find(static_type_info::getTypeIndex<ResourceType>()).data().get();
-					return *reinterpret_cast<ResourceType*>(ptr);
+					auto it = world.m_dynamicResources.find(static_type_info::getTypeIndex<ResourceType>());
+					ASSERT(!!it, "Requested resource needs to exist.");
+					return *reinterpret_cast<ResourceType*>(it.data().get());
 				}
 			}
 
