@@ -42,4 +42,15 @@ namespace random {
 		const T sinTheta = sqrt((1.0f - cosTheta) * (1.0f + cosTheta));
 		return glm::vec<3,T>(sinTheta * sin(phi), sinTheta * cos(phi), cosTheta);
 	}
+
+	// Generates uniformly distributed random points on the unit circle.
+	template <typename T = float,
+		class Engine = DefaultRandomEngine>
+	glm::vec<2, T> direction2D(Engine& _engine = g_random)
+	{
+		std::uniform_real_distribution<T> uniform;
+
+		const T phi = 2 * std::numbers::pi_v<T> * uniform(_engine);
+		return glm::vec<2, T>(sin(phi), cos(phi));
+	}
 }}
