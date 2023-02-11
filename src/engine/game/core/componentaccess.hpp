@@ -45,8 +45,8 @@ namespace game {
 			: m_targetStorage(_targetStorage)
 		{}
 
-		auto iterate() { return m_targetStorage.iterate<T>(); }
-		auto iterate() const { return m_targetStorage.iterate<T>(); }
+		auto iterate() { return m_targetStorage.template iterate<T>(); }
+		auto iterate() const { return m_targetStorage.template iterate<T>(); }
 
 		bool has(Entity _ent) const { return m_targetStorage.contains(_ent.toIndex()); }
 
@@ -157,7 +157,7 @@ namespace game {
 		std::tuple<CompAccess...> m_components;
 	};
 
-	namespace details {
+/*	namespace details {
 		template<class...Ts>
 		constexpr auto flatten(Ts...ts) {
 			return ComponentTuple<Ts>(ts...);
@@ -169,5 +169,5 @@ namespace game {
 	struct MakeComponentTuple
 	{
 		using type = decltype(details::flatten<Ts...>(std::declval<Ts>()...));
-	};
+	};*/
 }

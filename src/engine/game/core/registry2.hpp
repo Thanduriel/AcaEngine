@@ -30,14 +30,14 @@ namespace game {
 		// _ent already has a component of this type.
 		// @return A reference to the new component or the already existing component.
 		template<component_type Component, typename... Args>
-		requires !std::same_as<Component, components::Parent>
+		requires (!std::same_as<Component, components::Parent>)
 		Component& addComponent(Entity _ent, Args&&... _args)
 		{
 			return getContainer<Component>().template emplace<Component>(_ent.toIndex(), std::forward<Args>(_args)...);
 		}
 
 		template<component_type Component>
-		requires std::same_as<Component, components::Parent>
+		requires (std::same_as<Component, components::Parent>)
 		Component& addComponent(Entity _ent, components::Parent _parent)
 		{
 			auto& childs = addComponent<components::Children>(_parent.entity);
@@ -48,7 +48,7 @@ namespace game {
 		// Remove a component from an entity.
 		// Expects the component to exist.
 		template<component_type Component>
-		requires !std::same_as<Component, components::Parent> && !std::same_as<Component, components::Children>
+		requires (!std::same_as<Component, components::Parent> && !std::same_as<Component, components::Children>)
 		void removeComponent(Entity _ent)
 		{
 			getContainer<Component>().erase(_ent.toIndex());
@@ -57,17 +57,17 @@ namespace game {
 		// Also removes the entity from its parent list.
 		// Unlike the base remove this checks for the existence of the component first.
 		template<component_type Component>
-		requires std::same_as<Component, components::Parent>
+		requires (std::same_as<Component, components::Parent>)
 		void removeComponent(Entity _ent)
 		{
 			auto& comps = getContainer<Component>();
 			if (comps.contains(_ent.toIndex()))
 			{
 				// remove from parent list
-				auto& parent = comps.at<Component>(_ent.toIndex());
+				auto& parent = comps.template at<Component>(_ent.toIndex());
 				if (isValid(parent.entity))
 				{
-					auto& childs = getContainer<components::Children>().at<components::Children>(parent.entity.toIndex()).entities;
+					auto& childs = getContainer<components::Children>().template at<components::Children>(parent.entity.toIndex()).entities;
 					auto it = std::find(childs.begin(), childs.end(), _ent);
 					ASSERT(it != childs.end(), "Child is not known to parent.");
 					*it = childs.back();
@@ -78,13 +78,13 @@ namespace game {
 		}
 
 		template<component_type Component>
-		requires std::same_as<Component, components::Children>
+		requires (std::same_as<Component, components::Children>)
 		void removeComponent(Entity _ent)
 		{
 			auto& comps = getContainer<Component>();
 			if (comps.contains(_ent.toIndex()))
 			{
-				auto& childs = comps.at<Component>(_ent.toIndex()).entities;
+				auto& childs = comps.template at<Component>(_ent.toIndex()).entities;
 				// erase all children
 				for (Entity ent : childs)
 					erase(ent);

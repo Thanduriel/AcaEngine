@@ -9,8 +9,6 @@
 #include "engine/graphics/core/sampler.hpp"
 #include "engine/game/core/registry.hpp"
 #include "engine/game/core/registry2.hpp"
-#include "engine/game/core/oth/smkregistry.hpp"
-//#include "engine/game/core/oth/RegistrySMK.hpp"
 #include "engine/game/operations/drawModels.hpp"
 #include "engine/game/operations/applyVelocity.hpp"
 #include "engine/game/operations/updateTransform.hpp"
@@ -247,9 +245,9 @@ namespace tests {
 
 		// Retrieve the component container for the specified type.
 		template<typename Component>
-		CompAccess<Component> getComponents() { return CompAccess<Component>(m_registry.getContainer<Component>()); }
+		CompAccess<Component> getComponents() { return CompAccess<Component>(m_registry.template getContainer<Component>()); }
 		template<typename Component>
-		const CompAccess<Component> getComponents() const { return CompAccess<Component>(m_registry.getContainer<Component>()); }
+		const CompAccess<Component> getComponents() const { return CompAccess<Component>(m_registry.template getContainer<Component>()); }
 
 		// Execute an Action on all entities having the components
 		// expected by Action::operator(component_type&...).
@@ -340,7 +338,7 @@ template<typename Registry>
 concept ManualComps = requires (Registry r) { r.template execute<int, float>([](int, float) {}); };
 
 template<typename... Comps, typename Registry, typename Action>
-requires !ManualComps<Registry>//requires (Registry& r, const Action& a) { r.template execute<Action>(a); }
+requires (!ManualComps<Registry>)//requires (Registry& r, const Action& a) { r.template execute<Action>(a); }
 void execute(Registry& registry, const Action& action)
 {
 	registry.execute(action);
@@ -548,7 +546,7 @@ int main(int argc, char* argv[])
 		numEntities, 
 		runs,
 		{"static", "type erasure", "sp"});*/
-	runComparison<GameRegistry, GameRegistry, Registry2, smk::Registry>(numEntities,
+	runComparison<GameRegistry, GameRegistry, Registry2/*, smk::Registry*/>(numEntities,
 		runs, 
 		{ "reference", "type erasure"});
 //	Game game;

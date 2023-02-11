@@ -3,6 +3,7 @@
 #include <concepts>
 #include <cstdint>
 #include <array>
+#include <limits>
 
 namespace math {
 namespace random {
@@ -23,17 +24,17 @@ namespace random {
 		{
 			static_assert(sizeof(m_state) % sizeof(uint64_t) == 0, 
 				"Initialization is not implemented for this state size.");
-			constexpr size_t numInit = sizeof(m_state) / sizeof(uint64_t);
+			constexpr std::size_t numInit = sizeof(m_state) / sizeof(uint64_t);
 
 			uint64_t x = seed;
-			for (size_t i = 0; i < numInit; ++i)
+			for (std::size_t i = 0; i < numInit; ++i)
 				*(reinterpret_cast<uint64_t*>(m_state.data()) + i) = splitmix64(x);
 		}
 
-		static constexpr T min() { return std::numeric_limits<T>::min(); }
-		static constexpr T max() { return std::numeric_limits<T>::max(); }
+		static constexpr T min() noexcept { return std::numeric_limits<T>::min(); }
+		static constexpr T max() noexcept { return std::numeric_limits<T>::max(); }
 
-		constexpr T operator()()
+		constexpr T operator()() noexcept
 		{
 			const T result = rotl<7>(m_state[1] * 5) * 9;
 			const T t = m_state[1] << Shift;
@@ -49,7 +50,7 @@ namespace random {
 		std::array<T,4> m_state;
 
 		// a different random generator used to construct a better seed sequence
-		static constexpr uint64_t splitmix64(uint64_t& x)
+		static constexpr uint64_t splitmix64(uint64_t& x) noexcept
 		{
 			uint64_t z = (x += 0x9e3779b97f4a7c15uLL);
 			z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9uLL;
@@ -58,7 +59,7 @@ namespace random {
 		}
 
 		template<T K>
-		static constexpr T rotl(T x)
+		static constexpr T rotl(T x) noexcept
 		{
 			return (x << K) | (x >> (Sub - K));
 		}

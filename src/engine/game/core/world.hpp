@@ -6,6 +6,125 @@
 
 namespace game {
 
+	namespace details {
+		using TypeIndex = std::remove_const_t<static_type_info::TypeIndex>;
+		enum struct AccessReq : char { Read, Write };
+		using RequirementsInfo = utils::HashMap<TypeIndex, AccessReq>;
+
+		// Generic lookup in the resource tuple.
+		// Handles both const and mutable reference types 
+		// since the unqualified reference is returned.
+		template<typename Resource>
+		struct ResourceFetch
+		{
+			ResourceFetch() = delete; // mark for ensureResource
+
+			using ResourceType = std::remove_cvref_t<Resource>;
+
+			template<typename World>
+			static ResourceType& get(World& world)
+			{
+				if constexpr (utils::contains_type_v<ResourceType, decltype(world.m_resources)>)
+					return std::get<ResourceType>(world.m_resources);
+				else
+				{
+					auto it = world.m_dynamicResources.find(static_type_info::getTypeIndex<ResourceType>());
+					ASSERT(!!it, "Requested resource needs to exist.");
+					return *reinterpret_cast<ResourceType*>(it.data().get());
+				}
+			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<ResourceType>();
+				reqs.add(typeIndex, std::is_const_v<Resource> ? AccessReq::Read : AccessReq::Write);
+			}
+		};
+
+
+		// game time
+		template<>
+		struct ResourceFetch<float>
+		{
+			template<typename World>
+			static float get(World& world)
+			{
+				return world.m_deltaTime;
+			}
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<float>();
+				reqs.add(typeIndex, AccessReq::Read);
+			}
+		};
+
+		template<>
+		struct ResourceFetch<LifetimeManager2&>
+		{
+			template<typename World>
+			static LifetimeManager2& get(World& world)
+			{
+				return world.m_manager;
+			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<LifetimeManager2>();
+				reqs.add(typeIndex, AccessReq::Write);
+			}
+		};
+
+		// Read component
+		template<typename Comp>
+		struct ResourceFetch <ReadAccess<Comp>>
+		{
+			template<typename World>
+			static ReadAccess<Comp> get(World& world)
+			{
+				return ReadAccess<Comp>(world.m_registry.template getContainer<Comp>());
+			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<Comp>();
+				reqs.add(typeIndex, AccessReq::Read);
+			}
+		};
+
+		// Write component
+		template<typename Comp>
+		struct ResourceFetch <WriteAccess<Comp>>
+		{
+			template<typename World>
+			static WriteAccess<Comp> get(World& world)
+			{
+				return WriteAccess<Comp>(world.m_registry.template getContainer<Comp>());
+			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<Comp>();
+				reqs.add(typeIndex, AccessReq::Write);
+			}
+		};
+
+		// Component Tuple
+		template<typename... CompAccess>
+		struct ResourceFetch <ComponentTuple<CompAccess...>>
+		{
+			template<typename World>
+			static ComponentTuple<CompAccess...> get(World& world)
+			{
+				return ComponentTuple<CompAccess...>(ResourceFetch<CompAccess>::get(world)...);
+			}
+
+			static void registerRequirements(RequirementsInfo& reqs)
+			{
+				(ResourceFetch<CompAccess>::registerRequirements(reqs), ...);
+			}
+		};
+	}
+
 	template<typename T>
 	concept system_type = requires { &T::update; };
 
@@ -21,9 +140,9 @@ namespace game {
 	{
 	public:
 		World(Resources&&... _resources) 
-			: m_resources(EntityCreator(m_registry), EntityDeleter(), std::forward<Resources>(_resources)...),
-			m_deltaTime(0.f),
-			m_manager(m_registry)
+			: m_deltaTime(0.f),
+			m_manager(m_registry),
+			m_resources(EntityCreator(m_registry), EntityDeleter(), std::forward<Resources>(_resources)...)
 		{}
 
 		void process(SystemGroup _group, float _deltaTime)
@@ -78,9 +197,9 @@ namespace game {
 
 		// Call member function of a system providing the expected resources.
 		template<typename System, typename... ResourcesReq>
-		void call(System& _system, void(System::* _func)(ResourcesReq ...)) { (_system.*_func)(ResourceFetch<ResourcesReq>::get(*this)...); }
+		void call(System& _system, void(System::* _func)(ResourcesReq ...)) { (_system.*_func)(details::ResourceFetch<ResourcesReq>::get(*this)...); }
 		template<typename System, typename... ResourcesReq>
-		void call(const System& _system, void(System::* _func)(ResourcesReq ...) const) { (_system.*_func)(ResourceFetch<ResourcesReq>::get(*this)...); }
+		void call(const System& _system, void(System::* _func)(ResourcesReq ...) const) { (_system.*_func)(details::ResourceFetch<ResourcesReq>::get(*this)...); }
 
 		template<typename System>
 		void run(System& _system) { call(_system, &System::update); }
@@ -89,8 +208,11 @@ namespace game {
 		void run(const System& _system) { call(_system, &System::update); }
 	private:
 		using TypeIndex = std::remove_const_t<static_type_info::TypeIndex>;
-		enum struct AccessReq : char { Read, Write };
-		using RequirementsInfo = utils::HashMap<TypeIndex, AccessReq>;
+		using AccessReq = details::AccessReq;
+		using RequirementsInfo = details::RequirementsInfo;
+
+		template<typename T>
+		friend struct details::ResourceFetch;
 
 		// Default construct a required resource if it does not exist yet.
 		template<typename Res>
@@ -98,7 +220,7 @@ namespace game {
 		{
 			using ResourceT = std::remove_cvref_t<Res>;
 			// check that it is a dynamic resource which can be default constructed
-			if constexpr (!std::is_default_constructible_v<ResourceFetch<Res>>
+			if constexpr (!std::is_default_constructible_v<details::ResourceFetch<Res>>
 				&& !utils::contains_type_v<ResourceT, decltype(m_resources)>
 				&& std::is_default_constructible_v<ResourceT>)
 			{
@@ -116,118 +238,12 @@ namespace game {
 
 			// fetch once to ensure that the containers exist
 			// todo: improve component container prefetching
-			(ResourceFetch<ResourcesReq>::get(*this), ...);
+			(details::ResourceFetch<ResourcesReq>::get(*this), ...);
 
 			RequirementsInfo requirements;
-			(ResourceFetch<ResourcesReq>::registerRequirements(requirements), ...);
+			(details::ResourceFetch<ResourcesReq>::registerRequirements(requirements), ...);
 			return requirements;
 		}
-
-		// Generic lookup in the resource tuple.
-		// Handles both const and mutable reference types 
-		// since the unqualified reference is returned.
-		template<typename Resource>
-		struct ResourceFetch
-		{
-			ResourceFetch() = delete; // mark for ensureResource
-
-			using ResourceType = std::remove_cvref_t<Resource>;
-
-			static ResourceType& get(World& world)
-			{
-				if constexpr(utils::contains_type_v<ResourceType, decltype(world.m_resources)>)
-					return std::get<ResourceType>(world.m_resources);
-				else
-				{
-					auto it = world.m_dynamicResources.find(static_type_info::getTypeIndex<ResourceType>());
-					ASSERT(!!it, "Requested resource needs to exist.");
-					return *reinterpret_cast<ResourceType*>(it.data().get());
-				}
-			}
-
-			static void registerRequirements(RequirementsInfo& reqs)
-			{
-				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<ResourceType>();
-				reqs.add(typeIndex, std::is_const_v<Resource> ? AccessReq::Read : AccessReq::Write);
-			}
-		};
-
-		// game time
-		template<>
-		struct ResourceFetch<float>
-		{
-			static float get(World& world)
-			{
-				return world.m_deltaTime;
-			}
-			static void registerRequirements(RequirementsInfo& reqs)
-			{
-				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<float>();
-				reqs.add(typeIndex, AccessReq::Read);
-			}
-		};
-
-		template<>
-		struct ResourceFetch<LifetimeManager2&>
-		{
-			static LifetimeManager2& get(World& world)
-			{
-				return world.m_manager;
-			}
-
-			static void registerRequirements(RequirementsInfo& reqs)
-			{
-				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<LifetimeManager2>();
-				reqs.add(typeIndex, AccessReq::Write);
-			}
-		};
-
-		// Read component
-		template<typename Comp>
-		struct ResourceFetch <ReadAccess<Comp>>
-		{
-			static ReadAccess<Comp> get(World& world)
-			{
-				return ReadAccess<Comp>(world.m_registry.getContainer<Comp>());
-			}
-
-			static void registerRequirements(RequirementsInfo& reqs)
-			{
-				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<Comp>();
-				reqs.add(typeIndex, AccessReq::Read);
-			}
-		};
-
-		// Write component
-		template<typename Comp>
-		struct ResourceFetch <WriteAccess<Comp>>
-		{
-			static WriteAccess<Comp> get(World& world)
-			{
-				return WriteAccess<Comp>(world.m_registry.getContainer<Comp>());
-			}
-
-			static void registerRequirements(RequirementsInfo& reqs)
-			{
-				constexpr TypeIndex typeIndex = static_type_info::getTypeIndex<Comp>();
-				reqs.add(typeIndex, AccessReq::Write);
-			}
-		};
-
-		// Component Tuple
-		template<typename... CompAccess>
-		struct ResourceFetch <ComponentTuple<CompAccess...>>
-		{
-			static ComponentTuple<CompAccess...> get(World& world)
-			{
-				return ComponentTuple<CompAccess...>(ResourceFetch<CompAccess>::get(world)...);
-			}
-
-			static void registerRequirements(RequirementsInfo& reqs)
-			{
-				(ResourceFetch<CompAccess>::registerRequirements(reqs), ...);
-			}
-		};
 
 		using RunSystem = void(*)(World&, void*);
 		template<typename System>
