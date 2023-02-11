@@ -25,19 +25,12 @@ endmacro()
 # execute tha macro
 GroupSources(src)
 
-add_executable(Game src/main.cpp)
-set_target_properties(Game PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED YES
-)
 if (MSVC)
-	# disable type conversion warnings globaly
+	# disable type conversion warnings globally
 	add_compile_options(/wd4267)
 	add_compile_options(/wd4244)
 	add_compile_options(/wd4305)
 	add_compile_options(/wd4996)
-	# set startup project
-	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Game)
 endif()
 
 #---------------------------------------------------------------------------------------
@@ -49,12 +42,6 @@ set_target_properties(AcaEngine PROPERTIES
 	CXX_STANDARD 20
 	CXX_STANDARD_REQUIRED YES
 )
-
-include(CheckIPOSupported)
-check_ipo_supported(RESULT result)
-if(result)
-	set_property(TARGET AcaEngine Game PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-endif()
 
 if(MSVC)
 else()
@@ -142,7 +129,27 @@ target_link_libraries(AcaEngine PUBLIC StaticTypeInfo)
 
 list(APPEND INCLUDE_DIR "src")
 target_include_directories(AcaEngine PUBLIC ${INCLUDE_DIR})
-target_link_libraries(Game AcaEngine)
+
+# build the executable only if this is not a subdirectory
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+	add_executable(Game src/main.cpp)
+	target_link_libraries(Game AcaEngine)
+	set_target_properties(Game PROPERTIES
+		CXX_STANDARD 20
+		CXX_STANDARD_REQUIRED YES
+	)
+
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT result)
+	if(result)
+		set_property(TARGET AcaEngine Game PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+	endif()
+
+	if(MSVC)
+		# set startup project
+		set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Game)
+	endif()
+endif()
 
 enable_testing()
 add_subdirectory(tests)
