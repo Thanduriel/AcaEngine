@@ -26,7 +26,7 @@ namespace game {
 	Label::Label(ComponentCreator& _creator, const std::string& _text,
 		float _fontSize,
 		const glm::vec3& _pos,
-		const Color& _color,
+		const graphics::Color& _color,
 		const utils::Alignment& _alignment,
 		float _rotation)
 	{

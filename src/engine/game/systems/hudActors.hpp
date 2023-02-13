@@ -23,7 +23,7 @@ namespace game {
 		Label(ComponentCreator& _creator, const std::string& _text = "",
 			float _fontSize = 10.f,
 			const glm::vec3& _pos = glm::vec3(0.f, 0.f, -0.5f),
-			const Color& _color = Color(1.f),
+			const graphics::Color& _color = graphics::Color(1.f),
 			const utils::Alignment& _alignment = utils::Alignment(0.f, 0.f),
 			float _rotation = 0.f);
 	};

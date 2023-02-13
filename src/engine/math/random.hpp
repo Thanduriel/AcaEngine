@@ -4,6 +4,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <random>
 #include <numbers>
+#include <concepts>
 
 namespace math {
 namespace random {
@@ -11,8 +12,16 @@ namespace random {
 	using DefaultRandomEngine = xoshiro128ss;
 	extern thread_local DefaultRandomEngine g_random;
 
+	template<std::floating_point T = float, 
+		class Engine = DefaultRandomEngine>
+	T uniform(Engine& _engine = g_random)
+	{
+		std::uniform_real_distribution<T> dist;
+		return dist(_engine);
+	}
+
 	// Generates uniformly distributed 3D rotations.
-	template <typename T = float,
+	template <std::floating_point T = float,
 		class Engine = DefaultRandomEngine>
 	glm::qua<T> rotation(Engine& _engine = g_random)
 	{
@@ -31,7 +40,7 @@ namespace random {
 	}
 
 	// Generates uniformly distributed random points on the unit sphere.
-	template <typename T = float, 
+	template <std::floating_point T = float,
 		class Engine = DefaultRandomEngine>
 	glm::vec<3,T> direction(Engine& _engine = g_random)
 	{
@@ -44,7 +53,7 @@ namespace random {
 	}
 
 	// Generates uniformly distributed random points on the unit circle.
-	template <typename T = float,
+	template <std::floating_point T = float,
 		class Engine = DefaultRandomEngine>
 	glm::vec<2, T> direction2D(Engine& _engine = g_random)
 	{

@@ -1,13 +1,11 @@
 #pragma once
 
 #include "../../graphics/renderer/sprite.hpp"
+#include "../../graphics/core/color.hpp"
 #include "../core/component.hpp"
 #include "../../math/glmext.hpp"
 #include "../../utils/alignment.hpp"
 #include <string>
-
-// todo move this to a better location and namespace
-using Color = glm::vec4;
 
 namespace game { namespace components {
 
@@ -40,7 +38,7 @@ namespace game { namespace components {
 			const glm::vec3& _pos = glm::vec3(0.f), 
 			const glm::vec2 _size = glm::vec2(0.f),
 			float _rotation = 0.f,
-			const Color& _color = Color(0.f))
+			const graphics::Color& _color = graphics::Color(0.f))
 			: sprite(&_sprite), 
 			depth(_pos.z),
 			transform(_pos, _rotation, _size == glm::vec2(0.f) ? glm::vec2(1.f) : _size / glm::vec2(_sprite.size)), 
@@ -52,7 +50,7 @@ namespace game { namespace components {
 		float depth;
 		Transform2D transform;
 		glm::u16vec2 tile;
-		Color color;
+		graphics::Color color;
 	};
 
 	struct Label
@@ -60,7 +58,7 @@ namespace game { namespace components {
 		Label(const std::string& _text = "", 
 			float _fontSize = 10.f,
 			const glm::vec3& _pos = glm::vec3(0.f, 0.f, -0.5f),
-			const Color& _color = Color(1.f),
+			const graphics::Color& _color = graphics::Color(1.f),
 			const utils::Alignment& _alignment = utils::Alignment(0.f, 0.f),
 			float _rotation = 0.f,
 			bool _roundToPixel = false)
@@ -72,7 +70,7 @@ namespace game { namespace components {
 		std::string text;
 		float fontSize;
 		glm::vec3 position;
-		Color color;
+		graphics::Color color;
 		float rotation;
 		utils::Alignment alignment;
 		bool roundToPixel;
